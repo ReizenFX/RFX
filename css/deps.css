@@ -1,0 +1,128 @@
+/* ============================================================================
+   DEPENDENCY MANAGER UI (js/deps.js): settings dialogs, dependency rows and the
+   welcome dialog. Same look as the Assets settings panel (rfxset-*), prefixed
+   rfxdep- so it never collides with a tab's own styles.
+   global.css forces font-weight 400 !important, so weights here need !important.
+   ========================================================================== */
+
+.rfxdep-overlay {
+    position: fixed; inset: 0; z-index: 2147483000;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0, 0, 0, .55);
+    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+}
+.rfxdep-card {
+    width: 440px; max-width: calc(100vw - 24px); max-height: calc(100vh - 24px);
+    display: flex; flex-direction: column;
+    background: #1c1c1e; border: 1px solid #2e2e30; border-radius: 16px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, .6); color: #e8e8ea;
+}
+.rfxdep-card-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 12px 22px; flex-shrink: 0; }
+.rfxdep-card-title { font-size: 16px; font-weight: 650 !important; letter-spacing: .2px; }
+.rfxdep-x {
+    width: 30px; height: 30px; border: none; background: none; color: #9a9a9c; border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; line-height: 0; transition: background .12s, color .12s;
+}
+.rfxdep-x:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+.rfxdep-card-body { padding: 0 22px 6px; overflow-y: auto; min-height: 0; }
+.rfxdep-card-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 22px 16px; flex-shrink: 0; border-top: 1px solid #2a2a2c; }
+.rfxdep-done {
+    height: 32px; padding: 0 20px; border: none; border-radius: 8px; background: #3b82f6; color: #fff;
+    font-size: 12.5px; font-weight: 600 !important; cursor: pointer; transition: background .12s;
+}
+.rfxdep-done:hover { background: #4f8ff8; }
+.rfxdep-done.is-secondary { background: #2f2f33; color: #e8e8ea; }
+.rfxdep-done.is-secondary:hover { background: #3a3a3f; }
+
+.rfxdep-section { margin-bottom: 20px; }
+.rfxdep-label {
+    font-size: 10.5px; font-weight: 600 !important; letter-spacing: .7px; text-transform: uppercase;
+    color: #7d7d80; margin: 0 2px 9px;
+}
+.rfxdep-text { font-size: 12px; line-height: 1.55; color: #b9b9bd; margin: 0 2px 10px; }
+.rfxdep-text b { color: #e8e8ea; font-weight: 600 !important; }
+
+/* folder row (same as the Assets "Library folder" row) */
+.rfxdep-folder { margin-bottom: 18px; }
+.rfxdep-folder-row {
+    display: flex; align-items: center; gap: 8px;
+    background: #151517; border: 1px solid #2c2c2e; border-radius: 10px; padding: 6px 6px 6px 12px;
+}
+.rfxdep-folder-path {
+    flex: 1; min-width: 0; font-size: 12px; color: #cdcdd0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; direction: rtl; text-align: left;
+}
+
+/* buttons */
+.rfxdep-btn {
+    height: 28px; padding: 0 12px; border: 1px solid #38383d; border-radius: 8px;
+    background: #2a2a2e; color: #e8e8ea; font-size: 11.5px; font-weight: 600 !important;
+    cursor: pointer; white-space: nowrap; transition: background .12s, border-color .12s, color .12s;
+}
+.rfxdep-btn:hover:not(:disabled) { background: #34343a; border-color: #4a4a50; }
+.rfxdep-btn:disabled { opacity: .45; cursor: default; }
+.rfxdep-btn.is-primary { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+.rfxdep-btn.is-primary:hover:not(:disabled) { background: #4f8ff8; border-color: #4f8ff8; }
+.rfxdep-btn.is-danger:hover:not(:disabled) { background: rgba(255, 107, 107, .12); border-color: rgba(255, 107, 107, .55); color: #ff8a8a; }
+.rfxdep-btn.is-ghost { background: transparent; border-color: transparent; color: #9a9a9e; }
+.rfxdep-btn.is-ghost:hover:not(:disabled) { background: rgba(255, 255, 255, .06); color: #e8e8ea; border-color: transparent; }
+
+/* dependency rows */
+.rfxdep-list { display: flex; flex-direction: column; gap: 10px; }
+.rfxdep-item { background: #151517; border: 1px solid #2c2c2e; border-radius: 12px; padding: 12px 12px 10px; }
+.rfxdep-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rfxdep-name { font-size: 13px; font-weight: 600 !important; color: #f0f0f2; }
+.rfxdep-desc { font-size: 11px; color: #8d8d92; margin-top: 3px; line-height: 1.45; }
+.rfxdep-status { font-size: 11.5px; color: #c4c4c8; margin-top: 8px; line-height: 1.45; overflow-wrap: anywhere; }
+.rfxdep-path {
+    font-size: 10.5px; color: #75757a; margin-top: 3px; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; direction: rtl; text-align: left;
+}
+
+.rfxdep-chip {
+    flex-shrink: 0; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600 !important;
+    letter-spacing: .3px; white-space: nowrap;
+}
+.rfxdep-chip.is-ok { background: rgba(74, 200, 120, .14); color: #6fdc98; }
+.rfxdep-chip.is-update { background: rgba(91, 164, 255, .16); color: #8fc1ff; }
+.rfxdep-chip.is-legacy { background: rgba(230, 170, 60, .14); color: #f0c060; }
+.rfxdep-chip.is-missing { background: rgba(255, 107, 107, .13); color: #ff8a8a; }
+.rfxdep-chip.is-busy { background: rgba(255, 255, 255, .08); color: #d0d0d4; }
+
+.rfxdep-progress { position: relative; height: 5px; margin-top: 10px; border-radius: 3px; background: #2a2a2e; overflow: hidden; }
+.rfxdep-progress-fill { height: 100%; background: #3b82f6; border-radius: 3px; transition: width .3s; }
+.rfxdep-progress.is-indeterminate .rfxdep-progress-fill { width: 35% !important; animation: rfxdep-slide 1.1s ease-in-out infinite; }
+@keyframes rfxdep-slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+.rfxdep-progress-text { font-size: 10.5px; color: #9a9a9e; margin-top: 5px; font-variant-numeric: tabular-nums; }
+
+.rfxdep-msg { font-size: 11px; line-height: 1.45; margin-top: 8px; padding: 6px 8px; border-radius: 7px; background: rgba(255, 255, 255, .04); color: #c4c4c8; overflow-wrap: anywhere; }
+.rfxdep-msg.is-ok { background: rgba(74, 200, 120, .10); color: #7fe0a4; }
+.rfxdep-msg.is-update { background: rgba(91, 164, 255, .10); color: #9ecaff; }
+.rfxdep-msg.is-error { background: rgba(255, 107, 107, .10); color: #ff9d9d; }
+
+.rfxdep-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+/* welcome dialog table */
+.rfxdep-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; font-size: 11.5px; }
+.rfxdep-table th { text-align: left; font-size: 10px; font-weight: 600 !important; letter-spacing: .6px; text-transform: uppercase; color: #7d7d80; padding: 0 8px; }
+.rfxdep-table td { background: #151517; padding: 8px; vertical-align: top; color: #c9c9cd; border-top: 1px solid #2c2c2e; border-bottom: 1px solid #2c2c2e; }
+.rfxdep-table td:first-child { border-left: 1px solid #2c2c2e; border-radius: 10px 0 0 10px; color: #f0f0f2; font-weight: 600 !important; }
+.rfxdep-table td:last-child { border-right: 1px solid #2c2c2e; border-radius: 0 10px 10px 0; text-align: right; }
+.rfxdep-table .rfxdep-chip { display: inline-block; margin-bottom: 6px; }
+.rfxdep-small { font-size: 10.5px; color: #85858a; }
+
+/* inline notice shown in a tab when one of its dependencies is missing */
+.rfxdep-notice {
+    display: flex; align-items: center; gap: 10px; margin: 8px 10px; padding: 9px 10px; border-radius: 10px;
+    background: rgba(230, 170, 60, .10); border: 1px solid rgba(230, 170, 60, .35); color: #f0d49a; font-size: 11.5px; line-height: 1.4;
+}
+.rfxdep-notice .rfxdep-btn { margin-left: auto; flex-shrink: 0; }
+
+/* small pill used by the Download tab to surface yt-dlp updates */
+.rfxdep-pill {
+    display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 11px;
+    border: 1px solid #38383d; background: #232326; color: #b9b9bd; font-size: 10.5px; cursor: pointer; white-space: nowrap;
+}
+.rfxdep-pill:hover { border-color: #4a4a50; color: #e8e8ea; }
+.rfxdep-pill.is-update { border-color: rgba(91, 164, 255, .55); background: rgba(91, 164, 255, .12); color: #9ecaff; }
+.rfxdep-pill.is-missing { border-color: rgba(255, 107, 107, .5); background: rgba(255, 107, 107, .10); color: #ff9d9d; }

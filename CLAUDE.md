@@ -7,6 +7,7 @@ After Effects CEP panel. This folder is the extension root (`CSXS/manifest.xml`,
 - Each tab loads its own jsx on demand: `const <name>Jsx = window.createJsxLoader('<name>.jsx')` (in `js/globals.js`), then every host call goes through `<name>Jsx(script, cb)`, which waits for the load. `assets.jsx` and `caption.jsx` keep their own loaders in their tab JS.
 - A jsx file must never call anything defined in another jsx file, and a tab's JS must only call its own jsx (the other file may not be loaded). If two tabs need the same helper, give each a tab-prefixed copy (e.g. `pasteGetAepPath` / `downloadGetAepPath`).
 - All panels in After Effects share one ExtendScript global scope. Never define the same function in two jsx files; use tab-prefixed names for new globals.
+- External programs (ffmpeg, yt-dlp, deno, faster-whisper-xxl, the Whisper model) are managed by `js/deps.js` (shared installer code, not a tab; UI styles in `css/deps.css`). Each tab registers its own dependencies and gets its own installs under `%APPDATA%\RFX\Dependencies\<tab>` (changeable per tab); two tabs never share a binary. Tabs get paths with `RFXDeps.resolve(tab, id)` (managed version, else the legacy `bin/win/<tab>` copy, else missing). Never write into `bin/`.
 - jsx is ES3: no `let`/`const`, arrow functions, template strings, or reliance on native `JSON` (bring a local, tab-prefixed JSON helper if needed).
 
 ## Live development
