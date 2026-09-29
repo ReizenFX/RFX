@@ -1,0 +1,5 @@
+node_modules/
+bin/
+*.zxp
+.DS_Store
+Thumbs.db

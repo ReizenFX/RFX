@@ -1,0 +1,429 @@
+/* ===========================================================
+   1. MAIN LAYOUT & CONTAINERS
+   =========================================================== */
+#tab-graph.active { 
+    display: flex !important; 
+    flex-direction: column !important; 
+    height: 100% !important; 
+    width: 100% !important; 
+}
+#tab-graph.active .flex-column-container { 
+    flex: 1 1 auto !important; 
+    display: flex !important; 
+    flex-direction: column !important; 
+    min-height: 0 !important; 
+    position: relative !important; 
+}
+
+/* ===========================================================
+   2. GRAPH CANVAS & RESIZER (VERTICAL MODE)
+   =========================================================== */
+#tab-graph.active #graph-top-wrapper {
+    position: relative !important; 
+    width: 100% !important; 
+    flex-shrink: 0 !important;
+    height: var(--graph-panel-height, 240px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    margin-bottom: 6px !important; /* THE FIX: Reduced from 10px */
+    z-index: 30 !important; 
+    display: block !important; 
+}
+
+#tab-graph.active #graph-editor-area { 
+    position: relative !important; 
+    width: 100% !important; 
+    height: 100% !important; 
+    border: none !important; 
+    border-radius: 0 !important; 
+}
+
+#tab-graph.active #bezier-svg { 
+    position: absolute !important; 
+    top: 0 !important; 
+    left: 0 !important; 
+    right: 0 !important; 
+    bottom: 0 !important; 
+    width: 100% !important; 
+    height: 100% !important; 
+    display: block !important; 
+}
+
+/* Massive Resizer Hitbox & Thinner Handle */
+#tab-graph.active #graph-resizer {
+    position: absolute !important; 
+    bottom: -6px !important; /* THE FIX: Pulled up to match the new 6px gap */
+    left: 0 !important;
+    display: flex !important; 
+    align-items: center !important; 
+    justify-content: center !important;
+    width: 100% !important; 
+    height: 8px !important; /* Tightened the invisible hitbox to match */
+    cursor: ns-resize !important; 
+    margin: 0 !important; 
+    padding: 0 !important; 
+    background: transparent !important;
+    z-index: 40 !important;
+}
+
+#tab-graph.active #graph-resizer > div { 
+    width: 52px !important; 
+    height: 4px !important; 
+    border-radius: 2px !important; 
+    background: #555; 
+    pointer-events: none; 
+}
+
+/* ===========================================================
+   3. PRESETS AREA & LIBRARY DROPDOWN
+   =========================================================== */
+#tab-graph.active #graph-presets-area {
+    padding-top: 0 !important; 
+    flex: 1 1 auto !important; 
+    min-height: 0 !important;
+    position: relative !important; 
+    z-index: 10 !important; 
+}
+
+/* THE FIX: Jump to front when JavaScript applies this class */
+#tab-graph.active #graph-presets-area.dropdown-active {
+    z-index: 999 !important;
+}
+
+#graph-presets-area .panel-box {
+    margin: 0 !important; 
+    padding: 0 !important; 
+    background: transparent !important; 
+    border: none !important; 
+    box-shadow: none !important; 
+}
+
+/* Dropdown Row Layout */
+#graph-presets-area .panel-box > div:first-child { 
+    display: flex !important; 
+    width: 100% !important; 
+    margin-top: 4px !important; /* THE FIX: Reduced from 8px for a tighter fit */
+    margin-bottom: 0px !important; 
+    padding: 0 4px !important; 
+    box-sizing: border-box !important;
+}
+
+#graph-presets-area .panel-box > div:first-child > select,
+#graph-presets-area .panel-box > div:first-child > .custom-select-wrapper { 
+    flex: 1 1 100% !important; 
+    width: 100% !important; 
+    min-width: 100% !important; 
+}
+
+#graph-presets-area .panel-box > div:first-child > .custom-select-wrapper > .custom-select-display { 
+    width: 100% !important; 
+}
+
+/* Ultra-Slim Dropdown Styling */
+#tab-graph.active .custom-select-display { 
+    height: 18px !important; 
+    padding: 0px 24px 0px 8px !important; 
+    line-height: 16px !important; 
+}
+
+#tab-graph.active .custom-select-option { 
+    padding: 6px 10px 6px 28px !important; 
+    position: relative !important; 
+}
+
+#tab-graph.active .custom-select-option::before { 
+    left: 8px !important; 
+    top: 50% !important; 
+    transform: translateY(-50%) !important; 
+}
+
+/* DYNAMIC DIRECTION: Pushes the list UP when JS adds .open-up */
+#tab-graph.active .custom-select-wrapper.open-up .custom-select-options {
+    top: auto !important;
+    bottom: 100% !important;
+    margin-bottom: 4px !important;
+    margin-top: 0 !important;
+    transform-origin: bottom center !important;
+}
+
+/* ===========================================================
+   4. PRESET GRID & CARDS
+   =========================================================== */
+#graph-presets-grid { 
+    display: grid !important; 
+    grid-template-columns: repeat(auto-fill, var(--preset-size, 60px)) !important; 
+    justify-content: flex-start !important; 
+    align-content: flex-start; 
+    
+    /* THE FIX: Ultra-tight dynamic gap. Base of 2px + 8% of the icon size. */
+    gap: calc(3px + var(--preset-size, 60px) * 0.08) 8px !important; 
+    
+    padding: 6px 4px 2px 4px !important; 
+    transition: opacity 0.18s ease; 
+}
+
+.graph-preset-card { 
+    background: transparent !important; 
+    border: none !important; 
+    box-shadow: none !important; 
+    cursor: pointer; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    width: 100% !important; 
+    flex-shrink: 0; 
+    padding: 0 !important; 
+    gap: 6px !important; 
+}
+
+.graph-preset-svg-wrap { 
+    width: 100%; 
+    aspect-ratio: 1 / 1; 
+    background: var(--bg-input); 
+    border: 1px solid transparent; 
+    border-radius: 4px; 
+    padding: 6px; 
+    pointer-events: none; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    
+    /* THE FIX: Buttery smooth animation curve */
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.2s ease, border-color 0.2s ease; 
+    
+    /* THE FIX: Hard-lock origin to center and force GPU rendering to stop jitter */
+    transform-origin: center center !important; 
+    backface-visibility: hidden !important;
+    will-change: transform;
+}
+
+.graph-preset-card:hover .graph-preset-svg-wrap { 
+    background: rgba(255,255,255,0.05); 
+    border-color: var(--border-color); 
+    transform: scale(1.05) translateZ(0); /* 5% zoom, completely unified */
+}
+
+/* THE FIX: Tactile 'click' feel */
+.graph-preset-card:active .graph-preset-svg-wrap {
+    transform: scale(0.96) translateZ(0); /* Squish inward slightly */
+    transition: transform 0.05s ease; /* Instant snap down when clicked */
+}
+
+.graph-preset-label { 
+    font-size: 10px !important; 
+    color: var(--text-secondary) !important; 
+    width: 100%; 
+    text-align: center; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    opacity: 0.6; 
+    font-weight: 400 !important; 
+    letter-spacing: 0.3px; 
+    transition: color 0.15s ease; 
+}
+
+.graph-preset-card:hover .graph-preset-label { 
+    color: var(--text-primary) !important; 
+}
+
+/* ===========================================================
+   5. BOTTOM BAR & ACTION BUTTONS
+   =========================================================== */
+#tab-graph.active .fixed-bottom { 
+    flex-shrink: 0 !important; 
+    margin-top: 0 !important; 
+    padding: 2px 4px 2px 4px !important; 
+    gap: 4px !important; 
+    box-sizing: border-box !important; 
+    position: relative !important; 
+    
+    /* Forces the bottom bar to cover the presets area when squished */
+    z-index: 20 !important; 
+}
+
+#html-auto-btn, .ease-btn, .btn-icon-square, #graphApplyBtn { 
+    height: 24px !important; 
+    min-height: 24px !important; 
+    display: flex !important; 
+    align-items: center !important; 
+    justify-content: center !important; 
+    padding-top: 0 !important; 
+    padding-bottom: 0 !important; 
+}
+
+#graphApplyBtn { 
+    min-width: 24px !important; 
+}
+
+.ease-btn { color: var(--text-secondary); }
+.ease-btn.active { color: #5ba4ff !important; background: rgba(20,115,230,0.2); }
+#html-auto-btn { border: 1px solid var(--border-color) !important; }
+#html-auto-btn.active { background: rgba(91, 164, 255, 0.15) !important; color: #5ba4ff !important; border: 1px solid transparent !important; outline: none !important; }
+
+#graph-value-display { 
+    height: auto !important; 
+    min-height: 24px !important; 
+    display: flex !important; 
+    align-items: center !important; 
+    justify-content: center !important; 
+    padding: 4px 0 !important; 
+    line-height: 1.4 !important; 
+}
+
+.btn-icon-square svg { width: 13px !important; height: 13px !important; }
+#bezier-handle1, #bezier-handle2 { transition: r 0.1s ease; }
+#bezier-handle1:hover, #bezier-handle2:hover { r: 9; }
+input[type="range"].main-slider { border-radius: 20px !important; }
+
+/* ===========================================================
+   6. CONTEXT MENU & ISOLATED MODALS
+   =========================================================== */
+#dynamic-ctx-menu, #dynamic-ctx-menu .ctx-sub { 
+    padding: 6px !important; 
+    border-radius: 8px !important; 
+    background: #1c1c1c !important; 
+    border: 1px solid #333 !important; 
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important; 
+}
+
+#dynamic-ctx-menu .ctx-item:hover { 
+    background: rgba(255, 255, 255, 0.1) !important; 
+    color: #ffffff !important; 
+}
+
+#dynamic-ctx-menu .ctx-sep { 
+    margin: 6px -6px !important; 
+    background: #333 !important; 
+}
+
+/* THE FIX: Invisible hover forcefield around submenus */
+#dynamic-ctx-menu .ctx-sub::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    bottom: -15px;
+    left: -15px;
+    right: -15px;
+    z-index: -1; 
+}
+
+.modal-overlay { z-index: 999999 !important; }
+
+.graph-modal-overlay { 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 999999; 
+}
+
+.graph-modal-box { 
+    background: var(--bg-panel); border: 1px solid var(--border-color); 
+    border-radius: 8px; padding: 16px; width: 90%; max-width: 260px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; 
+}
+
+.graph-modal-title { 
+    font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 12px; text-align: left; 
+}
+
+/* ===========================================================
+   7. WIDE LAYOUT MODE (SIDE-BY-SIDE)
+   =========================================================== */
+@media (min-width: 350px) {
+    #tab-graph.active .flex-column-container { 
+        display: grid !important; 
+        grid-template-columns: minmax(0, 1fr) var(--right-panel-width, 260px) !important; 
+        grid-template-rows: 1fr auto !important; 
+    }
+    
+    #tab-graph.active #graph-top-wrapper { 
+        grid-column: 1 / 2 !important; 
+        grid-row: 1 / 3 !important; 
+        height: 100% !important; 
+        border-right: 1px solid rgba(255, 255, 255, 0.08) !important; 
+        border-bottom: none !important; 
+        margin-bottom: 0 !important; 
+    }
+    
+    #tab-graph.active #graph-editor-area { 
+        height: 100% !important; 
+        border: none !important; 
+        border-radius: 0 !important; 
+    }
+    
+    #tab-graph.active #graph-presets-area { 
+        grid-column: 2 / 3 !important; 
+        grid-row: 1 / 2 !important; 
+        height: 100% !important; 
+        width: 100% !important; 
+        padding: 0px 0px 0px 4px !important; 
+        box-sizing: border-box !important; 
+    }
+    
+    #tab-graph.active .fixed-bottom { 
+        grid-column: 2 / 3 !important; 
+        grid-row: 2 / 3 !important; 
+        height: auto !important; 
+        width: 100% !important; 
+        padding: 2px 4px 2px 4px !important; 
+        box-sizing: border-box !important; 
+    }
+    
+    #tab-graph.active #graph-resizer {
+        position: absolute !important; 
+        grid-column: 1 / 2 !important; 
+        grid-row: 1 / 3 !important; 
+        top: 0 !important; 
+        bottom: 0 !important; 
+        left: auto !important; 
+        cursor: ew-resize !important; 
+        background: transparent !important;
+        width: 36px !important;  
+        height: 100% !important; 
+        right: -18px !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        align-items: center !important; 
+    }
+    
+    #tab-graph.active #graph-resizer > div { 
+        width: 4px !important; /* THE FIX: Made horizontally thinner for wide mode */
+        height: 52px !important; 
+        border-radius: 2px !important;
+    }
+}
+
+/* ===========================================================
+   CAPTION-STYLE DYNAMIC DROPDOWN ENGINE FOR GRAPH TAB
+   =========================================================== */
+#tab-graph.active .custom-select-wrapper {
+    position: relative !important;
+}
+
+/* Default downward alignment */
+#tab-graph.active .custom-select-wrapper .custom-select-options,
+#tab-graph.active .custom-select-wrapper .custom-select-list {
+    top: calc(100% + 4px) !important;
+    bottom: auto !important;
+    transform-origin: top center !important;
+}
+
+/* Flipped upward alignment when .drop-up is added */
+#tab-graph.active .custom-select-wrapper.drop-up .custom-select-options,
+#tab-graph.active .custom-select-wrapper.drop-up .custom-select-list {
+    top: auto !important;
+    bottom: calc(100% + 4px) !important;
+    transform-origin: bottom center !important;
+}
+
+/* Elevate presets area to float above the UI when active */
+#tab-graph.active #graph-presets-area.dropdown-active {
+    overflow: visible !important;
+    z-index: 999 !important;
+}
+
+/* Ensure disabled context menu items are greyed out and unclickable */
+.ctx-menu-item.disabled,
+.ctx-menu-item[disabled] {
+    opacity: 0.4 !important;
+    pointer-events: none !important;
+    cursor: default !important;
+}

@@ -1,0 +1,2057 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Ultimate FX Suite</title>
+    
+    <link rel="stylesheet" href="css/global.css">
+    
+    <link rel="stylesheet" href="css/tab-transform.css">
+    <link rel="stylesheet" href="css/tab-fx.css">
+    <link rel="stylesheet" href="css/tab-color.css">
+    <link rel="stylesheet" href="css/tab-graph.css">
+    <link rel="stylesheet" href="css/tab-assets.css">
+    <link rel="stylesheet" href="css/tab-paste.css">
+    <link rel="stylesheet" href="css/tab-render.css">
+    <link rel="stylesheet" href="css/tab-tracker.css">
+    <link rel="stylesheet" href="css/tab-discord.css">
+    <link rel="stylesheet" href="css/tab-download.css">
+    <link rel="stylesheet" href="css/tab-caption.css">
+    <script src="js/CSInterface.js"></script>
+</head>
+<body>
+    <div class="tabs-header">
+        <button class="tab-btn active" id="btn-tab-transform" onclick="switchTab('tab-transform')">Transform</button>
+        <button class="tab-btn" id="btn-tab-fx" onclick="switchTab('tab-fx')">FX</button>
+        <button class="tab-btn" id="btn-tab-color" onclick="switchTab('tab-color')">Color</button>
+        <button class="tab-btn" id="btn-tab-graph" onclick="switchTab('tab-graph')">Graph</button>
+        <button class="tab-btn" id="btn-tab-assets" onclick="switchTab('tab-assets')">Assets</button>
+        <button id="btn-tab-paste" class="tab-btn" onclick="switchTab('tab-paste')">Paste</button>
+        <button id="btn-tab-render" class="tab-btn" onclick="switchTab('tab-render')">Render</button>
+        <button class="tab-btn" id="btn-tab-tracker" onclick="switchTab('tab-tracker')">Tracker</button>
+        <button class="tab-btn" id="btn-tab-discord" onclick="switchTab('tab-discord')">Discord</button>
+        <button class="tab-btn" id="btn-tab-download" onclick="switchTab('tab-download')">Download</button>
+        <button class="tab-btn" id="btn-tab-caption" onclick="switchTab('tab-caption')">Caption</button>
+    </div>
+
+    <div class="tab-content active" id="tab-transform">
+        <div class="flex-column-container">
+            <div class="scrollable-content" style="gap:10px; display:flex; flex-direction:column;">
+                <div class="section-block" style="padding-top: 10px; padding-bottom: 14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <label class="section-label" style="margin-bottom:0;">Alignment & Transform</label>
+                        <select id="align-relative-to" style="font-size:10px; padding:3px 6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; cursor:pointer;">
+                            <option value="comp">Comp</option>
+                            <option value="selection" selected>Selection</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <label class="section-label" style="margin-bottom: 8px; font-size: 10px;">Anchor</label>
+                            <div class="anchor-grid-small">
+                                <button class="anchor-btn" data-tooltip="Top Left" onclick="moveAnchor('tl')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="4" cy="4" r="2.5" fill="#ffffff"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Top Center" onclick="moveAnchor('tc')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="4" r="2.5" fill="#ffffff"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Top Right" onclick="moveAnchor('tr')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="20" cy="4" r="2.5" fill="#ffffff"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Middle Left" onclick="moveAnchor('ml')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="4" cy="12" r="2.5" fill="#ffffff"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Center" onclick="moveAnchor('mc')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="2.5" fill="#ffffff"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Middle Right" onclick="moveAnchor('mr')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="20" cy="12" r="2.5" fill="#ffffff"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Bottom Left" onclick="moveAnchor('bl')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="4" cy="20" r="2.5" fill="#ffffff"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Bottom Center" onclick="moveAnchor('bc')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="20" r="2.5" fill="#ffffff"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Bottom Right" onclick="moveAnchor('br')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="20" cy="20" r="2.5" fill="#ffffff"/></svg></button>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <label class="section-label" style="margin-bottom: 8px; font-size: 10px;">Align</label>
+                            <div class="anchor-grid-small">
+                                <button class="anchor-btn" data-tooltip="Align Top Left Corner" onclick="runAlign('tl')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><line x1="2" y1="4" x2="22" y2="4"/><rect x="8" y="8" width="8" height="8"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Top Edges" onclick="runAlign('top')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="2" y1="4" x2="22" y2="4"/><rect x="6" y="8" width="4" height="10"/><rect x="14" y="8" width="4" height="6"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Top Right Corner" onclick="runAlign('tr')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="20" y1="2" x2="20" y2="22"/><line x1="2" y1="4" x2="22" y2="4"/><rect x="8" y="8" width="8" height="8"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Left Edges" onclick="runAlign('left')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><rect x="8" y="6" width="10" height="4"/><rect x="8" y="14" width="6" height="4"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Centers" onclick="runAlign('center')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="16" height="16"><path d="M 8 50 H 92 M 50 8 V 92 M 33 33 H 67 V 67 H 33 Z" stroke="#ffffff" stroke-width="6" stroke-linejoin="miter" fill="none" /></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Right Edges" onclick="runAlign('right')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="20" y1="2" x2="20" y2="22"/><rect x="6" y="6" width="10" height="4"/><rect x="10" y="14" width="6" height="4"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Bottom Left Corner" onclick="runAlign('bl')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><line x1="2" y1="20" x2="22" y2="20"/><rect x="8" y="8" width="8" height="8"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Bottom Edges" onclick="runAlign('bottom')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="2" y1="20" x2="22" y2="20"/><rect x="6" y="6" width="4" height="10"/><rect x="14" y="10" width="4" height="6"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Bottom Right Corner" onclick="runAlign('br')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="20" y1="2" x2="20" y2="22"/><line x1="2" y1="20" x2="22" y2="20"/><rect x="8" y="8" width="8" height="8"/></svg></button>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <label class="section-label" style="margin-bottom: 8px; font-size: 10px;">Align</label>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px;">
+                                <button class="btn-icon-square" data-tooltip="Align Horizontal Center" onclick="runAlign('hcenter')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="12" y1="2" x2="12" y2="22"/><rect x="5" y="6" width="14" height="4"/><rect x="8" y="14" width="8" height="4"/></svg></button>
+                                <button class="btn-icon-square" data-tooltip="Align Vertical Center" onclick="runAlign('vcenter')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="2" y1="12" x2="22" y2="12"/><rect x="6" y="5" width="4" height="14"/><rect x="14" y="8" width="4" height="8"/></svg></button>
+                            </div>
+                            <label class="section-label" style="margin-top: 10px; margin-bottom: 8px; font-size: 10px;">Dist</label>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px;">
+                                <button class="btn-icon-square" data-tooltip="Distribute Horizontal Spacing" onclick="runAlign('distrib-h')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><line x1="20" y1="2" x2="20" y2="22"/><rect x="10" y="8" width="4" height="8"/></svg></button>
+                                <button class="btn-icon-square" data-tooltip="Distribute Vertical Spacing" onclick="runAlign('distrib-v')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="2" y1="4" x2="22" y2="4"/><line x1="2" y1="20" x2="22" y2="20"/><rect x="8" y="10" width="8" height="4"/></svg></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-block">
+                    <label class="section-label" style="margin-bottom: 12px;">New Layers</label>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                        <button class="nl-btn" onclick="addCustomLayer('NUL')">NUL</button>
+                        <button class="nl-btn" onclick="addCustomLayer('ADJ')">ADJ</button>
+                        <button class="nl-btn" onclick="addCustomLayer('SLD')">SLD</button>
+                        <button class="nl-btn" onclick="addCustomLayer('SHP')">SHP</button>
+                        <button class="nl-btn" onclick="addCustomLayer('TXT')">TXT</button>
+                        <button class="nl-btn" onclick="addCustomLayer('CAM')">CAM</button>
+                        <button class="nl-btn" onclick="addCustomLayer('LIG')">LIG</button>
+                    </div>
+                </div>
+
+                <div class="section-block">
+                    <label class="section-label" style="margin-bottom: 12px;">Layer Order &amp; Timing</label>
+                    <div style="display:flex; gap:6px; flex-wrap: wrap;">
+                        <button class="btn-icon-square" data-tooltip="Reverse Stack Order" onclick="runFlipLayers()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L13 16M17 20L21 16"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Match Earliest Start Time" onclick="runMatchStartTime()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><rect x="8" y="6" width="12" height="4"/><rect x="8" y="14" width="8" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Set In Point at Playhead" onclick="runSetInPoint()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="6" y1="2" x2="6" y2="22"/><path d="M12 8L6 12L12 16"/><rect x="14" y="8" width="6" height="8"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Set Out Point at Playhead" onclick="runSetOutPoint()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="18" y1="2" x2="18" y2="22"/><path d="M12 8L18 12L12 16"/><rect x="4" y="8" width="6" height="8"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Move Group Start to Playhead" onclick="runMoveGroupStart()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><rect x="8" y="4" width="6" height="4"/><rect x="12" y="10" width="6" height="4"/><rect x="16" y="16" width="6" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Move Group End to Playhead" onclick="runMoveGroupEnd()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="20" y1="2" x2="20" y2="22"/><rect x="10" y="4" width="6" height="4"/><rect x="6" y="10" width="6" height="4"/><rect x="2" y="16" width="6" height="4"/></svg></button>
+                        
+                        <button class="btn-icon-square" data-tooltip="Sort: Early to Bottom" onclick="if(window.safeEval) window.safeEval('sortLayersAE(true)')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="16" height="16"><g fill="#ffffff"><rect x="56" y="16" width="30" height="16" /><rect x="35" y="42" width="30" height="16" /><rect x="14" y="68" width="30" height="16" /></g></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Sort: Early to Top" onclick="if(window.safeEval) window.safeEval('sortLayersAE(false)')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="16" height="16"><g fill="#ffffff"><rect x="14" y="16" width="30" height="16" /><rect x="35" y="42" width="30" height="16" /><rect x="56" y="68" width="30" height="16" /></g></svg></button>
+                    </div>
+                </div>
+                <div class="section-block">
+                    <label class="section-label" style="margin-bottom: 12px;">Chain Layers End-to-End</label>
+                    <div style="display:flex; gap:6px; flex-wrap: wrap;">
+                        <button class="btn-icon-square" data-tooltip="Chain Bottom-to-Top" onclick="runSequenceChain('bottom-to-top')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><rect x="4" y="16" width="6" height="4"/><rect x="10" y="10" width="6" height="4"/><rect x="16" y="4" width="6" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Chain Top-to-Bottom" onclick="runSequenceChain('top-to-bottom')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><rect x="4" y="4" width="6" height="4"/><rect x="10" y="10" width="6" height="4"/><rect x="16" y="16" width="6" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Chain Random Order" onclick="runSequenceChain('random')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><rect x="4" y="16" width="6" height="4"/><rect x="10" y="4" width="6" height="4"/><rect x="16" y="10" width="6" height="4"/></svg></button>
+                    </div>
+                </div>
+                <div class="section-block">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <label class="section-label" style="margin-bottom:0;">Sequence Layers</label>
+                        <div class="slider-val-wrapper" id="seq-wrap" onclick="openNumpad('seq-val-input','setting-seq-frames','seq-wrap')">
+                            <input type="text" id="seq-val-input" class="slider-val-input" value="1" readonly oninput="syncInputToSlider(this.id,'setting-seq-frames')" style="cursor: pointer; user-select: none; outline: none;">
+                            <span class="slider-val-unit">f</span>
+                        </div>
+                    </div>
+                    <input type="range" id="setting-seq-frames" class="main-slider" style="display:none;" min="0" max="60" value="1" oninput="syncSliderToInput('setting-seq-frames','seq-val-input')">
+                    <div style="display:flex; gap:6px; margin-top:10px; flex-wrap: wrap;">
+                        <button class="btn-icon-square" data-tooltip="Stagger Backward" onclick="sequenceLayers('backward')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><rect x="2" y="4" width="10" height="4"/><rect x="6" y="10" width="10" height="4"/><rect x="10" y="16" width="10" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Stagger Forward" onclick="sequenceLayers('forward')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><rect x="10" y="4" width="10" height="4"/><rect x="6" y="10" width="10" height="4"/><rect x="2" y="16" width="10" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Scatter Randomly in Offset Range" onclick="sequenceLayers('random')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><rect x="8" y="4" width="8" height="4"/><rect x="2" y="10" width="8" height="4"/><rect x="14" y="16" width="8" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Reverse Timing Sequence" onclick="runReverseSequence()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><path d="M20 12H4M4 12L8 8M4 12L8 16"/><rect x="10" y="4" width="10" height="4"/><rect x="10" y="16" width="10" height="4"/></svg></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-fx">
+        <div class="flex-column-container">
+            <div class="editor-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+                <label style="color: var(--text-secondary); font-size: 12px; font-weight: bold;">FX Bundle Library</label>
+            </div>
+            <div class="scrollable-content" style="padding-bottom: 8px;">
+                <div id="fx-list-container" style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+                    <p style="color: var(--text-secondary); text-align: center; margin-top: 10px; font-size: 12px;">No effects copied yet.</p>
+                </div>
+            </div>
+            <div class="fixed-bottom" style="display: flex; gap: 12px; justify-content: center; padding-top: 12px; background: var(--bg-base); border-top: 1px solid var(--border-color);">
+                <button class="btn-icon-square" data-tooltip="Copy FX" onclick="copyFX()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                <button class="btn-icon-square" data-tooltip="Paste FX" onclick="pasteFX()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></button>
+                <button class="btn-icon-square danger-hover" data-tooltip="Clear All FX" onclick="removeFX()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-color">
+        <div class="flex-column-container">
+            <div class="scrollable-content" style="padding-right: 4px; display: flex; flex-direction: column; gap: 12px; flex: 1;">
+                <div class="picker-section" id="picker-section">
+                    <div class="canvas-container" id="sv-box">
+                        <canvas id="sv-bg"></canvas>
+                        <div class="sv-thumb" id="sv-thumb"></div>
+                    </div>
+                    <div class="canvas-container" id="h-box">
+                        <canvas id="h-bg"></canvas>
+                        <div class="h-thumb" id="h-thumb"></div>
+                    </div>
+                </div>
+                <div class="data-panel">
+                    <div class="data-top">
+                        <div class="swatch-name-group">
+                            <div class="preview-swatch" id="preview" style="background: #FF0000;"></div>
+                            <div class="name-col">
+                                <span class="label">Color Name</span>
+                                <div class="name-text" id="color-name">Red</div>
+                            </div>
+                        </div>
+                        <div class="hex-col">
+                            <span class="label">Hex Code</span>
+                            <div class="hex-group">
+                                <button class="btn-copy-hex" onclick="copyHexCode()" title="Copy Hex Code">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                </button>
+                                <input type="text" class="hex-input" id="hex-input" value="FF0000" maxlength="6">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="data-bottom">
+                        <div class="metrics-row" style="display: flex; gap: 12px; align-items: center; justify-content: space-between; width: 100%;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 14px; color: var(--text-secondary); font-weight: 500;">H:</span>
+                                <div class="slider-val-wrapper hsb-wrap" id="h-wrap" onclick="openNumpad('val-h', 'dummy-slider', 'h-wrap')"><input type="text" id="val-h" class="slider-val-input" value="0" readonly><span class="slider-val-unit">°</span></div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 14px; color: var(--text-secondary); font-weight: 500;">S:</span>
+                                <div class="slider-val-wrapper hsb-wrap" id="s-wrap" onclick="openNumpad('val-s', 'dummy-slider', 's-wrap')"><input type="text" id="val-s" class="slider-val-input" value="100" readonly><span class="slider-val-unit">%</span></div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 14px; color: var(--text-secondary); font-weight: 500;">B:</span>
+                                <div class="slider-val-wrapper hsb-wrap" id="b-wrap" onclick="openNumpad('val-b', 'dummy-slider', 'b-wrap')"><input type="text" id="val-b" class="slider-val-input" value="100" readonly><span class="slider-val-unit">%</span></div>
+                            </div>
+                            <input type="range" id="dummy-slider" style="display:none" min="0" max="360" value="0">
+                        </div>
+                        <button class="btn-secondary" style="margin-top: 12px; width: 100%; padding: 8px 12px;" id="btn-save">Save Preset</button>
+                    </div>
+                </div>
+                <div class="bottom-section" id="bottom-section" style="margin-top: 0; min-height: 150px;">
+                    <div class="presets-header-row">
+                        <div class="presets-header">PRESETS</div>
+                        <div class="preset-actions">
+                            <button class="btn-icon" id="btn-import">Import</button>
+                            <button class="btn-icon" id="btn-export">Export</button>
+                            <input type="file" id="file-import" style="display:none" accept=".json">
+                        </div>
+                    </div>
+                    <div class="presets-list" id="presets-list"></div>
+                </div>
+            </div>
+            <div class="fixed-bottom" style="display: flex; gap: 12px; justify-content: center; padding: 10px 34px 8px 34px; background: var(--bg-base);">
+                <button class="btn-icon-square" data-tooltip="Apply Fill Color" onclick="applyColorToFill()">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 11l-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z"></path><path d="M5 2l5 5"></path><path d="M2 13h15"></path><path d="M22 20a2 2 0 1 1-4 0c0-1.6 2-4 2-4s2 2.4 2 4Z"></path></svg>
+                </button>
+                <button class="btn-icon-square" data-tooltip="Apply Stroke Color" onclick="applyColorToStroke()">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-graph" class="tab-content">
+        <div class="flex-column-container">
+            <div id="graph-top-wrapper" style="display:flex; flex-direction:column; align-items:center; width:100%; position:relative;">
+                <div id="graph-editor-area" style="position:relative; width:100%; height:240px; background-color:#1a1a1a; border:1px solid var(--border-color); border-radius:6px; overflow:hidden; flex-shrink:0; transition:opacity 0.1s;"></div>
+                <div id="graph-resizer" style="width:100%; padding:8px 0; cursor:ns-resize; display:flex; justify-content:center; align-items:center; z-index:10;"><div style="width:40px; height:6px; background:#555; border-radius:3px; pointer-events:none;"></div></div>
+            </div>
+            <div id="graph-presets-area" style="display:flex; flex-direction:column; flex:1; min-height:0; padding-bottom:0;">
+                <div class="panel-box" style="display:flex; flex-direction:column; flex:1; min-height:0; margin-top:0; padding:0; background:transparent; border:none; box-shadow:none;">
+                    
+                    <!-- Fixed Dropdown -->
+                    <div style="flex-shrink:0; display:flex; justify-content:space-between; align-items:center; width: 100%; margin-top:4px; margin-bottom:0; padding:0 4px; box-sizing:border-box;">
+                        <select id="graph-lib-select" style="width: 100%; margin: 0;"></select>
+                    </div>
+                    
+                    <!-- Isolated Scrollable Grid -->
+                    <div class="scrollable-content" style="flex:1; overflow-y:auto; overflow-x:hidden; padding:0;">
+                        <div id="graph-presets-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(var(--preset-size, 60px), 1fr)); gap:18px 8px; padding:2px 4px 0px 4px;"></div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="fixed-bottom" style="display:flex; flex-direction:column; gap:8px; padding:8px 34px 6px 34px; background:var(--bg-base);">
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <button class="btn-icon-square" style="width:26px; height:26px;" data-tooltip="Copy graph from keyframes" onclick="readGraphValues()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                    <div id="graph-value-display" style="flex:1; font-size:12px; font-family:monospace; color:var(--text-primary); cursor:pointer; padding:5px 0; background:var(--bg-input); border:1px solid var(--border-color); border-radius:4px; text-align:center; transition:border 0.2s;" onclick="openGraphInputModal()">0.33, 0.00, 0.66, 1.00</div>
+                    <button class="btn-icon-square" style="width:26px; height:26px;" data-tooltip="Save as preset" onclick="openGraphSaveModal()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></button>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <div style="display:flex; background:var(--bg-input); border:1px solid var(--border-color); border-radius:4px; overflow:hidden;">
+                        <button id="btn-ease-in" class="btn-icon ease-btn" data-tooltip="Ease Out" onclick="setEaseType('in')" style="border-radius:0; padding:5px 6px; border-right:1px solid var(--border-color);"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                        <button id="btn-ease-all" class="btn-icon ease-btn active" data-tooltip="Easy Ease" onclick="setEaseType('all')" style="border-radius:0; padding:5px 6px; border-right:1px solid var(--border-color);"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 22 19 22 12 12 19 2 5 2 12 12 5 22"></polygon></svg></button>
+                        <button id="btn-ease-out" class="btn-icon ease-btn" data-tooltip="Ease In" onclick="setEaseType('out')" style="border-radius:0; padding:5px 6px;"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                    </div>
+                    <button id="graphApplyBtn" class="btn-primary" style="margin:0; flex:1; padding:6px 0; font-weight:500;" onclick="applyGraphToKeyframesWithCheck(window._activeEaseType)">Apply</button>
+                    <button id="html-auto-btn" class="btn-icon ease-btn" data-tooltip="Auto-apply graph" onclick="toggleAutoGraph()" style="width:auto; padding:0 12px; font-size:11px; font-weight:600; border-radius:4px; height:26px;">AUTO</button>
+                </div>
+            </div>
+        </div> 
+    </div>
+
+<!-- ======================= ASSETS TAB ======================= -->
+<div class="tab-content" id="tab-assets">
+    <div class="flex-column-container">
+
+        <!-- Location row: breadcrumb + library actions -->
+        <div class="assets-toolbar">
+            <div class="assets-breadcrumb" id="assets-breadcrumb">
+                <span class="breadcrumb-root" onclick="assetsNavRoot()">Library</span>
+            </div>
+            <div class="assets-toolbar-actions">
+                <button class="btn-icon-square" data-tooltip="New folder" onclick="assetsNewFolder()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg></button>
+                <button class="btn-icon-square" data-tooltip="Refresh" onclick="assetsRefresh()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg></button>
+                <span class="assets-ctrl-sep"></span>
+                <button class="btn-icon-square" data-tooltip="Settings" onclick="assetsOpenSettings()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+            </div>
+        </div>
+
+        <!-- Search row: search + view controls -->
+        <div class="assets-searchbar">
+            <div class="assets-search-wrap">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="assets-search" placeholder="Search assets">
+                <button class="assets-search-clear" data-tooltip="Clear"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            <div class="assets-view-controls">
+                <button class="btn-icon-square assets-filter-btn" id="assets-filter-btn" data-tooltip="Filter by tag" onclick="assetsToggleTagFilter()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg></button>
+                <span class="assets-ctrl-sep"></span>
+                <button class="btn-icon-square assets-view-btn mode-grid" id="assets-view-btn" onclick="assetsToggleView()" data-tooltip="Switch to list view">
+                    <svg class="vi-grid" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <svg class="vi-list" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Active tag chips (populated by JS when tags are filtered) -->
+        <div class="assets-active-tags" id="assets-active-tags"></div>
+
+        <!-- Scrollable asset grid/list -->
+        <div class="assets-scroll scrollable-content" id="assets-scroll">
+            <div class="assets-loading-spinner"><div class="ring"></div></div>
+            <div class="assets-grid-wrapper" id="assets-grid"></div>
+        </div>
+
+        <!-- Save bar -->
+        <div class="assets-savebar fixed-bottom">
+            <div class="assets-save-menu-wrap">
+                <div class="assets-save-menu" id="assets-save-menu">
+                    <div class="item" onclick="assetsSaveComp()">
+                        <span class="ic"><svg viewBox="0 0 24 24" width="15" height="15" stroke="#5ba4ff" stroke-width="2" fill="none"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></span>
+                        <span>Save comp<span class="desc">Active or selected composition</span></span>
+                    </div>
+                    <div class="item" onclick="assetsSaveLayers()">
+                        <span class="ic"><svg viewBox="0 0 24 24" width="15" height="15" stroke="#5ba4ff" stroke-width="2" fill="none"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg></span>
+                        <span>Save layer(s)<span class="desc">One or more selected layers</span></span>
+                    </div>
+                    <div class="item" onclick="assetsSaveExpression()">
+                        <span class="ic"><svg viewBox="0 0 24 24" width="15" height="15" stroke="#b98cff" stroke-width="2" fill="none"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg></span>
+                        <span>Save expression<span class="desc">Selected property's expression</span></span>
+                    </div>
+                    <div class="item" onclick="assetsSaveVideo()">
+                        <span class="ic"><svg viewBox="0 0 24 24" width="15" height="15" stroke="#58c98a" stroke-width="2" fill="none"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2"></rect></svg></span>
+                        <span>Save video<span class="desc">Selected AV layer or a file</span></span>
+                    </div>
+                    <div class="item" onclick="assetsSaveAudio()">
+                        <span class="ic"><svg viewBox="0 0 24 24" width="15" height="15" stroke="#f0a742" stroke-width="2" fill="none"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></span>
+                        <span>Save audio<span class="desc">Selected AV layer or a file</span></span>
+                    </div>
+                </div>
+                <button class="btn-primary" id="assets-save-menu-btn" onclick="assetsToggleSaveMenu()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Add to Library
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+    <div id="tab-paste" class="tab-content">
+        <div class="scrollable-content">
+            <div class="bento-grid">
+                
+                <div class="section-block bento-span-2">
+                    <div class="button-grid">
+                        <button id="pasteBtn" class="btn-primary" style="height:44px;">Paste to AE</button>
+                        <button id="copyToSystemBtn" class="btn-secondary" style="height:44px;">Copy to System</button>
+                    </div>
+                </div>
+
+                <div class="section-block bento-span-2" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div class="section-header">
+                        <h3 class="section-label">Target Locations</h3>
+                    </div>
+                    
+                    <button id="changeFolderBtn" class="btn-secondary">Change Save Folder</button>
+                    <div class="button-grid">
+                        <button id="renameRelativeBtn" class="btn-secondary">Rename Local Folder</button>
+                        <button id="changeAeFolderBtn" class="btn-secondary">Target AE Folder</button>
+                    </div>
+                    
+                    <div class="path-display-container">
+                        <button id="togglePathBtn" class="icon-btn" title="Toggle Path Visibility">
+                            <svg id="icon-eye-open" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            <svg id="icon-eye-closed" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                        </button>
+                        <div id="pathDisplay" class="path-text">Folder: Default (Next to AEP)</div>
+                    </div>
+                </div>
+
+                <div class="section-block bento-span-2">
+                    <div class="section-header">
+                        <h3 class="section-label">Paste Settings</h3>
+                    </div>
+                    <div class="setting-row">
+                        <span>Copy local files to save folder</span>
+                        <label class="switch">
+                            <input type="checkbox" id="copyLocalCheck" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-divider"></div>
+                    <div class="setting-row">
+                        <span>Match Layer Start & Duration</span>
+                        <label class="switch">
+                            <input type="checkbox" id="matchDurationCheck" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-row">
+                        <span>Stretch Layer to Fit Duration</span>
+                        <label class="switch">
+                            <input type="checkbox" id="stretchVideoCheck">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="folderModal" class="modal-overlay">
+            <div class="modal-content section-block">
+                <div class="section-header">
+                    <h3 class="section-label">Custom PC Save Location</h3>
+                </div>
+                <div style="margin-top: 12px; display: grid; grid-template-columns: 1fr auto; gap: 8px; width: 100%; align-items: center;">
+                    <input type="text" id="customPathInput" class="modal-input" placeholder="Enter path or click Browse..." style="width: 100%; margin: 0; box-sizing: border-box;">
+                    <button id="browseBtn" class="btn-secondary" style="margin: 0; padding: 6px 16px; white-space: nowrap;">Browse</button>
+                </div>
+                <div class="setting-row" style="margin-top: 16px; margin-bottom: 16px;">
+                    <span>Move existing assets here?</span>
+                    <label class="switch">
+                        <input type="checkbox" id="moveAssetsCheck" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="button-grid">
+                    <button id="cancelModalBtn" class="btn-secondary">Cancel</button>
+                    <button id="applyModalBtn" class="btn-primary">Apply</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="initRelativeModal" class="modal-overlay">
+            <div class="modal-content section-block">
+                <div class="section-header">
+                    <h3 class="section-label">Name Local Save Folder</h3>
+                </div>
+                <p style="font-size: 11px; color: var(--text-secondary); margin: 0 0 16px 0;">This is the folder that will be created next to your AEP files to store pasted assets.</p>
+                <div class="input-group">
+                    <input type="text" id="initRelativeInput" class="modal-input" placeholder="e.g. Assets">
+                </div>
+                <div class="button-grid" style="margin-top: 16px;">
+                    <button id="cancelInitBtn" class="btn-secondary">Cancel</button>
+                    <button id="applyInitBtn" class="btn-primary">Apply</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="renameRelativeModal" class="modal-overlay">
+            <div class="modal-content section-block">
+                <div class="section-header">
+                    <h3 class="section-label">Rename Local Save Folder</h3>
+                </div>
+                <p style="font-size: 11px; color: var(--text-secondary); margin: 0 0 12px 0;">This is the folder that will be created next to your AEP files.</p>
+                <div class="input-group">
+                    <input type="text" id="renameRelativeInput" class="modal-input" placeholder="e.g. Assets">
+                </div>
+                <div class="setting-row" style="margin-top: 16px; margin-bottom: 16px;" id="renameMoveRow">
+                    <span>Rename existing folder on disk?</span>
+                    <label class="switch">
+                        <input type="checkbox" id="renameMoveCheck" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="button-grid">
+                    <button id="cancelRenameBtn" class="btn-secondary">Cancel</button>
+                    <button id="applyRenameBtn" class="btn-primary">Apply</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="aeFolderModal" class="modal-overlay">
+            <div class="modal-content section-block">
+                <div class="section-header">
+                    <h3 class="section-label">Target After Effects Folder</h3>
+                </div>
+                <p style="font-size: 11px; color: var(--text-secondary); margin: 0 0 12px 0;">Type a new folder name, or select an existing one.</p>
+                <div class="input-group" style="flex-direction: column;">
+                    <input type="text" id="aeFolderInput" class="modal-input" placeholder="e.g. Coppypasta Assets">
+                    <select id="aeFolderDropdown" class="modal-input" style="cursor: pointer;">
+                        <option value="">-- Or select an existing folder --</option>
+                    </select>
+                </div>
+                <div class="button-grid" style="margin-top: 16px;">
+                    <button id="cancelAeModalBtn" class="btn-secondary">Cancel</button>
+                    <button id="applyAeModalBtn" class="btn-primary">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-render" class="tab-content">
+        <div class="scrollable-content">
+            <div class="bento-grid">
+                
+                <div class="section-block bento-span-2" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div class="section-header">
+                        <h3 class="section-label">New Preset</h3>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-secondary); margin: 0 0 4px 0;">
+                        Set up your desired format on the <strong>last item (bottom)</strong> in the Render Queue to capture its settings.
+                    </p>
+                    <div class="button-grid">
+                        <button id="savePresetBtn" class="btn-primary">Capture Settings</button>
+                    </div>
+                </div>
+
+                <div class="section-block bento-span-2">
+                    <div class="section-header">
+                        <h3 class="section-label">Saved Render Presets</h3>
+                    </div>
+                    <div id="presetListContainer" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                    </div>
+                </div>
+
+                <div class="section-block bento-span-2" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div class="section-header">
+                        <h3 class="section-label">Render & Output</h3>
+                    </div>
+                    
+                    <div style="display: flex; gap: 8px; align-items: stretch;">
+                        <button id="browseLocationBtn" class="btn-secondary" style="width: auto !important; flex-shrink: 0; padding: 0 12px; font-size: 11px;" data-tooltip="Choose output folder">Browse...</button>
+                        <div class="path-display-container" style="flex: 1; margin: 0; min-width: 0;">
+                            <button id="render-togglePathBtn" class="icon-btn" data-tooltip="Toggle Path Visibility">
+                                <svg id="render-icon-eye-open" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                <svg id="render-icon-eye-closed" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                            </button>
+                            <div id="renderPathDisplay" class="path-text">Default (Project Path)</div>
+                        </div>
+                    </div>
+
+                    <div class="input-group" style="margin-top: 4px;">
+                        <input type="text" id="customFileNameInput" class="modal-input" placeholder="File Name (Leave blank to use Comp Name)">
+                    </div>
+
+                    <div class="setting-row" style="margin-top: 12px;">
+                        <span>Import to active Comp after render</span>
+                        <label class="switch">
+                            <input type="checkbox" id="importRenderCheck" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-row" style="margin-top: 12px;">
+                        <span>Include existing AE queue items</span>
+                        <label class="switch">
+                            <input type="checkbox" id="includeNativeCheck" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-divider"></div>
+                    
+                    <div class="button-grid">
+                        <button id="renderBtn" class="btn-primary" style="grid-column: 1 / -1; background: rgba(46, 160, 67, 1);">Start Render</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="presetModal" class="modal-overlay">
+            <div class="modal-content section-block">
+                <div class="section-header">
+                    <h3 class="section-label">Name Render Preset</h3>
+                </div>
+                <div class="input-group" style="margin-top: 12px;">
+                    <input type="text" id="presetNameInput" class="modal-input" placeholder="e.g. MP4 H.264 15Mbps">
+                </div>
+                <div class="button-grid" style="margin-top: 16px;">
+                    <button id="cancelPresetBtn" class="btn-secondary">Cancel</button>
+                    <button id="applyPresetBtn" class="btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="renameModal" class="modal-overlay">
+            <div class="modal-content section-block">
+                <div class="section-header">
+                    <h3 class="section-label">Rename Preset</h3>
+                </div>
+                <div class="input-group" style="margin-top: 12px;">
+                    <input type="text" id="renameInput" class="modal-input" placeholder="New preset name">
+                </div>
+                <div class="button-grid" style="margin-top: 16px;">
+                    <button id="render-cancelRenameBtn" class="btn-secondary">Cancel</button>
+                    <button id="render-applyRenameBtn" class="btn-primary">Apply</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="alertModal" class="modal-overlay" style="z-index: 400;">
+            <div class="modal-content section-block" style="text-align: center; max-width: 300px;">
+                <div class="section-header" style="justify-content: center;">
+                    <h3 class="section-label" style="color: #ff5555; font-size: 11px;">Notice</h3>
+                </div>
+                <p id="alertMessage" style="font-size: 12px; color: var(--text-primary); margin: 12px 0 20px 0; word-wrap: break-word;"></p>
+                <div class="button-grid">
+                    <button id="closeAlertBtn" class="btn-primary" style="grid-column: 1 / -1; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color);">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="renderProgressModal" class="modal-overlay" style="z-index: 300;">
+            <div class="modal-content section-block" style="text-align: center; max-width: 320px; padding: 24px;">
+                <div class="section-header" style="justify-content: center; margin-bottom: 12px;">
+                    <h3 id="renderModalTitle" class="section-label" style="color: var(--accent-blue); font-size: 12px;">Rendering in Progress</h3>
+                </div>
+                <p id="renderModalDesc" style="font-size: 11px; color: var(--text-secondary); margin: 0;">After Effects will be unresponsive until complete.</p>
+                
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="queueModal" class="modal-overlay" style="z-index: 250;">
+            <div class="modal-content section-block">
+                <div class="section-header">
+                    <h3 class="section-label">Multiple Items Queued</h3>
+                </div>
+                <p style="font-size: 11px; color: var(--text-secondary); margin: 0 0 12px 0;">Select which items you want to render right now.</p>
+
+                <div id="queueListContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 16px; padding-right: 4px;">
+                </div>
+
+                <div class="button-grid">
+                    <button id="renderLastBtn" class="btn-secondary">Render Last Only</button>
+                    <button id="renderSelectedBtn" class="btn-primary">Render Selected</button>
+                </div>
+                <button id="cancelQueueBtn" class="btn-secondary" style="margin-top: 8px; width: 100%;">Cancel</button>
+            </div>
+        </div>
+
+    </div>
+    
+    <div class="tab-content" id="tab-tracker">
+        <div class="flex-column-container">
+            
+            <div class="tabs-header" id="tracker-tabs-header" style="border-bottom: 1px solid var(--border-color); padding: 6px 10px; flex-shrink: 0;">
+                <button class="tracker-tab-btn active" id="btn-tab-dashboard" onclick="switchTrackerTab('tab-dashboard')">Dashboard</button>
+                <button class="tracker-tab-btn" id="btn-tab-timer" onclick="switchTrackerTab('tab-timer')">Focus Timer</button>
+                <button class="tracker-tab-btn" id="btn-tab-projects" onclick="switchTrackerTab('tab-projects')">Projects</button>
+            </div>
+
+            <div class="tracker-tab-content active" id="tab-dashboard" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; padding: 8px;">
+                <div class="scrollable-content" style="padding: 2px;">
+                    <div class="bento-grid">
+                        
+                        <div class="section-block bento-span-2 dh-combined">
+                            <div class="dh-header-row">
+                                <div class="dh-streak-side">
+                                    <svg class="dh-flame-mini" viewBox="0 0 355 419" fill="currentColor">
+                                        <g transform="translate(0.000000,419.000000) scale(0.050000,-0.050000)" stroke="none">
+                                            <path d="M2540 7804 c0 -9 24 -39 52 -66 740 -687 534 -2005 -485 -3098 -826 -887 -1053 -1648 -763 -2560 300 -946 1043 -1450 2136 -1450 1268 0 2072 683 2232 1898 136 1026 -343 2101 -1264 2833 -155 124 -162 123 -88 -8 252 -446 84 -929 -239 -690 -123 90 -144 176 -173 705 -51 955 -290 1568 -800 2053 -187 178 -608 443 -608 383z m968 -3211 c64 -169 155 -319 306 -506 478 -590 500 -621 615 -872 322 -696 44 -1422 -629 -1642 -1092 -358 -1843 924 -1151 1965 106 160 141 180 117 67 -110 -517 249 -911 663 -727 308 136 349 440 118 876 -229 433 -283 886 -144 1218 23 55 25 49 38 -92 8 -82 38 -212 67 -287z"/>
+                                        </g>
+                                    </svg>
+                                    <span id="streak-days" class="dh-stat-val">0</span>
+                                    <span class="dh-stat-label">Days</span>
+                                </div>
+                                <div class="dh-time-side">
+                                    <span id="daily-time-val" class="dh-stat-val">00:00:00</span>
+                                    <span class="dh-stat-label">/ 5h</span>
+                                </div>
+                            </div>
+                            <div class="dh-progress-bar">
+                                <div id="dh-daily-progress" class="dh-progress-fill"></div>
+                            </div>
+                            <div class="dh-week-container" id="streak-container"></div>
+                        </div>
+
+                        <div class="section-block bento-span-2" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;">
+                            <div class="section-header" style="margin-bottom: 0;">
+                                <label class="section-label">Current Session</label>
+                            </div>
+                            <div id="session-time" style="font-size: 26px; font-weight: 500 !important; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1;">00:00:00</div>
+                        </div>
+
+                        <div class="section-block bento-span-2" style="display: flex; flex-direction: column; padding: 16px 20px;">
+                            <div class="section-header" style="margin-bottom: 12px;">
+                                <label class="section-label">Usage</label>
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <div class="metric-pill"><span class="m-label">This Week</span><span class="m-val" id="week-time">0m</span></div>
+                                <div class="metric-pill"><span class="m-label">This Month</span><span class="m-val" id="month-time">0m</span></div>
+                                <div class="metric-pill"><span class="m-label">Total Hours</span><span class="m-val" id="total-time">0m</span></div>
+                            </div>
+                        </div>
+
+                        <div class="section-block chart-container bento-span-2">
+                            <div class="section-header">
+                                <label class="section-label">Weekly Usage</label>
+                            </div>
+                            <div id="weekly-chart" style="display: flex; flex-direction: column; flex: 1; width: 100%;"></div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="tracker-tab-content" id="tab-timer" style="display: none; flex-direction: column; flex: 1; overflow: hidden; padding: 8px;">
+                <div class="flex-column-container" style="position: relative;">
+                    
+                    <button id="btn-presets-toggle" style="position: absolute; top: 10px; left: 10px; background: transparent; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; transition: background 0.2s; z-index: 10;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'" onclick="openPresetModal()" title="Timer Presets">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </button>
+
+                    <button id="btn-sound-toggle" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; transition: background 0.2s; z-index: 10;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'" onclick="toggleSound()" title="Toggle Alarm Sound">
+                        <svg id="icon-sound-on" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <svg id="icon-sound-off" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            <path d="M18.63 13A17.89 17.89 0 0 1 18 8"></path>
+                            <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"></path>
+                            <path d="M18 8a6 6 0 0 0-9.33-5"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </button>
+
+                    <div class="scrollable-content" style="padding: 2px;">
+                        <div style="display: flex; flex-direction: column; align-items: center; padding-top: 10px;">
+                            
+                            <div class="timer-mode-switcher">
+                                <button class="mode-btn active" id="btn-mode-timer" onclick="setTimerMode('timer')">Timer</button>
+                                <button class="mode-btn" id="btn-mode-stopwatch" onclick="setTimerMode('stopwatch')">Stopwatch</button>
+                            </div>
+
+                            <div id="view-timer" class="time-view active">
+                                <div class="sw-dial-container" id="timer-ring-container">
+                                    <svg viewBox="0 0 220 220" width="100%" height="100%" style="position:absolute; inset:0; z-index:1;">
+                                        <circle cx="110" cy="110" r="106" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="4" />
+                                        <circle id="timer-progress-svg" cx="110" cy="110" r="106" fill="none" stroke="var(--accent-blue)" stroke-width="4" stroke-linecap="round" stroke-dasharray="666.02" stroke-dashoffset="0" transform="rotate(-90 110 110)" />
+                                    </svg>
+                                    <div class="sw-inner-content" style="z-index:5;">
+                                        <span id="timer-display" class="time-display">00:25:00</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="time-inputs" id="timer-setup">
+                                    <input type="text" id="input-h" class="t-input" placeholder="00" value="00" readonly onclick="openNumpad('input-h', 'dummy-slider', null)">
+                                    <span class="t-colon">:</span>
+                                    <input type="text" id="input-m" class="t-input" placeholder="25" value="25" readonly onclick="openNumpad('input-m', 'dummy-slider', null)">
+                                    <span class="t-colon">:</span>
+                                    <input type="text" id="input-s" class="t-input" placeholder="00" value="00" readonly onclick="openNumpad('input-s', 'dummy-slider', null)">
+                                </div>
+
+                                <div class="playback-controls">
+                                    <button class="round-btn secondary" onclick="resetTimer()" title="Reset Timer">
+                                        <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.95 7.95 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                                    </button>
+                                    <button class="round-btn primary play-btn" id="btn-timer-play" onclick="toggleTimer()">
+                                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="view-stopwatch" class="time-view">
+                                <div class="sw-dial-container">
+                                    <div id="sw-dial-ticks" class="sw-dial-ticks"></div>
+                                    <div class="sw-dot-container" id="sw-dot-container">
+                                        <div class="sw-dot"></div>
+                                    </div>
+                                    
+                                    <div class="sw-inner-content">
+                                        <span class="time-display" style="line-height: 1;">
+                                            <span id="sw-display-main">00:00</span><span id="sw-display-ms" class="ms-text">.00</span>
+                                        </span>
+                                        <span id="sw-lap-current" class="sw-lap-current">00:00.00</span>
+                                    </div>
+                                </div>
+
+                                <div class="sw-laps-wrapper">
+                                    <div id="sw-laps-container"></div>
+                                </div>
+
+                                <div class="playback-controls">
+                                    <button class="round-btn secondary" id="btn-sw-action" onclick="handleSwAction()" title="Reset / Lap">
+                                        <svg id="icon-sw-reset" viewBox="0 0 24 24"><path d="M17.65 6.35A7.95 7.95 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                                        <svg id="icon-sw-flag" viewBox="0 0 24 24" style="display:none;"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>
+                                    </button>
+                                    <button class="round-btn primary play-btn" id="btn-sw-play" onclick="toggleStopwatch()">
+                                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tracker-tab-content" id="tab-projects" style="display: none; flex-direction: column; flex: 1; overflow: hidden; padding: 8px;">
+                <div class="flex-column-container">
+                    <div class="scrollable-content" style="padding: 2px;">
+                        <div style="margin: 8px 0 16px 0; display: flex; gap: 8px; align-items: center; justify-content: space-between;">
+                            <div style="position: relative; flex: 1; height: 32px;">
+                                <input type="text" id="project-search-input" class="modal-input" placeholder="Search projects..." oninput="if(window.applyProjectSortAndFilter) window.applyProjectSortAndFilter()" style="width: 100%; height: 100%; padding-left: 30px; box-sizing: border-box; background: var(--bg-input); margin: 0; border-radius: 4px;">
+                                <svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--text-secondary)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            </div>
+                            <button class="btn-icon-square" data-tooltip="Sort &amp; Filter" onclick="if(window.openProjectSortMenu) window.openProjectSortMenu(this)" style="width: 32px !important; height: 32px !important; min-width: 32px !important; min-height: 32px !important; flex-shrink: 0 !important; padding: 0 !important; margin: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; box-sizing: border-box !important; border-radius: 4px !important;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="16" height="16">
+                                  <g fill="none" stroke="var(--text-secondary)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M 12 36 L 28 20 L 44 36 M 28 20 L 28 84" />
+                                    <path d="M 56 64 L 72 80 L 88 64 M 72 80 L 72 16" />
+                                  </g>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="project-list" style="display: flex; flex-direction: column; gap: 8px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <input type="range" id="dummy-slider" style="display:none" min="0" max="99" value="0">
+
+            <div id="alarm-overlay" class="alarm-popup">
+                <div style="text-align:center; font-size:16px; font-weight:500; margin-bottom:12px; color:var(--text-primary);">Timer Ended</div>
+                <button class="btn-primary" style="margin-top:0; padding:12px; font-size:14px;" onclick="handleAlarm('restart')">Restart Timer</button>
+                <div class="secondary-actions-grid">
+                    <button class="btn-secondary" onclick="handleAlarm('plus10')">+10 min</button>
+                    <button class="btn-secondary" onclick="handleAlarm('break5')">5m Break</button>
+                    <button class="btn-secondary" onclick="handleAlarm('break15')">15m Break</button>
+                    <button class="btn-secondary" style="color:#ff6b6b; border-color:rgba(255, 74, 74, 0.3); background:rgba(255, 74, 74, 0.05);" onclick="handleAlarm('dismiss')">Dismiss</button>
+                </div>
+            </div>
+
+            <div id="preset-modal-backdrop" class="modal-backdrop" onclick="closePresetModal()">
+                <div class="custom-modal" onclick="event.stopPropagation()">
+                    <div class="section-label" style="margin-bottom: -4px;">Your Presets</div>
+                    <div class="preset-list" id="preset-list"></div>
+                    
+                    <div class="section-label" style="margin-top: 8px;">Create New Preset</div>
+                    <div class="preset-add-row">
+                        <input type="text" id="new-preset-name" class="modal-input" placeholder="Preset Name (e.g. Pomodoro)">
+                        <div class="preset-time-inputs">
+                            <input type="text" id="new-preset-h" class="modal-input t-mini" placeholder="HH" readonly onclick="openNumpad('new-preset-h', 'dummy-slider', null)">
+                            <input type="text" id="new-preset-m" class="modal-input t-mini" placeholder="MM" readonly onclick="openNumpad('new-preset-m', 'dummy-slider', null)">
+                            <input type="text" id="new-preset-s" class="modal-input t-mini" placeholder="SS" readonly onclick="openNumpad('new-preset-s', 'dummy-slider', null)">
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="btn-secondary" onclick="closePresetModal()">Cancel</button>
+                        <button class="btn-primary" onclick="addPreset()">Save Preset</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tracker-numpad" class="numpad-popup">
+                <div class="numpad-btn" onclick="numpadPress('1')">1</div>
+                <div class="numpad-btn" onclick="numpadPress('2')">2</div>
+                <div class="numpad-btn" onclick="numpadPress('3')">3</div>
+                <div class="numpad-btn" onclick="numpadPress('4')">4</div>
+                <div class="numpad-btn" onclick="numpadPress('5')">5</div>
+                <div class="numpad-btn" onclick="numpadPress('6')">6</div>
+                <div class="numpad-btn" onclick="numpadPress('7')">7</div>
+                <div class="numpad-btn" onclick="numpadPress('8')">8</div>
+                <div class="numpad-btn" onclick="numpadPress('9')">9</div>
+                <div class="numpad-btn btn-clear" onclick="numpadPress('AC')">AC</div>
+                <div class="numpad-btn" onclick="numpadPress('0')">0</div>
+                <div class="numpad-btn btn-action" onclick="numpadPress('OK')">OK</div>
+            </div>
+            
+            <div id="chart-tooltip" class="global-tooltip"></div>
+            
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-discord">
+        <div class="flex-column-container">
+            <div class="scrollable-content">
+                <div class="bento-grid">
+                    
+                    <div class="section-block bento-span-2 discord-status-box">
+                        <div class="discord-header-container">
+                            <h3 class="discord-title">Discord Status</h3>
+                        </div>
+                        <p id="version" class="discord-version">Checking Version...</p>
+                        
+                        <div class="discord-status-row">
+                            <span class="discord-status-dot" id="status-dot"></span>
+                            <span id="state" class="discord-state-text">-</span>
+                        </div>
+                        
+                        <button id="button" class="btn-primary" style="width: 100%;">Please Wait</button>
+                    </div>
+
+                    <div class="section-block bento-span-2">
+                        <div class="section-header">
+                            <h3 class="section-label">Display Options</h3>
+                        </div>
+                        <div class="setting-row">
+                            <span>Project Name</span>
+                            <label class="switch"><input type="checkbox" id="toggle-details" checked><span class="slider"></span></label>
+                        </div>
+                        <div class="setting-row">
+                            <span>State Prefix</span>
+                            <label class="switch"><input type="checkbox" id="toggle-prefix" checked><span class="slider"></span></label>
+                        </div>
+                        <div class="setting-row">
+                            <span>State</span>
+                            <label class="switch"><input type="checkbox" id="toggle-state" checked><span class="slider"></span></label>
+                        </div>
+                        <div class="setting-row">
+                            <span>Tool</span>
+                            <label class="switch"><input type="checkbox" id="toggle-tool" checked><span class="slider"></span></label>
+                        </div>
+                        <div class="setting-row">
+                            <span>Items / Layers</span>
+                            <label class="switch"><input type="checkbox" id="toggle-party" checked><span class="slider"></span></label>
+                        </div>
+                        <div class="setting-row">
+                            <span>Streaks</span>
+                            <label class="switch"><input type="checkbox" id="toggle-streaks" checked><span class="slider"></span></label>
+                        </div>
+                    </div>
+
+                    <div class="section-block bento-span-2 discord-custom-overrides">
+                        <div class="section-header" style="margin-bottom: 0;">
+                            <h3 class="section-label">Custom Overrides</h3>
+                        </div>
+
+                        <div class="discord-input-group">
+                            <div class="setting-row"><span>Project Name</span><label class="switch"><input type="checkbox" id="toggle-custom-project"><span class="slider"></span></label></div>
+                            <input id="custom-project-str" type="text" class="modal-input" placeholder="My Awesome Edit">
+                        </div>
+                        <div class="discord-input-group">
+                            <div class="setting-row"><span>State Prefix</span><label class="switch"><input type="checkbox" id="toggle-custom-prefix"><span class="slider"></span></label></div>
+                            <input id="custom-prefix-str" type="text" class="modal-input" placeholder="Working on ">
+                        </div>
+                        <div class="discord-input-group">
+                            <div class="setting-row"><span>State</span><label class="switch"><input type="checkbox" id="toggle-custom-state"><span class="slider"></span></label></div>
+                            <input id="custom-state-str" type="text" class="modal-input" placeholder="Editing Montage">
+                        </div>
+                        <div class="discord-input-group">
+                            <div class="setting-row"><span>Items / Layers</span><label class="switch"><input type="checkbox" id="toggle-custom-party"><span class="slider"></span></label></div>
+                            <input id="custom-party-str" type="text" class="modal-input" placeholder="e.g. 5/10">
+                        </div>
+                        <div class="discord-input-group">
+                            <div class="setting-row"><span>Main Image URL</span><label class="switch"><input type="checkbox" id="toggle-custom-main-image"><span class="slider"></span></label></div>
+                            <input id="custom-main-image-url" type="text" class="modal-input" placeholder="https://...">
+                        </div>
+                        <div class="discord-input-group">
+                            <div class="setting-row"><span>Tool Image URL</span><label class="switch"><input type="checkbox" id="toggle-custom-tool-image"><span class="slider"></span></label></div>
+                            <input id="custom-tool-image-url" type="text" class="modal-input" placeholder="https://...">
+                        </div>
+                        <div class="discord-input-group">
+                            <div class="setting-row"><span>Tool Name</span><label class="switch"><input type="checkbox" id="toggle-custom-tool-name"><span class="slider"></span></label></div>
+                            <input id="custom-tool-name-str" type="text" class="modal-input" placeholder="e.g. Mogging Tool">
+                        </div>
+                    </div> <div class="section-block bento-span-2">
+                        <div class="section-header">
+                            <h3 class="section-label">Action Buttons</h3>
+                        </div>
+                        
+                        <div class="discord-input-group" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
+                            <div class="setting-row"><span>Button 1</span><label class="switch"><input type="checkbox" id="toggle-btn1"><span class="slider"></span></label></div>
+                            <input id="btn1-label" type="text" class="modal-input" placeholder="Button Label (e.g. Portfolio)" style="margin-bottom: 6px;">
+                            <input id="btn1-url" type="text" class="modal-input" placeholder="https://...">
+                        </div>
+
+                        <div class="discord-input-group">
+                            <div class="setting-row"><span>Button 2</span><label class="switch"><input type="checkbox" id="toggle-btn2"><span class="slider"></span></label></div>
+                            <input id="btn2-label" type="text" class="modal-input" placeholder="Button Label (e.g. Best Work)" style="margin-bottom: 6px;">
+                            <input id="btn2-url" type="text" class="modal-input" placeholder="https://...">
+                        </div>
+                    </div>
+
+                    <div class="section-block bento-span-2">
+                        <div class="section-header">
+                            <h3 class="section-label">Update Interval</h3>
+                        </div>
+                        <input id="custom-interval-val" type="text" class="modal-input" placeholder="How often your status updates (Sec)">
+                    </div>
+                </div>
+            </div>
+
+            <div id="discordNotificationOverlay" class="notification-overlay">
+                <div class="notification-content">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="notif-icon error-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <span id="discordNotificationText" class="notification-text">Message goes here</span>
+                    <button id="discordCloseNotifBtn" class="notif-close-btn">&times;</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="tab-download" class="tab-content">
+        <div class="flex-column-container">
+            <div class="scrollable-content">
+                <div class="bento-grid">
+                    
+                    <div class="section-block bento-span-2">
+                        <div class="section-header">
+                            <span class="section-label">DOWNLOAD MEDIA (YT-DLP)</span>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="dlUrlInput" class="modal-input" placeholder="Paste YouTube, Insta, Pinterest URL..." style="flex: 1;">
+                            <button id="dlFetchBtn" class="btn-primary" style="width: 44px; flex: none; display: flex; align-items: center; justify-content: center;">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="section-block bento-span-2" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div class="section-header">
+                            <h3 class="section-label">Target Locations</h3>
+                        </div>
+                        
+                        <button id="dlChangeFolderBtn" class="btn-secondary">Change Save Folder</button>
+                        <div class="button-grid">
+                            <button id="dlRenameRelativeBtn" class="btn-secondary">Rename Local Folder</button>
+                            <button id="dlChangeAeFolderBtn" class="btn-secondary">Target AE Folder</button>
+                        </div>
+                        
+                        <div class="path-display-container">
+                            <button id="toggleDlPathBtn" class="icon-btn" title="Toggle Path Visibility">
+                                <svg id="icon-dl-eye-open" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                <svg id="icon-dl-eye-closed" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                            </button>
+                            <div id="dlPathDisplay" class="path-text">Folder: Default (Next to AEP)</div>
+                        </div>
+                    </div>
+
+                    <div class="section-block bento-span-2">
+                        <div class="section-header">
+                            <h3 class="section-label">Download Settings</h3>
+                        </div>
+                        <div class="setting-row" style="margin-top: 0; margin-bottom: 12px;">
+                            <span>Import to Project Panel</span>
+                            <label class="switch"><input type="checkbox" id="dlImportProjCheck" checked><span class="slider"></span></label>
+                        </div>
+                        
+                        <div style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: rgba(0,0,0,0.15);">
+                            <div class="section-header" style="margin-bottom: 12px;">
+                                <h3 class="section-label" style="font-size: 10px; color: var(--text-secondary);">TIMELINE MANIPULATION</h3>
+                            </div>
+                            <div class="setting-row" style="margin-top: 0;">
+                                <span>Import in Active Comp</span>
+                                <label class="switch"><input type="checkbox" id="dlImportCompCheck" checked><span class="slider"></span></label>
+                            </div>
+                            <div class="setting-divider"></div>
+                            <div class="setting-row" style="margin-top: 0;">
+                                <span>Match Layer Start & Duration</span>
+                                <label class="switch"><input type="checkbox" id="dlMatchDurCheck"><span class="slider"></span></label>
+                            </div>
+                            <div class="setting-divider"></div>
+                            <div class="setting-row" style="margin-top: 0;">
+                                <span>Stretch Layer to Fit Duration</span>
+                                <label class="switch"><input type="checkbox" id="dlStretchCheck"><span class="slider"></span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="dlTrimModal">
+        <div class="modal-content section-block" style="padding: 16px; background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 8px; max-height: 90vh; overflow-y: auto; box-sizing: border-box;">
+            <div class="section-header">
+                <h3 class="section-label" style="font-size: 12px; color: var(--text-primary);">Download Media</h3>
+            </div>
+            <p id="dlVideoTitle" style="font-size: 11px; color: var(--text-secondary); margin-bottom: 12px; word-wrap: break-word;"></p>
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                <div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 110px; min-width: 130px;">
+                    <span style="font-size: 10px; color: var(--text-secondary); font-weight: bold; text-transform: uppercase;">Video Quality</span>
+                    <select id="dlQualitySelect" class="modal-input" style="width: 100%;">
+                        <option value="best">Best Available</option>
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 110px; min-width: 130px;">
+                    <span style="font-size: 10px; color: var(--text-secondary); font-weight: bold; text-transform: uppercase;">Segment Action</span>
+                    <select id="dlOperationMode" class="modal-input" style="width: 100%;">
+                        <option value="trim">Keep Selected</option>
+                        <option value="cut">Remove Selected</option>
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 250px; min-width: 220px;">
+                    <span style="font-size: 10px; color: var(--text-secondary); font-weight: bold; text-transform: uppercase;">Trim Method</span>
+                    <select id="dlTrimMethod" class="modal-input" style="width: 100%;">
+                        <option value="local">Fast Local (Downloads full video first, instant cut)</option>
+                        <option value="network">Network (Slow, ONLY downloads the selected part)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="dlPartsContainer" style="max-height: 200px; overflow-y: auto; margin-bottom: 12px; padding-right: 4px;">
+                </div>
+
+            <button class="btn-secondary" id="dlAddPartBtn" style="margin-bottom: 16px; width: 100%; border-style: dashed;">+ Add Segment</button>
+
+            <div class="setting-row" style="background: var(--bg-panel); padding: 8px 12px; border-radius: 6px; margin-bottom: 16px;">
+                <span>Audio Only (MP3)</span>
+                <label class="switch"><input type="checkbox" id="dlAudioOnlyCheck"><span class="slider"></span></label>
+            </div>
+
+            <div id="dlProgressWrapper" style="display:none; flex-direction:column; gap:6px; margin-bottom:16px; background:var(--bg-panel); padding:10px; border-radius:6px; border:1px solid var(--border-color);">
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-secondary); font-weight:bold; font-family: monospace;">
+                    <span id="dlProgressStatus">Fetching media streams...</span>
+                    <span id="dlProgressEta">ETA: Calc...</span>
+                </div>
+                <div style="height:6px; background:var(--bg-input); border-radius:3px; overflow:hidden;">
+                    <div id="dlProgressBar" style="height:100%; width:0%; background:var(--accent-blue); transition:width 0.1s linear, background 0.3s ease;"></div>
+                </div>
+                <div id="dlDebugConsole" style="width:100%; height:120px; background:#0b0b0b; color:#00ff00; font-family:monospace; font-size:10px; padding:6px; overflow-y:auto; border-radius:4px; border:1px solid #333; user-select:text; -webkit-user-select:text; white-space:pre-wrap; word-wrap:break-word; margin-top:8px;"></div>
+            </div>
+
+            <div class="button-grid" style="display: flex; gap: 8px;">
+                <button class="btn-secondary" id="cancelDlBtn" style="flex:1;">Cancel</button>
+                <button class="btn-primary" id="confirmDlBtn" style="position: relative; flex:1; transition: background 0.2s, border 0.2s, color 0.2s;">
+                    <span id="dlBtnText">Download</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================= CAPTION TAB ======================= -->
+    <div class="tab-content" id="tab-caption">
+        <div class="cap-flex-col">
+
+            <div class="tabs-header" id="caption-tabs-header">
+                <button class="tab-btn active" id="btn-cap-format" onclick="switchCaptionTab('cap-format')">Format</button>
+                <button class="tab-btn" id="btn-cap-style" onclick="switchCaptionTab('cap-style')">Style</button>
+                <button class="tab-btn" id="btn-cap-box" onclick="switchCaptionTab('cap-box')">Box</button>
+                <button class="tab-btn" id="btn-cap-editor" onclick="switchCaptionTab('cap-editor')">Editor</button>
+                <button class="tab-btn" id="btn-cap-generate" onclick="switchCaptionTab('cap-generate')">Generate</button>
+            </div>
+
+            <!-- ---------------- FORMAT ---------------- -->
+            <div class="cap-tab-content active" id="cap-format">
+                <div class="cap-flex-col">
+                    <div class="cap-scroll">
+
+                        <div class="cap-input-group" style="margin-top: 0; margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label style="margin: 0;">Format Preset</label>
+                                <button class="cap-refresh-btn" onclick="captionAnimateRefresh()" title="Refresh Lists">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="18" height="18">
+                                      <g fill="var(--text-secondary)" stroke="var(--text-secondary)" class="cap-refresh-spin">
+                                        <polygon points="4,51 36,51 20,26" stroke="none" />
+                                        <polygon points="64,49 96,49 80,74" stroke="none" />
+                                        <path d="M 35,24 A 30,30 0 0,1 80,50" fill="none" stroke-width="12" stroke-linecap="butt" />
+                                        <circle cx="35" cy="24" r="6" stroke="none" />
+                                        <path d="M 65,76 A 30,30 0 0,1 20,50" fill="none" stroke-width="12" stroke-linecap="butt" />
+                                        <circle cx="65" cy="76" r="6" stroke="none" />
+                                      </g>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <select id="cap-format-select" style="flex: 2 1 120px; margin: 0;"><option value="">Default Format</option></select>
+                                <button class="cap-btn-secondary" style="flex: 1 1 60px; margin-top: 0; padding: 10px;" onclick="captionPromptSaveFormat()">Save</button>
+                                <button class="cap-btn-danger" style="flex: 1 1 60px; margin-top: 0; padding: 10px;" onclick="captionPromptDeleteFormat()">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="cap-input-group cap-panel" style="margin-top: 0;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <label style="margin: 0;">Minimum characters per text layers</label>
+                                <div class="cap-val-wrapper" id="cap-chars-wrap" onclick="captionOpenNumpad('cap-chars-val', 'cap-set-chars', 'cap-chars-wrap')">
+                                    <input type="text" id="cap-chars-val" class="cap-val-input" value="7" oninput="captionSyncInputToSlider(this.id, 'cap-set-chars')">
+                                </div>
+                            </div>
+                            <input type="range" id="cap-set-chars" class="cap-slider" min="7" max="72" value="7" oninput="captionSyncSliderToInput('cap-set-chars', 'cap-chars-val')">
+                        </div>
+
+                        <div class="cap-input-group cap-panel">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <label style="margin: 0;">Minimum duration per text layers</label>
+                                <div class="cap-val-wrapper" id="cap-mindur-wrap" onclick="captionOpenNumpad('cap-mindur-val', 'cap-set-mindur', 'cap-mindur-wrap')">
+                                    <input type="text" id="cap-mindur-val" class="cap-val-input" value="1.2" oninput="captionSyncInputToSlider(this.id, 'cap-set-mindur')">
+                                    <span class="cap-val-unit">s</span>
+                                </div>
+                            </div>
+                            <input type="range" id="cap-set-mindur" class="cap-slider" min="0.1" max="6.0" step="0.1" value="1.2" oninput="captionSyncSliderToInput('cap-set-mindur', 'cap-mindur-val')">
+                        </div>
+
+                        <div class="cap-input-group cap-panel">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <label style="margin: 0;">Gap between text layers</label>
+                                <div class="cap-val-wrapper" id="cap-gap-wrap" onclick="captionOpenNumpad('cap-gap-val', 'cap-set-gap', 'cap-gap-wrap')">
+                                    <input type="text" id="cap-gap-val" class="cap-val-input" value="0" oninput="captionSyncInputToSlider(this.id, 'cap-set-gap')">
+                                </div>
+                            </div>
+                            <input type="range" id="cap-set-gap" class="cap-slider" min="0" max="10" value="0" oninput="captionSyncSliderToInput('cap-set-gap', 'cap-gap-val')">
+                        </div>
+
+                        <div style="margin-top: 16px;">
+                            <div class="cap-input-group cap-panel" style="margin-top: 0; padding: 16px;">
+                                <label style="margin-bottom: 12px;">Lines</label>
+                                <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                                    <label class="cap-toggle-label">
+                                        <input type="radio" name="cap-set-lines" value="single" checked> Single
+                                    </label>
+                                    <label class="cap-toggle-label">
+                                        <input type="radio" name="cap-set-lines" value="double"> Double
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="cap-input-group cap-panel" style="padding: 16px;">
+                                <label style="margin-bottom: 12px;">Remove Punctuations</label>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                                    <span style="color: var(--text-primary); font-size: 13px;">Commas</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="cap-punc-comma" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                                    <span style="color: var(--text-primary); font-size: 13px;">Periods</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="cap-punc-period" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                                    <span style="color: var(--text-primary); font-size: 13px;">Questions</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="cap-punc-question">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <span style="color: var(--text-primary); font-size: 13px;">Exclaims</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="cap-punc-exclaim">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---------------- STYLE ---------------- -->
+            <div class="cap-tab-content" id="cap-style">
+                <div class="cap-flex-col">
+                    <div class="cap-scroll">
+
+                        <div class="cap-input-group" style="margin-top: 0; margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label style="margin: 0;">Style Settings Preset</label>
+                                <button class="cap-refresh-btn" onclick="captionAnimateRefresh()" title="Refresh Lists">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="18" height="18">
+                                      <g fill="var(--text-secondary)" stroke="var(--text-secondary)" class="cap-refresh-spin">
+                                        <polygon points="4,51 36,51 20,26" stroke="none" />
+                                        <polygon points="64,49 96,49 80,74" stroke="none" />
+                                        <path d="M 35,24 A 30,30 0 0,1 80,50" fill="none" stroke-width="12" stroke-linecap="butt" />
+                                        <circle cx="35" cy="24" r="6" stroke="none" />
+                                        <path d="M 65,76 A 30,30 0 0,1 20,50" fill="none" stroke-width="12" stroke-linecap="butt" />
+                                        <circle cx="65" cy="76" r="6" stroke="none" />
+                                      </g>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <select id="cap-style-format-select" style="flex: 2 1 120px; margin: 0;"><option value="">Default Style Settings</option></select>
+                                <button class="cap-btn-secondary" style="flex: 1 1 60px; margin-top: 0; padding: 10px;" onclick="captionPromptSaveStyleFormat()">Save</button>
+                                <button class="cap-btn-danger" style="flex: 1 1 60px; margin-top: 0; padding: 10px;" onclick="captionPromptDeleteStyleFormat()">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="cap-input-group" style="margin-top: 0;">
+                            <label>Text Properties</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <select id="cap-style-select" style="flex: 2 1 120px; margin: 0;"><option value="">None (AE Default)</option></select>
+                                <button class="cap-btn-secondary" style="flex: 1 1 60px; margin-top: 0; padding: 10px;" onclick="captionPromptSaveStyle()">Save</button>
+                                <button class="cap-btn-danger" style="flex: 1 1 60px; margin-top: 0; padding: 10px;" onclick="captionPromptDeleteStyle()">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="cap-input-group">
+                            <label>Effect Preset (.ffx)</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <select id="cap-preset-select" style="flex: 2 1 120px; margin: 0;"><option value="">No Effect Preset</option></select>
+                                <button class="cap-btn-secondary" style="flex: 1 1 50px; margin-top: 0; padding: 10px;" onclick="captionPromptSaveEffectPreset()">Save</button>
+                                <button class="cap-btn-secondary" style="flex: 1 1 50px; margin-top: 0; padding: 10px;" onclick="captionAddPresetFile()">+ Import</button>
+                                <button class="cap-btn-danger" style="flex: 1 1 40px; margin-top: 0; padding: 10px;" onclick="captionPromptDeletePreset()">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="cap-input-group">
+                            <label>Text Label Color</label>
+                            <select id="cap-color-select">
+                                <option value="0">None</option>
+                                <option value="1" selected>Red</option>
+                                <option value="2">Yellow</option>
+                                <option value="3">Aqua</option>
+                                <option value="4">Pink</option>
+                                <option value="5">Lavender</option>
+                                <option value="6">Peach</option>
+                                <option value="7">Sea Foam</option>
+                                <option value="8">Blue</option>
+                                <option value="9">Green</option>
+                                <option value="10">Purple</option>
+                                <option value="11">Orange</option>
+                                <option value="12">Brown</option>
+                                <option value="13">Fuchsia</option>
+                                <option value="14">Cyan</option>
+                                <option value="15">Sandstone</option>
+                                <option value="16">Dark Green</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="cap-fixed-bottom">
+                        <button class="cap-btn-primary" id="cap-btn-apply-styles" style="margin-top: 0; width: 100%;" onclick="captionApplyToSelection()">Apply Styles to Selected Layers</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---------------- BOX ---------------- -->
+            <div class="cap-tab-content" id="cap-box">
+                <div class="cap-flex-col">
+                    <div class="cap-scroll">
+
+                        <div class="cap-input-group" style="margin-top: 0; margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label style="margin: 0;">Box Settings Preset</label>
+                                <button class="cap-refresh-btn" onclick="captionAnimateRefresh()" title="Refresh Lists">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="18" height="18">
+                                      <g fill="var(--text-secondary)" stroke="var(--text-secondary)" class="cap-refresh-spin">
+                                        <polygon points="4,51 36,51 20,26" stroke="none" />
+                                        <polygon points="64,49 96,49 80,74" stroke="none" />
+                                        <path d="M 35,24 A 30,30 0 0,1 80,50" fill="none" stroke-width="12" stroke-linecap="butt" />
+                                        <circle cx="35" cy="24" r="6" stroke="none" />
+                                        <path d="M 65,76 A 30,30 0 0,1 20,50" fill="none" stroke-width="12" stroke-linecap="butt" />
+                                        <circle cx="65" cy="76" r="6" stroke="none" />
+                                      </g>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <select id="cap-box-format-select" style="flex: 2 1 120px; margin: 0;"><option value="">Default Box</option></select>
+                                <button class="cap-btn-secondary" style="flex: 1 1 60px; margin-top: 0; padding: 10px;" onclick="captionPromptSaveBoxFormat()">Save</button>
+                                <button class="cap-btn-danger" style="flex: 1 1 60px; margin-top: 0; padding: 10px;" onclick="captionPromptDeleteBoxFormat()">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="cap-input-group cap-panel" style="margin-top: 0; padding: 16px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                                <span style="color: var(--text-primary); font-size: 13px;">Auto-Generate Boxes</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="cap-set-bg-enable">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <p style="font-size: 11px; color: var(--text-secondary); margin: 0;">Automatically creates linked shape layers behind your text when generating subtitles.</p>
+                        </div>
+
+                        <div class="cap-input-group" style="margin-top: 16px; margin-bottom: 16px;">
+                            <label>Box Effect Preset (.ffx)</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <select id="cap-bg-preset-select" style="flex: 2 1 120px; margin: 0;"><option value="">No Preset</option></select>
+                                <button class="cap-btn-secondary" style="flex: 1 1 60px; margin-top: 0; padding: 10px;" onclick="captionAddBgPresetFile()">+ Import</button>
+                                <button class="cap-btn-danger" style="flex: 1 1 60px; margin-top: 0; padding: 10px;" onclick="captionPromptDeleteBgPreset()">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="cap-input-group">
+                            <label>Box Label Color</label>
+                            <select id="cap-box-color-select">
+                                <option value="0">None</option>
+                                <option value="1">Red</option>
+                                <option value="2">Yellow</option>
+                                <option value="3">Aqua</option>
+                                <option value="4">Pink</option>
+                                <option value="5">Lavender</option>
+                                <option value="6">Peach</option>
+                                <option value="7">Sea Foam</option>
+                                <option value="8" selected>Blue</option>
+                                <option value="9">Green</option>
+                                <option value="10">Purple</option>
+                                <option value="11">Orange</option>
+                                <option value="12">Brown</option>
+                                <option value="13">Fuchsia</option>
+                                <option value="14">Cyan</option>
+                                <option value="15">Sandstone</option>
+                                <option value="16">Dark Green</option>
+                            </select>
+                        </div>
+
+                        <div class="cap-input-group cap-panel" style="padding: 16px;">
+                            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
+                                <div style="display: flex; align-items: center; gap: 12px; flex: 1 1 auto; min-width: 120px;">
+                                    <label style="margin: 0;">Color</label>
+                                    <div id="cap-visual-color-box" class="cap-color-cube" style="background-color: #FF1493;" onclick="captionOpenColorPicker()"></div>
+                                    <input type="hidden" id="cap-set-bg-color" value="#FF1493">
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 120px;">
+                                    <label style="margin: 0;">ADJ Layer</label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="cap-set-bg-adj">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cap-input-group cap-panel">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <label style="margin: 0;">Opacity</label>
+                                <div class="cap-val-wrapper" id="cap-bg-op-wrap" onclick="captionOpenNumpad('cap-bg-op-val', 'cap-set-bg-opacity', 'cap-bg-op-wrap')">
+                                    <input type="text" id="cap-bg-op-val" class="cap-val-input" value="70" oninput="captionSyncInputToSlider(this.id, 'cap-set-bg-opacity')">
+                                    <span class="cap-val-unit">%</span>
+                                </div>
+                            </div>
+                            <input type="range" id="cap-set-bg-opacity" class="cap-slider" min="0" max="100" value="70" oninput="captionSyncSliderToInput('cap-set-bg-opacity', 'cap-bg-op-val')">
+                        </div>
+
+                        <div class="cap-input-group cap-panel">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <label style="margin: 0;">Padding X (Width)</label>
+                                <div class="cap-val-wrapper" id="cap-bg-px-wrap" onclick="captionOpenNumpad('cap-bg-px-val', 'cap-set-bg-padx', 'cap-bg-px-wrap')">
+                                    <input type="text" id="cap-bg-px-val" class="cap-val-input" value="0" oninput="captionSyncInputToSlider(this.id, 'cap-set-bg-padx')">
+                                </div>
+                            </div>
+                            <input type="range" id="cap-set-bg-padx" class="cap-slider" min="-150" max="150" value="0" oninput="captionSyncSliderToInput('cap-set-bg-padx', 'cap-bg-px-val')">
+                        </div>
+
+                        <div class="cap-input-group cap-panel">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <label style="margin: 0;">Padding Y (Height)</label>
+                                <div class="cap-val-wrapper" id="cap-bg-py-wrap" onclick="captionOpenNumpad('cap-bg-py-val', 'cap-set-bg-pady', 'cap-bg-py-wrap')">
+                                    <input type="text" id="cap-bg-py-val" class="cap-val-input" value="0" oninput="captionSyncInputToSlider(this.id, 'cap-set-bg-pady')">
+                                </div>
+                            </div>
+                            <input type="range" id="cap-set-bg-pady" class="cap-slider" min="-150" max="150" value="0" oninput="captionSyncSliderToInput('cap-set-bg-pady', 'cap-bg-py-val')">
+                        </div>
+
+                        <div class="cap-input-group cap-panel">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <label style="margin: 0;">Roundness</label>
+                                <div class="cap-val-wrapper" id="cap-bg-rnd-wrap" onclick="captionOpenNumpad('cap-bg-rnd-val', 'cap-set-bg-round', 'cap-bg-rnd-wrap')">
+                                    <input type="text" id="cap-bg-rnd-val" class="cap-val-input" value="25" oninput="captionSyncInputToSlider(this.id, 'cap-set-bg-round')">
+                                </div>
+                            </div>
+                            <input type="range" id="cap-set-bg-round" class="cap-slider" min="0" max="150" value="25" oninput="captionSyncSliderToInput('cap-set-bg-round', 'cap-bg-rnd-val')">
+                        </div>
+
+                        <div style="height: 10px;"></div>
+                    </div>
+                    <div class="cap-fixed-bottom">
+                        <button class="cap-btn-primary" onclick="captionApplyBackgroundToSelection()" style="margin-top: 0; width: 100%;">Apply Box to Selected Text Layers</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---------------- EDITOR ---------------- -->
+            <div class="cap-tab-content" id="cap-editor">
+                <div class="cap-flex-col">
+                    <div class="cap-editor-header">
+                        <label style="color: var(--text-secondary); font-size: 12px;">Subtitles</label>
+                        <div class="cap-header-actions">
+                            <button class="cap-btn-secondary" style="padding: 4px 12px;" onclick="captionExportEditorSRT()">Export SRT</button>
+                            <button class="cap-btn-danger" style="padding: 4px 12px;" onclick="captionOpenMultiDeleteModal('editor')">Delete</button>
+                        </div>
+                    </div>
+
+                    <div class="cap-scroll" style="padding-top: 4px;">
+                        <div id="cap-timeline-list" class="cap-srt-list">
+                            <p style="color: var(--text-secondary); text-align: center; margin-top: 20px; font-size: 12px;">Timeline subtitles will load automatically.</p>
+                        </div>
+                    </div>
+
+                    <div class="cap-fixed-bottom" style="padding-top: 12px; background: var(--bg-base); border-top: 1px solid var(--border-color);">
+                        <div class="cap-button-row" style="margin-bottom: 8px; flex-wrap: wrap;">
+                            <button class="cap-btn-secondary" style="flex: 1 1 100px;" onclick="captionOpenExtraModal('editor')">Extra</button>
+                            <button class="cap-btn-secondary" style="flex: 1 1 100px;" onclick="captionSplitEditorLayer()">Split at Playhead</button>
+                        </div>
+                        <div class="cap-button-row" style="flex-wrap: wrap; display: flex; gap: 8px;">
+                            <button class="cap-btn-primary" style="flex: 2; margin-top: 0;" onclick="captionApplyEditorChanges()">Update</button>
+                            <button class="cap-btn-secondary" style="flex: 1; margin-top: 0; padding: 12px 10px; font-size: 12px; border-radius: 4px;" onclick="captionRefreshEditorTimeline()">Refresh List</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---------------- GENERATE ---------------- -->
+            <div class="cap-tab-content" id="cap-generate">
+
+                <div class="cap-flex-col" id="cap-engine-setup-area">
+                    <div class="cap-scroll">
+
+                        <div class="cap-input-group cap-panel" style="margin-top: 0; padding: 16px 16px 8px 16px;">
+                            <label style="margin-bottom: 12px;">Standard Language</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px; width: 100%;">
+                                <label class="cap-toggle-label" style="flex: 1 1 85px; padding: 10px 8px; justify-content: center; font-size: 11px; min-width: 85px;">
+                                    <input type="radio" name="cap-spoken-language" value="en"> English
+                                </label>
+                                <label class="cap-toggle-label" style="flex: 1 1 85px; padding: 10px 8px; justify-content: center; font-size: 11px; min-width: 85px;">
+                                    <input type="radio" name="cap-spoken-language" value="auto" checked> Auto Detect
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="cap-input-group cap-panel" style="margin-top: 8px; padding: 16px 16px 8px 16px;">
+                            <label style="margin-bottom: 12px;">Romanized (English Letters)</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px; width: 100%;">
+                                <label class="cap-toggle-label" style="flex: 1 1 calc(33% - 6px); padding: 10px 8px; justify-content: center; font-size: 11px;">
+                                    <input type="radio" name="cap-spoken-language" value="hinglish"> Hinglish
+                                </label>
+                                <label class="cap-toggle-label" style="flex: 1 1 calc(33% - 6px); padding: 10px 8px; justify-content: center; font-size: 11px;">
+                                    <input type="radio" name="cap-spoken-language" value="roman_urdu"> Urdu
+                                </label>
+                                <label class="cap-toggle-label" style="flex: 1 1 calc(33% - 6px); padding: 10px 8px; justify-content: center; font-size: 11px;">
+                                    <input type="radio" name="cap-spoken-language" value="pinyin"> Chinese
+                                </label>
+                                <label class="cap-toggle-label" style="flex: 1 1 calc(33% - 6px); padding: 10px 8px; justify-content: center; font-size: 11px;">
+                                    <input type="radio" name="cap-spoken-language" value="romaji"> Japanese
+                                </label>
+                                <label class="cap-toggle-label" style="flex: 1 1 calc(33% - 6px); padding: 10px 8px; justify-content: center; font-size: 11px;">
+                                    <input type="radio" name="cap-spoken-language" value="arabish"> Arabic
+                                </label>
+                                <label class="cap-toggle-label" style="flex: 1 1 calc(33% - 6px); padding: 10px 8px; justify-content: center; font-size: 11px;">
+                                    <input type="radio" name="cap-spoken-language" value="translit_ru"> Russian
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="cap-fixed-bottom">
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <button class="cap-btn-secondary" style="flex: 1; display: none;" id="cap-btn-generate-extra-setup" onclick="captionOpenExtraModal('generate')">Extra</button>
+                            <button class="cap-btn-secondary" style="flex: 2; width: 100%;" id="cap-btn-generate-import-setup" onclick="captionImportExternalSRT()">Import SRT</button>
+                        </div>
+                        <button class="cap-btn-primary" id="cap-btn-transcribe" style="width: 100%; margin-top: 0;" onclick="captionStartTranscription()">Transcribe Timeline</button>
+                    </div>
+                </div>
+
+                <div class="cap-flex-col" id="cap-srt-editor-area" style="display: none;">
+                    <div class="cap-editor-header">
+                        <label style="color: var(--text-secondary); font-size: 12px;">Pre-Generation Adjustments</label>
+                        <div class="cap-header-actions">
+                            <button class="cap-btn-secondary" style="padding: 4px 12px;" onclick="captionSaveSRTFile()">Save SRT</button>
+                            <button class="cap-btn-danger" style="padding: 4px 12px;" onclick="captionOpenMultiDeleteModal('generate')">Discard</button>
+                        </div>
+                    </div>
+                    <div class="cap-scroll" style="padding-top: 4px;">
+                        <div id="cap-srt-list" class="cap-srt-list"></div>
+                    </div>
+                    <div class="cap-fixed-bottom">
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <button class="cap-btn-secondary" style="flex: 1;" onclick="captionOpenExtraModal('generate')">Extra</button>
+                            <button class="cap-btn-secondary" style="flex: 2;" onclick="captionImportExternalSRT()">Import SRT</button>
+                        </div>
+                        <button class="cap-btn-primary" id="cap-btn-generate-layers" onclick="captionGenerateLayersFromSRT()" style="margin-top: 0;">Generate Text Layers</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="cap-status-container" style="display:none; flex: 0 0 auto; background: var(--bg-base); border-top: 1px solid var(--border-color); padding: 12px 16px;">
+                <div class="cap-status-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <p id="cap-status-text" style="margin: 0; font-weight: 500; color: #ffffff; font-size: 12px;">Processing...</p>
+                        <button class="cap-btn-danger" id="cap-cancel-btn" style="padding: 4px 12px; font-size: 11px; margin: 0; font-weight: 600; flex: 0 0 auto; display: none;" onclick="captionCancelTranscription()">Cancel</button>
+                    </div>
+                    <div class="cap-progress-track">
+                        <div class="cap-progress-fill" id="cap-progress-bar"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Caption hidden punctuation state (Format-tab toggles now hold the
+         cap-punc-* checkboxes directly; only the Extra-Features modal state
+         remains hidden here) -->
+    <div style="display:none;">
+        <input type="checkbox" id="cap-extra-punc-comma" checked>
+        <input type="checkbox" id="cap-extra-punc-period" checked>
+        <input type="checkbox" id="cap-extra-punc-question">
+        <input type="checkbox" id="cap-extra-punc-exclaim">
+    </div>
+
+    <!-- ================= CAPTION OVERLAYS ================= -->
+    <div id="cap-alert-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-alert-box">
+            <p id="cap-alert-message">Message goes here.</p>
+            <button class="cap-btn-primary" onclick="captionCloseAlert()">OK</button>
+        </div>
+    </div>
+
+    <div id="cap-wav-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-popup active" style="width: 320px; padding: 20px; text-align: left;">
+            <p style="color: white; margin: 0 0 12px 0; font-weight: 500; font-size: 14px; text-align: center;">Setup Required</p>
+            <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 16px; line-height: 1.5;">To extract audio natively, After Effects needs a custom output template. Follow these easy steps once:</p>
+            <ol style="color: var(--text-primary); font-size: 12px; margin: 0 0 16px 0; padding-left: 24px; line-height: 1.6;">
+                <li>In After Effects, go to the top menu:<br><b style="color: var(--accent-blue);">Edit &gt; Templates &gt; Output Module...</b></li>
+                <li>Click <b>New</b> to create a new template.</li>
+                <li>Name the template exactly: <b style="color: var(--accent-blue);">WAV</b></li>
+                <li>Click <b>Edit...</b></li>
+                <li>Change Format to <b>Waveform Audio</b>.</li>
+                <li>Click <b>OK</b> on both windows.</li>
+            </ol>
+            <button class="cap-btn-primary" style="margin-top: 0; width: 100%;" onclick="captionCloseWavInstructions()">I've done this!</button>
+        </div>
+    </div>
+
+    <div id="cap-format-prompt-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-alert-box" style="text-align: left;">
+            <p style="margin-bottom: 12px; color: var(--text-primary);">Enter a name for this Format Preset:</p>
+            <input type="text" id="cap-format-prompt-input" class="cap-prompt-input" autocomplete="off">
+            <div style="display: flex; gap: 8px;">
+                <button class="cap-btn-secondary" style="flex: 1; padding: 10px;" onclick="captionCloseFormatPrompt(false)">Cancel</button>
+                <button class="cap-btn-primary" style="margin-top: 0; flex: 1; padding: 10px;" onclick="captionCloseFormatPrompt(true)">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cap-delete-format-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-alert-box" style="text-align: left;">
+            <p style="margin-bottom: 12px; color: var(--text-primary);">Select Format to Delete:</p>
+            <select id="cap-delete-format-select" style="width: 100%; margin-bottom: 16px;"></select>
+            <div style="display: flex; gap: 8px;">
+                <button class="cap-btn-secondary" style="flex: 1; padding: 10px;" onclick="captionCloseDeleteFormat(false)">Cancel</button>
+                <button class="cap-btn-danger" style="margin-top: 0; flex: 1; padding: 10px;" onclick="captionCloseDeleteFormat(true)">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cap-box-format-prompt-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-alert-box" style="text-align: left;">
+            <p style="margin-bottom: 12px; color: var(--text-primary);">Enter a name for this Box Settings Preset:</p>
+            <input type="text" id="cap-box-format-prompt-input" class="cap-prompt-input" autocomplete="off">
+            <div style="display: flex; gap: 8px;">
+                <button class="cap-btn-secondary" style="flex: 1; padding: 10px;" onclick="captionCloseBoxFormatPrompt(false)">Cancel</button>
+                <button class="cap-btn-primary" style="margin-top: 0; flex: 1; padding: 10px;" onclick="captionCloseBoxFormatPrompt(true)">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cap-delete-box-format-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-alert-box" style="text-align: left;">
+            <p style="margin-bottom: 12px; color: var(--text-primary);">Select Box Preset to Delete:</p>
+            <select id="cap-delete-box-format-select" style="width: 100%; margin-bottom: 16px;"></select>
+            <div style="display: flex; gap: 8px;">
+                <button class="cap-btn-secondary" style="flex: 1; padding: 10px;" onclick="captionCloseDeleteBoxFormat(false)">Cancel</button>
+                <button class="cap-btn-danger" style="margin-top: 0; flex: 1; padding: 10px;" onclick="captionCloseDeleteBoxFormat(true)">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cap-style-prompt-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-alert-box" style="text-align: left;">
+            <p id="cap-style-prompt-message" style="margin-bottom: 12px; color: var(--text-primary);">Enter a name for this Text Properties File:</p>
+            <input type="text" id="cap-style-prompt-input" class="cap-prompt-input" autocomplete="off">
+            <div style="display: flex; gap: 8px;">
+                <button class="cap-btn-secondary" style="flex: 1; padding: 10px;" onclick="captionCloseStylePrompt(false)">Cancel</button>
+                <button class="cap-btn-primary" style="margin-top: 0; flex: 1; padding: 10px;" onclick="captionCloseStylePrompt(true)">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cap-delete-style-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-alert-box" style="text-align: left;">
+            <p style="margin-bottom: 12px; color: var(--text-primary);">Select Text Properties File to Delete:</p>
+            <select id="cap-delete-style-select" style="width: 100%; margin-bottom: 16px;"></select>
+            <div style="display: flex; gap: 8px;">
+                <button class="cap-btn-secondary" style="flex: 1; padding: 10px;" onclick="captionCloseDeleteStyle(false)">Cancel</button>
+                <button class="cap-btn-danger" style="margin-top: 0; flex: 1; padding: 10px;" onclick="captionCloseDeleteStyle(true)">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cap-delete-preset-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-alert-box" style="text-align: left;">
+            <p style="margin-bottom: 12px; color: var(--text-primary);">Select Effect Preset to Delete:</p>
+            <select id="cap-delete-preset-select" style="width: 100%; margin-bottom: 16px;"></select>
+            <div style="display: flex; gap: 8px;">
+                <button class="cap-btn-secondary" style="flex: 1; padding: 10px;" onclick="captionCloseDeletePreset(false)">Cancel</button>
+                <button class="cap-btn-danger" style="margin-top: 0; flex: 1; padding: 10px;" onclick="captionCloseDeletePreset(true)">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cap-effect-prompt-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-alert-box" style="text-align: left;">
+            <p style="margin-bottom: 12px; color: var(--text-primary);">Enter a name for this Effect Preset (.ffx):</p>
+            <input type="text" id="cap-effect-prompt-input" class="cap-prompt-input" autocomplete="off">
+            <div style="display: flex; gap: 8px;">
+                <button class="cap-btn-secondary" style="flex: 1; padding: 10px;" onclick="captionCloseEffectPrompt(false)">Cancel</button>
+                <button class="cap-btn-primary" style="margin-top: 0; flex: 1; padding: 10px;" onclick="captionCloseEffectPrompt(true)">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cap-delete-bg-preset-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-alert-box" style="text-align: left;">
+            <p style="margin-bottom: 12px; color: var(--text-primary);">Select Box Effect Preset to Delete:</p>
+            <select id="cap-delete-bg-preset-select" style="width: 100%; margin-bottom: 16px;"></select>
+            <div style="display: flex; gap: 8px;">
+                <button class="cap-btn-secondary" style="flex: 1; padding: 10px;" onclick="captionCloseDeleteBgPreset(false)">Cancel</button>
+                <button class="cap-btn-danger" style="margin-top: 0; flex: 1; padding: 10px;" onclick="captionCloseDeleteBgPreset(true)">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cap-style-format-prompt-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-alert-box" style="text-align: left;">
+            <p style="margin-bottom: 12px; color: var(--text-primary);">Enter a name for this Style Settings Preset:</p>
+            <input type="text" id="cap-style-format-prompt-input" class="cap-prompt-input" autocomplete="off">
+            <div style="display: flex; gap: 8px;">
+                <button class="cap-btn-secondary" style="flex: 1; padding: 10px;" onclick="captionCloseStyleFormatPrompt(false)">Cancel</button>
+                <button class="cap-btn-primary" style="margin-top: 0; flex: 1; padding: 10px;" onclick="captionCloseStyleFormatPrompt(true)">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cap-delete-style-format-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-alert-box" style="text-align: left;">
+            <p style="margin-bottom: 12px; color: var(--text-primary);">Select Style Preset to Delete:</p>
+            <select id="cap-delete-style-format-select" style="width: 100%; margin-bottom: 16px;"></select>
+            <div style="display: flex; gap: 8px;">
+                <button class="cap-btn-secondary" style="flex: 1; padding: 10px;" onclick="captionCloseDeleteStyleFormat(false)">Cancel</button>
+                <button class="cap-btn-danger" style="margin-top: 0; flex: 1; padding: 10px;" onclick="captionCloseDeleteStyleFormat(true)">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cap-multi-delete-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-popup active" style="width: 280px; max-height: 80vh; display: flex; flex-direction: column;">
+            <p style="margin: 0 0 10px 0; color: #fff; font-weight: 500; text-align: center;">Select Texts to Delete</p>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding: 0;">
+                <label class="cap-checkbox-wrapper" style="background: transparent; border: none; padding: 4px 8px; margin-bottom: 0; width: fit-content;">
+                    <input type="checkbox" id="cap-md-select-all" onclick="captionToggleAllMultiDelete(this)">
+                    <span style="font-size: 13px; font-weight: 500; color: #fff;">Select All</span>
+                </label>
+            </div>
+            <div id="cap-multi-delete-list" style="overflow-y: auto; flex: 1 1 auto; margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px;"></div>
+            <div style="display: flex; gap: 8px; flex: 0 0 auto;">
+                <button class="cap-btn-secondary" style="margin: 0; padding: 10px;" onclick="captionCloseMultiDeleteModal()">Cancel</button>
+                <button class="cap-btn-danger" style="margin: 0; padding: 10px;" onclick="captionExecuteMultiDelete()">Delete Selected</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cap-extra-modal-overlay" class="cap-alert-overlay" style="display: none;">
+        <div class="cap-popup active" style="width: 260px; padding: 16px;">
+            <p style="text-align: center; color: white; margin: 0 0 16px 0; font-weight: 500; font-size: 14px;">Extra Features</p>
+
+            <div style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                <label style="color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; font-weight: 500 !important;">Remove Punctuations</label>
+
+                <div class="cap-punc-grid" style="margin-bottom: 12px;">
+                    <div class="cap-punc-item" id="cap-extra-punc-wrap-comma" onclick="captionToggleExtraPunc('comma')">
+                        <div class="cap-punc-char">,</div>
+                        <span>Commas</span>
+                    </div>
+                    <div class="cap-punc-item" id="cap-extra-punc-wrap-period" onclick="captionToggleExtraPunc('period')">
+                        <div class="cap-punc-char">.</div>
+                        <span>Periods</span>
+                    </div>
+                    <div class="cap-punc-item" id="cap-extra-punc-wrap-question" onclick="captionToggleExtraPunc('question')">
+                        <div class="cap-punc-char">?</div>
+                        <span>Questions</span>
+                    </div>
+                    <div class="cap-punc-item" id="cap-extra-punc-wrap-exclaim" onclick="captionToggleExtraPunc('exclaim')">
+                        <div class="cap-punc-char">!</div>
+                        <span>Exclaims</span>
+                    </div>
+                </div>
+
+                <button class="cap-btn-secondary" style="width: 100%; margin-top: 0;" onclick="captionApplyPunctuationsToCurrentTab()">Apply to Texts</button>
+            </div>
+
+            <button class="cap-btn-primary" style="margin-top: 4px;" onclick="captionCloseExtraModal()">Close</button>
+        </div>
+    </div>
+
+    <div id="cap-numpad" class="cap-numpad-popup">
+        <div class="cap-numpad-btn" onclick="captionNumpadPress('1')">1</div>
+        <div class="cap-numpad-btn" onclick="captionNumpadPress('2')">2</div>
+        <div class="cap-numpad-btn" onclick="captionNumpadPress('3')">3</div>
+        <div class="cap-numpad-btn" onclick="captionNumpadPress('4')">4</div>
+        <div class="cap-numpad-btn" onclick="captionNumpadPress('5')">5</div>
+        <div class="cap-numpad-btn" onclick="captionNumpadPress('6')">6</div>
+        <div class="cap-numpad-btn" onclick="captionNumpadPress('7')">7</div>
+        <div class="cap-numpad-btn" onclick="captionNumpadPress('8')">8</div>
+        <div class="cap-numpad-btn" onclick="captionNumpadPress('9')">9</div>
+        <div class="cap-numpad-btn" onclick="captionNumpadPress('.')">.</div>
+        <div class="cap-numpad-btn" onclick="captionNumpadPress('0')">0</div>
+        <div class="cap-numpad-btn" onclick="captionNumpadPress('-')">-</div>
+        <div class="cap-numpad-btn cap-numpad-clear" onclick="captionNumpadPress('AC')">AC</div>
+        <div class="cap-numpad-btn cap-numpad-action" style="grid-column: span 2;" onclick="captionNumpadPress('OK')">OK</div>
+    </div>
+
+    <div id="cap-cp" class="cap-popup">
+        <div id="cap-cp-preview" class="cap-cp-preview"></div>
+
+        <div class="cap-cp-row">
+            <label>Hue</label>
+            <input type="range" id="cap-cp-hue" min="0" max="360" value="0" class="cap-cp-slider cap-cp-slider-hue">
+        </div>
+        <div class="cap-cp-row">
+            <label>Saturation</label>
+            <input type="range" id="cap-cp-sat" min="0" max="100" value="100" class="cap-cp-slider">
+        </div>
+        <div class="cap-cp-row">
+            <label>Lightness</label>
+            <input type="range" id="cap-cp-lit" min="0" max="100" value="50" class="cap-cp-slider">
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+            <label style="font-size: 12px; color: var(--text-secondary); margin: 0; font-weight: 500 !important; letter-spacing: 0.5px;">HEX</label>
+            <input type="text" id="cap-cp-hex" class="cap-cp-hex-input" maxlength="7">
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <button class="cap-btn-secondary" style="margin: 0; padding: 8px;" onclick="captionCloseColorPicker(false)">Cancel</button>
+            <button class="cap-btn-primary" style="margin: 0; padding: 8px;" onclick="captionCloseColorPicker(true)">OK</button>
+        </div>
+    </div>
+    <!-- ===================== END CAPTION ===================== -->
+
+
+    <div id="dlFolderModal" class="modal-overlay">
+        <div class="modal-content section-block">
+            <div class="section-header">
+                <h3 class="section-label">Custom PC Save Location</h3>
+            </div>
+            <div style="margin-top: 12px; display: grid; grid-template-columns: 1fr auto; gap: 8px; width: 100%; align-items: center;">
+                <input type="text" id="dlCustomPathInput" class="modal-input" placeholder="Enter path or click Browse..." style="width: 100%; margin: 0; box-sizing: border-box;">
+                <button id="dlBrowseBtn" class="btn-secondary" style="margin: 0; padding: 6px 16px; white-space: nowrap;">Browse</button>
+            </div>
+            <div class="setting-row" style="margin-top: 16px; margin-bottom: 16px;">
+                <span>Move existing assets here?</span>
+                <label class="switch">
+                    <input type="checkbox" id="dlMoveAssetsCheck" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="button-grid">
+                <button id="dlCancelModalBtn" class="btn-secondary">Cancel</button>
+                <button id="dlApplyModalBtn" class="btn-primary">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dlRenameRelativeModal" class="modal-overlay">
+        <div class="modal-content section-block">
+            <div class="section-header">
+                <h3 class="section-label">Rename Local Save Folder</h3>
+            </div>
+            <p style="font-size: 11px; color: var(--text-secondary); margin: 0 0 12px 0;">This is the folder that will be created next to your AEP files.</p>
+            <div class="input-group">
+                <input type="text" id="dlRenameRelativeInput" class="modal-input" placeholder="e.g. Assets">
+            </div>
+            <div class="setting-row" style="margin-top: 16px; margin-bottom: 16px;">
+                <span>Rename existing folder on disk?</span>
+                <label class="switch">
+                    <input type="checkbox" id="dlRenameMoveCheck" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="button-grid">
+                <button id="dlCancelRenameBtn" class="btn-secondary">Cancel</button>
+                <button id="dlApplyRenameBtn" class="btn-primary">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dlAeFolderModal" class="modal-overlay">
+        <div class="modal-content section-block">
+            <div class="section-header">
+                <h3 class="section-label">Target After Effects Folder</h3>
+            </div>
+            <p style="font-size: 11px; color: var(--text-secondary); margin: 0 0 12px 0;">Type a new folder name, or select an existing one.</p>
+            <div class="input-group" style="flex-direction: column;">
+                <input type="text" id="dlAeFolderInput" class="modal-input" placeholder="e.g. Downloaded Assets">
+                <select id="dlAeFolderDropdown" class="modal-input" style="cursor: pointer;">
+                    <option value="">-- Or select an existing folder --</option>
+                </select>
+            </div>
+            <div class="button-grid" style="margin-top: 16px;">
+                <button id="dlCancelAeModalBtn" class="btn-secondary">Cancel</button>
+                <button id="dlApplyAeModalBtn" class="btn-primary">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="graph-save-modal" class="graph-modal-overlay" style="display:none;" onclick="if(event.target===this)window.closeGraphSaveModal()">
+        <div class="graph-modal-box">
+            <div class="graph-modal-title" style="margin-bottom:4px;">Save preset</div>
+            <div style="font-size:11px; color:var(--text-secondary); text-align:left; margin-bottom:12px;">Graph values: <span id="graph-save-val-preview" style="color:var(--text-primary);"></span></div>
+            
+            <input type="text" id="graph-save-input" class="modal-input" placeholder="Preset name..." style="margin:0;" />
+            
+            <div style="display:flex; gap:8px; margin-top:12px;">
+                <button class="btn-secondary" style="flex:1; margin:0;" onclick="window.closeGraphSaveModal()">Cancel</button>
+                <button class="btn-primary" style="flex:1; margin:0;" onclick="window.confirmGraphSave()">OK</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="graph-input-modal" class="graph-modal-overlay" style="display:none;" onclick="if(event.target===this)window.closeGraphInputModal()">
+        <div class="graph-modal-box">
+            <div class="graph-modal-title" style="margin-bottom:4px;">Enter new values</div>
+            <div style="font-size:11px; color:var(--text-secondary); text-align:left; margin-bottom:12px;">Format "x1, y1, x2, y2"</div>
+            
+            <input type="text" id="graph-val-input" class="modal-input" placeholder="0.33, 0.00, 0.66, 1.00" style="margin:0;" />
+            
+            <div style="display:flex; gap:8px; margin-top:12px;">
+                <button class="btn-secondary" style="flex:1; margin:0;" onclick="window.closeGraphInputModal()">Cancel</button>
+                <button class="btn-primary" style="flex:1; margin:0;" onclick="window.confirmGraphInput()">OK</button>
+            </div>
+        </div>
+    </div>
+    <div id="graph-newlib-modal" class="graph-modal-overlay" style="display:none;" onclick="if(event.target===this)window.closeGraphNewLibModal()">
+        <div class="graph-modal-box">
+            <div class="graph-modal-title" id="graph-lib-modal-title">Create new library</div>
+            <input type="text" id="graph-newlib-input" class="modal-input" placeholder="Library name..." style="margin:0;" />
+            <div style="display:flex; gap:8px; margin-top:12px;">
+                <button class="btn-secondary" style="flex:1; margin:0;" onclick="window.closeGraphNewLibModal()">Cancel</button>
+                <button class="btn-primary" style="flex:1; margin:0;" onclick="window.confirmGraphNewLib()">OK</button>
+            </div>
+        </div>
+    </div>
+    <div id="linked-pos-modal" class="modal-overlay" style="display:none; justify-content:center; align-items:center; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:999999; backdrop-filter:blur(2px);" onclick="if(event.target===this)window.linkedPosSkip()">
+        <div class="panel-box" style="width:300px; padding:16px; display:flex; flex-direction:column; gap:12px; border:1px solid var(--border-color); background:var(--bg-panel); box-shadow:0 10px 30px rgba(0,0,0,0.8); border-radius:8px;">
+            <div style="font-size:14px; font-weight:600; color:#fff; text-align:left; line-height:1.4;">Cannot apply overshoot on linked position axis</div>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+                <button class="btn-secondary" style="width:100%; margin:0; padding:0; height:34px; box-sizing:border-box; display:flex; align-items:center; justify-content:center;" onclick="window.linkedPosSkip()">Skip</button>
+                <button class="btn-secondary" style="width:100%; margin:0; padding:0; height:34px; box-sizing:border-box; display:flex; align-items:center; justify-content:center;" onclick="window.linkedPosApplyWithoutOvershoot()">Apply without overshoot</button>
+                <button class="btn-primary" style="width:100%; margin:0; padding:0; height:34px; box-sizing:border-box; border:1px solid transparent; display:flex; align-items:center; justify-content:center;" onclick="window.linkedPosSeparateAndApply()">Separate dimensions &amp; apply</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="graph-rename-preset-modal" class="modal-overlay" style="display:none; justify-content:center; align-items:center; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:999999; backdrop-filter:blur(2px);" onclick="if(event.target===this)document.getElementById('graph-rename-preset-modal').style.display='none'">
+        <div class="panel-box" style="width:260px; padding:16px; display:flex; flex-direction:column; gap:12px; border:1px solid var(--border-color); background:var(--bg-panel); box-shadow:0 10px 30px rgba(0,0,0,0.8); border-radius:8px;">
+            <div style="font-size:14px; font-weight:600; color:#fff; text-align:left; margin-bottom:4px;">Rename preset</div>
+            <input type="text" id="graph-rename-preset-input" class="modal-input" placeholder="New name..." style="width:100%; box-sizing:border-box; margin:0;" />
+            <div style="display:flex; gap:8px; margin-top:4px;">
+                <button class="btn-secondary" style="flex:1; margin:0; padding:0; height:34px; box-sizing:border-box; display:flex; align-items:center; justify-content:center;" onclick="document.getElementById('graph-rename-preset-modal').style.display='none'">Cancel</button>
+                <button class="btn-primary" style="flex:1; margin:0; padding:0; height:34px; box-sizing:border-box; border:1px solid transparent; display:flex; align-items:center; justify-content:center;" onclick="window.confirmGraphRenamePreset()">OK</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="graph-edit-preset-modal" class="graph-modal-overlay" style="display:none;" onclick="if(event.target===this)document.getElementById('graph-edit-preset-modal').style.display='none'">
+        <div class="graph-modal-box">
+            <div class="graph-modal-title">Edit preset values</div>
+            
+            <input type="text" id="graph-edit-preset-input" class="modal-input" placeholder="x1, y1, x2, y2" style="margin:0;" />
+            
+            <div style="display:flex; gap:8px; margin-top:12px;">
+                <button class="btn-secondary" style="flex:1; margin:0;" onclick="document.getElementById('graph-edit-preset-modal').style.display='none'">Cancel</button>
+                <button class="btn-primary" style="flex:1; margin:0;" onclick="window.confirmGraphEditPreset()">OK</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="graph-renamelib-modal" class="graph-modal-overlay" style="display:none;" onclick="if(event.target===this)document.getElementById('graph-renamelib-modal').style.display='none'">
+        <div class="graph-modal-box">
+            <div class="graph-modal-title">Rename library</div>
+            <input type="text" id="graph-renamelib-input" class="modal-input" placeholder="New library name..." style="margin:0;" />
+            <div style="display:flex; gap:8px; margin-top:12px;">
+                <button class="btn-secondary" style="flex:1; margin:0;" onclick="document.getElementById('graph-renamelib-modal').style.display='none'">Cancel</button>
+                <button class="btn-primary" style="flex:1; margin:0;" onclick="window.confirmGraphRenameLib()">OK</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="clear-lib-modal" class="graph-modal-overlay" style="display:none;" onclick="if(event.target===this)document.getElementById('clear-lib-modal').style.display='none'">
+        <div class="graph-modal-box">
+            <div class="graph-modal-title">Clear Library</div>
+            <div style="font-size:11px; color:var(--text-secondary); text-align:left; line-height:1.4;">Are you sure you want to permanently clear all presets in this library?</div>
+            
+            <div style="display:flex; gap:8px; margin-top:12px;">
+                <button class="btn-secondary" style="flex:1; margin:0;" onclick="document.getElementById('clear-lib-modal').style.display='none'">Cancel</button>
+                <button class="btn-primary" style="flex:1; margin:0; background:#d32f2f; border-color:#b71c1c; color:#fff;" onclick="window.executeGraphClear()">Clear</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="delete-lib-modal" class="graph-modal-overlay" style="display:none;" onclick="if(event.target===this)document.getElementById('delete-lib-modal').style.display='none'">
+        <div class="graph-modal-box">
+            <div class="graph-modal-title">Delete Library</div>
+            <div style="font-size:11px; color:var(--text-secondary); text-align:left; line-height:1.4;">Are you sure you want to permanently delete '<span id="delete-lib-name" style="color:var(--text-primary); font-weight:bold;"></span>' and all its presets?</div>
+            
+            <div style="display:flex; gap:8px; margin-top:12px;">
+                <button class="btn-secondary" style="flex:1; margin:0;" onclick="document.getElementById('delete-lib-modal').style.display='none'">Cancel</button>
+                <button class="btn-primary" style="flex:1; margin:0; background:#d32f2f; border-color:#b71c1c; color:#fff;" onclick="window.executeGraphDeleteLib()">Delete</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="import-choice-modal" class="graph-modal-overlay" style="display:none;" onclick="if(event.target===this)document.getElementById('import-choice-modal').style.display='none'">
+        <div class="graph-modal-box">
+            <div class="graph-modal-title">Import Curves</div>
+            <div style="font-size:11px; color:var(--text-secondary); text-align:left; line-height:1.4; margin-bottom:12px;">Where would you like to import these curves?</div>
+            
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <button class="btn-secondary" style="width:100%; margin:0;" onclick="window.executeGraphImportToCurrent()">Merge into: [<span id="import-lib-target-name"></span>]</button>
+                <button class="btn-primary" style="width:100%; margin:0;" onclick="window.executeGraphImportToNew()">Create New Library</button>
+                <button class="btn-secondary" style="width:100%; margin:0; border:none; background:transparent;" onclick="document.getElementById('import-choice-modal').style.display='none'">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="global-numpad" class="numpad-popup">
+        <div class="numpad-btn" onclick="numpadPress('1')">1</div><div class="numpad-btn" onclick="numpadPress('2')">2</div><div class="numpad-btn" onclick="numpadPress('3')">3</div>
+        <div class="numpad-btn" onclick="numpadPress('4')">4</div><div class="numpad-btn" onclick="numpadPress('5')">5</div><div class="numpad-btn" onclick="numpadPress('6')">6</div>
+        <div class="numpad-btn" onclick="numpadPress('7')">7</div><div class="numpad-btn" onclick="numpadPress('8')">8</div><div class="numpad-btn" onclick="numpadPress('9')">9</div>
+        <div class="numpad-btn btn-clear" onclick="numpadPress('AC')">AC</div><div class="numpad-btn" onclick="numpadPress('0')">0</div><div class="numpad-btn btn-action" onclick="numpadPress('OK')">OK</div>
+    </div>
+
+    <div id="globalTooltip" class="global-tooltip"></div>
+    <div id="toast" class="toast">Message</div>
+
+    <div id="global-nav-left" class="global-nav-btn" onclick="switchTabOffset(-1)"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div>
+    <div id="global-nav-right" class="global-nav-btn" onclick="switchTabOffset(1)"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+
+    <script src="js/globals.js"></script>
+    <script src="js/tab-transform.js"></script>
+    <script src="js/tab-fx.js"></script>
+    <script src="js/tab-color.js"></script>
+    <script src="js/tab-graph.js"></script>
+    <script src="js/tab-assets.js"></script>
+    <script src="js/tab-paste.js"></script>
+    <script src="js/tab-render.js"></script>
+    <script src="js/tab-tracker.js"></script>
+    <script src="js/tab-discord.js"></script>
+    <script src="js/tab-download.js"></script>
+    <script src="js/tab-caption.js"></script>
+    <div id="notificationOverlay" class="notification-overlay">
+        <div class="notification-content" id="notificationContent">
+            <svg id="notif-icon-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="notif-icon" style="display:none;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <svg id="notif-icon-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="notif-icon" style="display:none;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <svg id="notif-icon-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="notif-icon" style="display:none;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span id="notificationText" class="notification-text">Message goes here</span>
+            <button id="closeNotificationBtn" class="notif-close-btn" aria-label="Dismiss" onclick="document.getElementById('notificationOverlay').classList.remove('show')">&times;</button>
+        </div>
+    </div>
+</body>
+</html>

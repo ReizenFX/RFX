@@ -1,0 +1,185 @@
+.anchor-grid-small { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 4px; 
+    width: max-content; 
+}
+.anchor-btn { 
+    background: var(--bg-input); 
+    border: 1px solid var(--border-color); 
+    color: var(--text-secondary); 
+    width: 24px; 
+    height: 24px; 
+    border-radius: 4px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    cursor: pointer; 
+    transition: all 0.15s ease-in-out; 
+    padding: 0; 
+}
+.anchor-btn:hover { 
+    background-color: rgba(255, 255, 255, 0.1); 
+}
+.anchor-btn:active { 
+    background-color: rgba(255, 255, 255, 0.2); 
+    transform: scale(0.95); 
+}
+
+input[type="checkbox"].big-checkbox { 
+    appearance: none; 
+    width: 16px; 
+    height: 16px; 
+    border: 1px solid var(--border-color); 
+    border-radius: 3px; 
+    background: var(--bg-input); 
+    cursor: pointer; 
+    position: relative; 
+    transition: all 0.2s; 
+    outline: none; 
+    margin: 0; 
+}
+input[type="checkbox"].big-checkbox:checked { 
+    background: var(--accent-blue); 
+    border-color: var(--accent-blue); 
+}
+input[type="checkbox"].big-checkbox:checked::after { 
+    content: ''; 
+    position: absolute; 
+    left: 4px; 
+    top: 1px; 
+    width: 4px; 
+    height: 8px; 
+    border: solid white; 
+    border-width: 0 2px 2px 0; 
+    transform: rotate(45deg); 
+}
+
+/* ==========================================
+   NUKE SEQUENCE BOX BLUE HIGHLIGHT
+   ========================================== */
+#seq-wrap, 
+#seq-wrap.active, 
+#seq-wrap:focus-within {
+    border-color: var(--border-color) !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+#seq-val-input, 
+#seq-val-input:focus, 
+#seq-val-input:active {
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* --- NEW LAYERS UI --- */
+.nl-btn { 
+    background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); 
+    border-radius: 4px; padding: 5px 10px; font-size: 11px; font-weight: 400 !important; 
+    cursor: pointer; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease-in-out; 
+}
+.nl-btn:hover { background-color: rgba(255, 255, 255, 0.1); }
+.nl-btn:active { background-color: rgba(255, 255, 255, 0.2); transform: scale(0.95); }
+
+.nl-btn-group { 
+    display: flex; align-items: center; background: var(--bg-input); 
+    border: 1px solid var(--border-color); border-radius: 4px; padding: 2px; 
+}
+.nl-btn-text { 
+    border: none; background: transparent; color: var(--text-primary); padding: 3px 6px; 
+    font-size: 11px; font-weight: 400 !important; cursor: pointer; transition: 0.15s; border-radius: 2px;
+    position: relative; overflow: hidden;
+}
+.nl-btn-text:hover { background: rgba(255,255,255,0.1); }
+.nl-btn-text:active { transform: scale(0.95); }
+
+.nl-toggles { display: flex; gap: 4px; padding-right: 6px; margin-left: 2px; }
+.nl-toggle { 
+    width: 10px; height: 10px; border-radius: 50%; background: #1a1a1a; 
+    border: 1px solid #444; cursor: pointer; transition: 0.2s; 
+}
+.nl-toggle.active { background: var(--accent-blue); border-color: var(--accent-blue); box-shadow: 0 0 6px rgba(91, 164, 255, 0.4); }
+
+.nl-color-indicator {
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; opacity: 0.85; pointer-events: none;
+}
+
+/* --- ENLARGE TRANSFORM TAB BUTTONS & ICONS --- */
+#tab-transform .anchor-btn,
+#tab-transform .btn-icon-square {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Force the flat square buttons to have the exact same physical box, border, and background as the anchor grid */
+#tab-transform .btn-icon-square {
+    background: var(--bg-input) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 4px !important;
+    transition: all 0.15s ease-in-out !important; 
+}
+#tab-transform .btn-icon-square:hover { 
+    background-color: rgba(255, 255, 255, 0.1) !important; 
+}
+#tab-transform .btn-icon-square:active { 
+    background-color: rgba(255, 255, 255, 0.2) !important; 
+    transform: scale(0.95) !important; 
+}
+
+#tab-transform .anchor-btn svg,
+#tab-transform .btn-icon-square svg {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+/* Prevents icons from blocking tooltip hover events */
+.anchor-btn svg,
+.btn-icon-square svg {
+    pointer-events: none;
+}
+
+/* Makes the mouse completely ignore the tooltip box so it stops cancelling itself */
+#globalTooltip {
+    pointer-events: none !important;
+}
+
+/* Keeps inner SVGs from blocking the hover */
+[data-tooltip] * {
+    pointer-events: none !important;
+} 
+
+/* FORCES THE TOOLTIP TO EXIST AND BE VISIBLE */
+#globalTooltip {
+    position: fixed !important;
+    background: rgba(15, 15, 15, 0.95) !important;
+    color: #ffffff !important;
+    border: 1px solid #444 !important;
+    padding: 6px 10px !important;
+    border-radius: 4px !important;
+    font-size: 11px !important;
+    pointer-events: none !important; /* Stops the flickering */
+    z-index: 999999 !important; /* Forces it to the absolute front */
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: opacity 0.15s ease-in-out !important;
+    white-space: nowrap !important;
+}
+
+/* THE TRIGGER THAT MAKES IT APPEAR */
+#globalTooltip.visible {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* STOPS THE INNER ICONS FROM BREAKING THE HOVER */
+[data-tooltip] * {
+    pointer-events: none !important;
+}

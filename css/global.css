@@ -1,0 +1,631 @@
+:root {
+    --bg-base: #1a1a1a; 
+    --bg-panel: #222222; 
+    --bg-input: #111111;
+    --text-primary: #ffffff; 
+    --text-secondary: #aaaaaa; 
+    --border-color: #333333;
+    --accent-blue: #5ba4ff; 
+    --accent-hover: #4a89d6;
+}
+
+html, body { height: 100%; margin: 0; overflow: hidden; }
+
+body { 
+    background-color: var(--bg-base); 
+    color: var(--text-primary); 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+    font-size: 13px; 
+    user-select: none; 
+    display: flex; 
+    flex-direction: column; 
+}
+
+* { font-weight: 400 !important; outline: none !important; box-sizing: border-box; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #555; border-radius: 10px; }
+::-webkit-scrollbar-corner { background: transparent; }
+
+.tabs-header { 
+    display: flex; 
+    align-items: center; 
+    overflow-x: auto; 
+    overflow-y: hidden; 
+    padding: 10px 10px 8px 10px; 
+    gap: 8px; 
+    border-bottom: 1px solid var(--border-color); 
+    background: var(--bg-base); 
+    flex-shrink: 0; 
+    scrollbar-width: none; 
+    touch-action: pan-x; 
+}
+.tabs-header::-webkit-scrollbar { display: none; }
+
+/* ------------------------------------------------------------------
+   THE ULTIMATE CEF SCROLL FIX
+   Chromium collapses whitespace at the end of scroll tracks. 
+   We force it to render a solid letter 'x', make it 100% transparent, 
+   and hard-lock its width to guarantee the breathing room.
+   ------------------------------------------------------------------ */
+.tabs-header { 
+    padding-right: 0 !important; /* Strips the broken native padding */
+}
+
+.tabs-header::after {
+    content: "x" !important; /* 👈 A solid letter. Chromium CANNOT collapse this. */
+    opacity: 0 !important;   /* 👈 100% invisible */
+    flex: 0 0 2px !important; /* 2px width + 8px flex gap = exactly 10px of space! */
+    width: 2px !important;
+    display: block !important;
+    pointer-events: none !important;
+    overflow: hidden !important; 
+}
+
+.tab-btn { 
+    background: var(--bg-panel); 
+    color: var(--text-secondary); 
+    border: 1px solid transparent; 
+    padding: 6px 14px; 
+    border-radius: 16px; 
+    cursor: pointer; 
+    font-size: 12px; 
+    white-space: nowrap; 
+    transition: background 0.2s, color 0.2s, border 0.2s; 
+    user-select: none; 
+    flex-shrink: 0; 
+    touch-action: none; 
+}
+.tab-btn:hover { background: #353535; color: var(--text-primary); }
+.tab-btn.active { 
+    background: rgba(20, 115, 230, 0.15); 
+    color: #5ba4ff; 
+    border: 1px solid rgba(20, 115, 230, 0.4); 
+    font-weight: 500 !important; 
+}
+.tab-btn.dragging {
+    opacity: 1 !important; 
+    background: var(--bg-panel) !important; /* Forces it to be solid */
+    box-shadow: none !important; /* Ensures no drop shadow here either */
+    position: relative;
+    z-index: 100;
+}
+
+.tab-content { display: none; height: 100%; flex: 1; overflow: hidden; padding: 0; background-color: var(--bg-base); }
+.tab-content.active { display: flex; flex-direction: column; }
+.flex-column-container { display: flex; flex-direction: column; height: 100%; width: 100%; }
+.scrollable-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px; background-color: var(--bg-base); }
+#tab-color { padding: 10px; }
+
+.preset-item, .panel-box { background-color: var(--bg-panel); border: 1px solid var(--border-color); }
+
+.btn-primary { 
+    background: var(--accent-blue); 
+    color: #fff; 
+    border: none; 
+    border-radius: 4px; 
+    padding: 8px 12px; 
+    cursor: pointer; 
+    font-size: 12px; 
+    width: 100%; 
+    margin: 0; 
+    transition: background 0.15s; 
+}
+.btn-primary:hover { background: var(--accent-hover); }
+
+.btn-secondary { 
+    background: var(--bg-panel); 
+    color: var(--text-primary); 
+    border: 1px solid var(--border-color); 
+    border-radius: 4px; 
+    padding: 8px 12px; 
+    cursor: pointer; 
+    font-size: 12px; 
+    width: 100%; 
+    margin: 0; 
+    transition: background 0.15s; 
+}
+.btn-secondary:hover { background: #353535; }
+
+.btn-icon { 
+    background: transparent; 
+    color: var(--text-secondary); 
+    border: none; 
+    padding: 4px; 
+    cursor: pointer; 
+    border-radius: 4px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    transition: background 0.15s, color 0.15s; 
+}
+.btn-icon:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+.btn-icon.active { background: rgba(20,115,230,0.2); color: #5ba4ff; }
+
+.btn-icon-square { 
+    background: var(--bg-input); 
+    color: var(--text-primary); 
+    border: 1px solid var(--border-color); 
+    border-radius: 4px; 
+    cursor: pointer; 
+    width: 28px; 
+    height: 28px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    transition: background 0.15s, border-color 0.15s, transform 0.1s; 
+}
+.btn-icon-square:hover { background: #2a2a2a; border-color: #555; }
+.btn-icon-square:active { transform: scale(0.95); }
+.btn-icon-square svg { width: 17px !important; height: 17px !important; stroke-width: 1.8 !important; flex-shrink: 0; }
+
+.danger-hover:hover { 
+    background: rgba(255, 74, 74, 0.15) !important; 
+    border-color: rgba(255, 74, 74, 0.3) !important; 
+    color: #ff6b6b !important; 
+}
+.danger-hover:hover svg { stroke: #ff6b6b !important; }
+
+.section-block { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; margin-bottom: 4px; }
+.section-label { display: block; font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; }
+
+.modal-input { 
+    width: 100%; 
+    background: var(--bg-input); 
+    color: var(--text-primary); 
+    border: 1px solid var(--border-color); 
+    border-radius: 4px; 
+    padding: 8px 10px; 
+    font-size: 12px; 
+}
+.modal-input:focus { border-color: var(--border-color); outline: none; }
+
+.slider-val-wrapper { 
+    position: relative; 
+    display: inline-flex; 
+    align-items: center; 
+    background: var(--bg-input); 
+    border: 1px solid var(--border-color); 
+    border-radius: 4px; 
+    overflow: hidden; 
+    cursor: text; 
+    transition: border-color 0.2s; 
+}
+.slider-val-wrapper.active { border-color: var(--accent-blue); }
+.slider-val-input { width: 32px; background: transparent; color: var(--text-primary); border: none; text-align: right; padding: 4px 0 4px 6px; font-size: 11px; }
+.slider-val-unit { color: var(--text-secondary); font-size: 10px; padding: 4px 6px 4px 2px; pointer-events: none; }
+
+.main-slider { -webkit-appearance: none; width: 100%; background: transparent; height: 16px; margin: 4px 0; outline: none !important; padding: 0; }
+.main-slider:focus, .main-slider:active { outline: none !important; }
+.main-slider::-webkit-slider-runnable-track { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; border: none; }
+.main-slider::-webkit-slider-thumb { 
+    -webkit-appearance: none; 
+    height: 12px; 
+    width: 12px; 
+    border-radius: 50%; 
+    background: #fff; 
+    cursor: pointer; 
+    margin-top: -4px; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5); 
+    border: 2px solid #fff; 
+    transition: transform 0.15s ease; 
+}
+.main-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.main-slider::-webkit-slider-thumb:active { transform: scale(1.05); }
+
+.numpad-popup { 
+    position: fixed; 
+    bottom: 0; 
+    left: 0; 
+    width: 100%; 
+    background: var(--bg-panel); 
+    border-top: 1px solid var(--border-color); 
+    padding: 8px; 
+    z-index: 9999; 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 6px; 
+    transform: translateY(100%); 
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); 
+}
+.numpad-popup.active { transform: translateY(0); box-shadow: 0 -4px 20px rgba(0,0,0,0.5); }
+.numpad-btn { 
+    background: var(--bg-input); 
+    color: var(--text-primary); 
+    border: 1px solid var(--border-color); 
+    border-radius: 6px; 
+    padding: 12px 0; 
+    text-align: center; 
+    font-size: 14px; 
+    font-weight: 500; 
+    cursor: pointer; 
+    user-select: none; 
+    transition: background 0.1s, transform 0.1s; 
+}
+.numpad-btn:active { background: #3a3a3a; transform: scale(0.96); }
+.numpad-btn.btn-action { background: var(--accent-blue); color: #fff; border: none; }
+.numpad-btn.btn-action:active { background: var(--accent-hover); }
+.numpad-btn.btn-clear { background: rgba(255, 74, 74, 0.15); color: #ff4a4a; border-color: rgba(255, 74, 74, 0.3); }
+
+.modal-overlay { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0, 0, 0, 0.7); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    z-index: 50000; 
+}
+.modal-box { 
+    background: var(--bg-panel); 
+    border: 1px solid var(--border-color); 
+    border-radius: 8px; 
+    padding: 16px; 
+    width: 90%; 
+    max-width: 320px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
+    display: flex; 
+    flex-direction: column; 
+}
+.modal-title { font-size: 14px; font-weight: 500 !important; color: #fff; margin-bottom: 12px; }
+.modal-box .btn-secondary, .modal-box .btn-primary { 
+    margin-top: 0 !important; 
+    height: 34px !important; 
+    display: flex !important; 
+    align-items: center !important; 
+    justify-content: center !important; 
+}
+
+.ctx-menu { 
+    position: fixed; 
+    background: #1e1e1e; 
+    border: 1px solid #444; 
+    border-radius: 6px; 
+    box-shadow: 0 8px 24px rgba(0,0,0,0.7); 
+    z-index: 99999; 
+    min-width: 160px; 
+    font-size: 12px; 
+    padding: 4px 0; 
+}
+.ctx-item { 
+    padding: 6px 12px; 
+    cursor: pointer; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    position: relative; 
+    color: #eee; 
+    transition: background 0.1s; 
+    white-space: nowrap; 
+    border-radius: 6px !important; 
+    margin: 1px 0 !important; 
+}
+.ctx-item:hover { background: var(--accent-blue); color: #fff; z-index: 9999; }
+.ctx-item:first-child { margin-top: 0 !important; }
+.ctx-item:last-child { margin-bottom: 0 !important; }
+.ctx-sub { 
+    position: absolute; 
+    left: 100%; 
+    top: -4px; 
+    background: #1e1e1e; 
+    border: 1px solid #444; 
+    border-radius: 6px; 
+    box-shadow: 0 8px 24px rgba(0,0,0,0.7); 
+    min-width: 140px; 
+    padding: 4px 0; 
+    display: none; 
+    z-index: 100000; 
+}
+
+.toast { 
+    position: fixed; 
+    bottom: 60px; 
+    left: 50%; 
+    transform: translateX(-50%) translateY(20px); 
+    background: #111; 
+    color: #fff; 
+    padding: 6px 12px; 
+    border-radius: 20px; 
+    font-size: 11px; 
+    opacity: 0; 
+    visibility: hidden; 
+    transition: opacity 0.3s, transform 0.3s; 
+    z-index: 999999; 
+    border: 1px solid #333; 
+    pointer-events: none; 
+}
+.toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+
+.global-tooltip {
+    position: fixed;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500 !important;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 999999;
+    transform: translateY(8px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    white-space: nowrap;
+}
+.global-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.custom-select-wrapper { position: relative; user-select: none; width: 100%; }
+.custom-select-display { 
+    background: var(--bg-input); 
+    border: 1px solid var(--border-color); 
+    border-radius: 4px; 
+    padding: 6px 24px 6px 10px; 
+    color: var(--text-primary); 
+    font-size: 11px; 
+    cursor: pointer; 
+    position: relative; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap; 
+    height: 26px; 
+    display: flex; 
+    align-items: center; 
+}
+.custom-select-display::after { 
+    content: ''; 
+    position: absolute; 
+    right: 10px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    border-left: 4px solid transparent; 
+    border-right: 4px solid transparent; 
+    border-top: 4px solid var(--text-secondary); 
+}
+.custom-select-wrapper.active .custom-select-display { border-color: var(--border-color); }
+.custom-select-list { 
+    position: fixed; 
+    background: #1e1e1e; 
+    border: 1px solid #444; 
+    border-radius: 6px !important; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5); 
+    z-index: 99999; 
+    min-width: 120px; 
+    max-height: 200px; 
+    overflow-y: auto; 
+    display: none; 
+    margin-top: 2px; 
+    /* was `overflow: hidden !important` - that !important beat the newer
+       `overflow-y: auto` rule and killed scrolling on every dropdown. Allow
+       vertical scroll, keep horizontal clipped. */
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+.custom-select-wrapper.active .custom-select-list { display: block; }
+.custom-select-option { padding: 6px 10px; font-size: 11px; color: var(--text-primary); cursor: pointer; }
+.custom-select-option:hover { background: var(--accent-blue); color: #fff; }
+.custom-select-option.selected { background: rgba(20, 115, 230, 0.2); color: #5ba4ff; }
+
+.global-nav-container { display: none !important; } 
+.global-nav-btn { 
+    position: fixed !important; 
+    bottom: 2px !important; 
+    z-index: 999999 !important; 
+    width: 22px !important; 
+    height: 22px !important; 
+    border: 1px solid var(--border-color) !important; 
+    background: rgba(20, 20, 20, 0.9) !important; 
+    backdrop-filter: blur(4px) !important; 
+    color: var(--text-secondary) !important; 
+    cursor: pointer !important; 
+    border-radius: 4px !important; 
+    display: flex !important; 
+    align-items: center !important; 
+    justify-content: center !important; 
+    transition: all 0.2s ease !important; 
+    box-shadow: 0 2px 6px rgba(0,0,0,0.8) !important; 
+    opacity: 0.35 !important; 
+}
+.global-nav-btn svg { width: 13px !important; height: 13px !important; stroke-width: 2 !important; }
+.global-nav-btn:hover { 
+    opacity: 1 !important; 
+    background: rgba(255, 255, 255, 0.1) !important; 
+    color: var(--text-primary) !important; 
+    border-color: #555 !important; 
+}
+.global-nav-btn:active { transform: scale(0.9) !important; }
+#global-nav-left { left: 2px !important; } 
+#global-nav-right { right: 2px !important; }
+
+/* Native fallback */
+select { 
+    background-color: var(--bg-input); color: #fff; border: 1px solid var(--border-color) !important; 
+    padding: 10px 34px 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    min-height: 38px; appearance: none; -webkit-appearance: none; 
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23e1e1e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat; background-position: right 14px center; background-size: 16px;
+    cursor: pointer; transition: all 0.2s ease; box-shadow: none !important; outline: none !important;
+}
+select:hover { border-color: #555 !important; }
+select:focus, select:active { border-color: var(--border-color) !important; box-shadow: none !important; outline: none !important; }
+
+/* Custom UI - Premium Video Match */
+.custom-select-wrapper { position: relative; user-select: none; width: 100%; outline: none !important; }
+
+/* Display Box */
+.custom-select-display { 
+    background: var(--bg-input); border: 1px solid var(--border-color) !important; 
+    border-radius: 8px; 
+    padding: 12px 40px 12px 14px !important; 
+    color: var(--text-primary); 
+    font-size: 13px; cursor: pointer; position: relative; 
+    min-height: 38px; 
+    height: auto !important; 
+    box-sizing: border-box !important;
+    display: flex; align-items: center; 
+    box-shadow: none !important; font-weight: 500; outline: none !important;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    white-space: normal !important; word-break: break-word !important; line-height: 1.4 !important;
+}
+
+/* Custom Chevron Arrow */
+.custom-select-display::after { 
+    content: ''; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); 
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    width: 16px; height: 16px; background-size: contain; background-repeat: no-repeat;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border: none !important; /* Wipes out the lingering flat line artifact */
+}
+
+.custom-select-display:hover { border-color: #555 !important; background: rgba(255,255,255,0.03); }
+.custom-select-wrapper.active .custom-select-display { border-color: var(--border-color) !important; }
+
+/* Rotate chevron smoothly on open */
+.custom-select-wrapper.active .custom-select-display::after { transform: translateY(-50%) rotate(180deg); }
+
+/* The Floating Dropdown Container */
+.custom-select-list { 
+    /* fixed, not absolute: an absolute display:block list stays in the scroll
+       flow while closed and adds ~220px of phantom scroll below the last
+       dropdown on a tab. It also caused a layout jump the first time JS switched
+       it to fixed on open, which left the menu stuck / unable to reopen. Fixed
+       from the start keeps it out of the scroll area entirely; the closed list
+       parks just below the viewport (top: 100% + 6px) and JS repositions it on
+       open. */
+    /* Position is fully controlled by buildCustomDropdown: left/width always, and
+       either top (downward) or bottom (upward). Do NOT set top here - on an
+       upward open the JS clears inline top to anchor by bottom, and a CSS
+       top:calc(100%+6px) leaks back in and pushes the menu off-screen, which
+       looks exactly like "the dropdown won't open". */
+    position: fixed; 
+    background: #1c1c1c; 
+    border: 1px solid #333; border-radius: 8px !important; 
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6); 
+    z-index: 999; 
+    padding: 6px; /* Creates the gap between the highlight pills and the menu edge */
+    max-height: 220px; overflow-y: auto;
+    
+    /* Smooth animation physics - Anti-Jerk GPU Fix */
+    display: block; 
+    opacity: 0; visibility: hidden; transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+}
+
+.custom-select-wrapper.active .custom-select-list { 
+    opacity: 1; visibility: visible; transform: translateY(0); 
+}
+/* When positioned above the field (set by buildCustomDropdown), start the slide
+   from below so the menu animates upward into place instead of downward. */
+.custom-select-list.drop-up { transform: translateY(10px); }
+.custom-select-wrapper.active .custom-select-list.drop-up { transform: translateY(0); }
+/* Individual Options */
+.custom-select-option { 
+    padding: 10px 14px 10px 34px !important; 
+    margin: 2px 0; font-size: 13px; color: var(--text-primary); 
+    border-radius: 6px; 
+    position: relative; cursor: pointer; font-weight: 500;
+    transition: background 0.15s ease, color 0.15s ease; 
+    height: auto !important;
+    box-sizing: border-box !important;
+    display: flex; align-items: center;
+    white-space: normal !important; word-break: break-word !important; line-height: 1.4 !important;
+}
+
+
+/* The Pill Highlight */
+.custom-select-option:hover { 
+    background: rgba(255, 255, 255, 0.1); 
+    color: #ffffff; 
+}
+
+.custom-select-option.selected { 
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.03); /* Extremely subtle persistent background for the active choice */
+}
+
+/* The Checkmark */
+.custom-select-option::before {
+    content: ''; position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    width: 15px; height: 15px;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='20 6 9 17 4 12'%3e%3c/polyline%3e%3c/svg%3e");
+    background-size: contain; background-repeat: no-repeat;
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.15s ease;
+}
+
+/* Reveal Checkmark */
+.custom-select-option.selected::before { 
+    opacity: 1; 
+}
+
+/* =======================================
+   GLOBAL TOGGLE SWITCHES
+======================================= */
+.switch { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+
+/* Unchecked State */
+.slider { 
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; 
+    background-color: #2c2c2c !important; /* Dark grey track */
+    border: 1px solid #2c2c2c !important; /* Solid matching border to prevent size jumping */
+    transition: all 0.15s ease-out !important; /* Fast, smooth, no bounce */
+    border-radius: 20px; 
+    box-sizing: border-box !important; /* Hard-locks the physical size */
+}
+.slider:before { 
+    position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; 
+    background-color: #ffffff !important; /* Pure white dot */
+    transition: transform 0.15s ease-out !important; 
+    border-radius: 50%; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important; /* Soft shadow */
+}
+
+/* Checked State */
+input:checked + .slider { 
+    background-color: #2d8ceb !important; /* Vibrant blue track */
+    border-color: #2d8ceb !important; /* Border matches exactly, zero size bump */
+} 
+input:checked + .slider:before { 
+    transform: translateX(16px) !important; 
+    background-color: #ffffff !important; 
+}
+
+/* ---------- Global notification / toast ---------- */
+.notification-overlay {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 12px 14px; z-index: 99999; pointer-events: none;
+    display: flex; justify-content: center;
+    transform: translateY(-120%); opacity: 0;
+    transition: transform .3s cubic-bezier(.2,.8,.2,1), opacity .2s ease;
+}
+.notification-overlay.show { transform: translateY(0); opacity: 1; }
+.notification-content {
+    pointer-events: all;
+    background: var(--bg-panel); border: 1px solid var(--border-color);
+    border-left-width: 3px; border-left-color: var(--border-color);
+    box-shadow: 0 10px 30px rgba(0,0,0,.55);
+    border-radius: 10px; padding: 11px 14px;
+    display: flex; align-items: center; gap: 10px;
+    max-width: 94%; min-width: 0;
+}
+.notification-content.error   { border-left-color: #ff5b5b; }
+.notification-content.success { border-left-color: #3ecf8e; }
+.notification-content.warning { border-left-color: #f0a742; }
+.notif-icon { width: 16px; height: 16px; flex-shrink: 0; }
+.notification-content.error   #notif-icon-error   { color: #ff5b5b; }
+.notification-content.success #notif-icon-success { color: #3ecf8e; }
+.notification-content.warning #notif-icon-warning { color: #f0a742; }
+.notification-text { color: var(--text-primary); font-size: 12.5px; line-height: 1.4; word-break: break-word; flex: 1; }
+.notif-close-btn { background: transparent; border: none; color: var(--text-secondary); font-size: 17px; line-height: 1; cursor: pointer; padding: 0 2px; flex-shrink: 0; transition: color .12s; }
+.notif-close-btn:hover { color: var(--text-primary); }

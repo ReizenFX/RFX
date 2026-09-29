@@ -1,0 +1,22 @@
+{
+    "AEFT": {
+        "id": "1387049921982501055",
+        "name": "Adobe After Effects",
+        "img": "https://res.cloudinary.com/dfzaret8p/image/v3/upload/AE.png"
+    },
+    "PHSP": {
+        "id": "1388901117156393171",
+        "name": "Adobe Photoshop",
+        "img": "https://res.cloudinary.com/dfzaret8p/image/upload/PS_New.png"
+    },
+    "PHXS": {
+        "id": "1388901117156393171",
+        "name": "Adobe Photoshop",
+        "img": "https://res.cloudinary.com/dfzaret8p/image/upload/PS_New.png"
+    },
+    "PPRO": {
+        "id": "1389140344565923901",
+        "name": "Adobe Premiere Pro",
+        "img": "https://res.cloudinary.com/dfzaret8p/image/upload/PR_New.png"
+    }
+}
