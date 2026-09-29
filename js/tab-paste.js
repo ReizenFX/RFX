@@ -305,9 +305,9 @@ window.addEventListener("DOMContentLoaded", () => {
                         const originalBg = btn.style.backgroundColor;
                         
                         btn.innerText = "Copied to PC!";
-                        btn.style.color = "#fff";
-                        btn.style.backgroundColor = "rgba(46, 160, 67, 0.8)";
-                        btn.style.borderColor = "rgba(46, 160, 67, 1)";
+                        btn.style.color = "var(--rfx-text-1)";
+                        btn.style.backgroundColor = "var(--rfx-fill-selected)";
+                        btn.style.borderColor = "transparent";
                         
                         setTimeout(() => {
                             btn.innerText = originalText;

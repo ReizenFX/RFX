@@ -31,9 +31,9 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    background: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    background: var(--rfx-surface-1);
+    border: 1px solid transparent;
+    border-radius: var(--rfx-r-lg);
     padding: 8px 10px;
 }
 .preset-name {
@@ -49,7 +49,7 @@
     cursor: pointer;
     transition: background 0.15s ease;
 }
-.preset-name:hover { background: rgba(255, 255, 255, 0.1); }
+.preset-name:hover { background: var(--rfx-fill-active); }
 .preset-actions { display: flex; flex-direction: row; gap: 4px; }
 
 /* Scoped icon button overrides for render preset rows */
@@ -60,9 +60,9 @@
     font-size: 11px;
 }
 #tab-render .btn-icon.edit-btn:hover,
-.modal-overlay .btn-icon.edit-btn:hover { background: rgba(255, 255, 255, 0.1); color: var(--text-primary); }
+.modal-overlay .btn-icon.edit-btn:hover { background: var(--rfx-fill-active); color: var(--rfx-text-1); }
 #tab-render .btn-icon.delete-btn:hover,
-.modal-overlay .btn-icon.delete-btn:hover { background: rgba(255, 60, 60, 0.2); color: #ff5555; }
+.modal-overlay .btn-icon.delete-btn:hover { background: var(--rfx-fill-active); color: var(--rfx-text-1); }
 
 /* ---- Preset checkbox (radio-style single select) ---- */
 .preset-checkbox {
@@ -71,16 +71,16 @@
     margin: 0;
     width: 24px;
     height: 24px;
-    border: 1px solid #2a2a2a;
-    border-radius: 4px;
-    background: #141414;
+    border: 1px solid transparent;
+    border-radius: var(--rfx-r-sm);
+    background: var(--rfx-fill-track);
     cursor: pointer;
     position: relative;
     flex-shrink: 0;
 }
 .preset-checkbox:checked {
-    background: #142840;
-    border-color: #1a3554;
+    background: var(--rfx-accent);
+    border-color: transparent;
 }
 .preset-checkbox:checked::after {
     content: "";
@@ -89,7 +89,7 @@
     top: 3px;
     width: 5px;
     height: 12px;
-    border: solid #5ea5f0;
+    border: solid var(--rfx-on-accent);
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
 }
@@ -99,19 +99,19 @@
    so the animation actually plays. */
 .progress-bar-container {
     width: 100%;
-    height: 6px;
-    background: var(--bg-input);
-    border-radius: 3px;
+    height: 4px;
+    background: var(--rfx-fill-track);
+    border-radius: 2px;
     overflow: hidden;
     margin-top: 16px;
-    border: 1px solid var(--border-color);
+    border: none;
     position: relative;
 }
 .progress-bar-fill {
     width: 40%;
     height: 100%;
-    background: var(--accent-blue);
-    border-radius: 3px;
+    background: var(--rfx-accent);
+    border-radius: 2px;
     position: absolute;
     animation: indeterminate 1.5s infinite ease-in-out;
 }
@@ -121,14 +121,14 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    background: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
+    background: var(--rfx-input);
+    border: 1px solid transparent;
+    border-radius: var(--rfx-r-md);
     padding: 6px 8px;
     overflow: hidden;
 }
 .path-text {
-    font-family: monospace;
+    font-family: var(--rfx-font-mono);
     font-size: 11px;
     color: var(--text-secondary);
     white-space: nowrap;
@@ -151,7 +151,7 @@
     transition: color 0.2s, background 0.2s;
     flex-shrink: 0;
 }
-.icon-btn:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.1); }
+.icon-btn:hover { color: var(--rfx-text-1); background: var(--rfx-fill-hover); }
 
 /* ---- Toggle switch (used in Render & Output section) ---- */
 .setting-row {
@@ -162,7 +162,7 @@
     color: var(--text-primary);
     gap: 12px;
 }
-.setting-divider { height: 1px; background: rgba(255, 255, 255, 0.05); margin: 12px 0; }
+.setting-divider { height: 1px; background: var(--rfx-line); margin: 12px 0; }
 
 /* ---- Render modal overlay (show/hide via .show class) ----
    global.css .modal-overlay is always-visible; render tab uses
@@ -176,7 +176,6 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease;
-    backdrop-filter: blur(4px);
     padding: 16px;
 }
 #tab-render .modal-overlay.show,
@@ -192,7 +191,7 @@
 .modal-content {
     width: 100%;
     max-width: 400px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    box-shadow: var(--rfx-shadow-lg);
     transform: translateY(20px) scale(0.98);
     transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }

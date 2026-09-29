@@ -211,8 +211,8 @@ window.addEventListener("DOMContentLoaded", () => {
     function updateCheckboxStyles() {
         document.querySelectorAll('#presetListContainer .preset-checkbox').forEach((el, i) => {
             const checked = renderPresets[i] && renderPresets[i].isChecked;
-            el.style.background = checked ? '#142840' : '#141414';
-            el.style.border     = checked ? '1px solid #1a3554' : '1px solid #2a2a2a';
+            el.style.background = checked ? 'var(--rfx-accent)' : 'var(--rfx-fill-track)';
+            el.style.border     = '1px solid transparent';
             let tick = el.querySelector('.checkbox-tick');
             if (checked) {
                 if (!tick) {
@@ -221,7 +221,7 @@ window.addEventListener("DOMContentLoaded", () => {
                     // Exact values from original style.css ::after rule:
                     // display:block, width:5px, height:12px, border shorthand,
                     // rotate(45deg), margin-bottom:3px (shifts tick up inside flex center)
-                    tick.style.cssText = 'display:block; width:5px; height:12px; border:solid #5ea5f0; border-width:0 2px 2px 0; transform:rotate(45deg); margin-bottom:3px; box-sizing:border-box;';
+                    tick.style.cssText = 'display:block; width:5px; height:12px; border:solid var(--rfx-on-accent); border-width:0 2px 2px 0; transform:rotate(45deg); margin-bottom:3px; box-sizing:border-box;';
                     el.appendChild(tick);
                 }
             } else {
@@ -271,7 +271,7 @@ window.addEventListener("DOMContentLoaded", () => {
             nameEl.style.cssText = 'font-size:12px; color:var(--text-primary); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:6px 8px; border-radius:4px; cursor:pointer; min-width:0;';
             nameEl.innerText = preset.name;
             nameEl.setAttribute('data-tooltip', 'Click to apply to selected Comp');
-            nameEl.onmouseover = () => { nameEl.style.background = 'rgba(255,255,255,0.1)'; };
+            nameEl.onmouseover = () => { nameEl.style.background = 'var(--rfx-fill-active)'; };
             nameEl.onmouseout  = () => { nameEl.style.background = ''; };
             nameEl.onclick = () => {
                 if (!csInterface) return;
@@ -282,7 +282,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 const safeCustomName  = safeString(customNameInput ? customNameInput.value.trim() : "");
                 const originalColor   = nameEl.style.color;
 
-                nameEl.style.color = "rgba(46,160,67,1)";
+                nameEl.style.color = "var(--rfx-ok)";
                 renderJsx(`applyRenderPreset("${tempName}","${safeLoc}","${safeExt}","${safeCustomName}")`, (res) => {
                     if (res && res.startsWith("ERROR:")) {
                         showCustomAlert(res.split("ERROR:")[1]);
@@ -303,7 +303,7 @@ window.addEventListener("DOMContentLoaded", () => {
             editBtn.style.cssText = 'background:transparent; border:1px solid transparent; color:var(--text-secondary); cursor:pointer; border-radius:4px; padding:6px 8px; font-size:11px;';
             editBtn.innerHTML = '✎';
             editBtn.setAttribute('data-tooltip', 'Rename Preset');
-            editBtn.onmouseover = () => { editBtn.style.background = 'rgba(255,255,255,0.1)'; editBtn.style.color = 'var(--text-primary)'; };
+            editBtn.onmouseover = () => { editBtn.style.background = 'var(--rfx-fill-active)'; editBtn.style.color = 'var(--text-primary)'; };
             editBtn.onmouseout  = () => { editBtn.style.background = 'transparent'; editBtn.style.color = 'var(--text-secondary)'; };
             editBtn.onclick = () => openRenameModal(index);
 
@@ -312,7 +312,7 @@ window.addEventListener("DOMContentLoaded", () => {
             delBtn.style.cssText = 'background:transparent; border:1px solid transparent; color:var(--text-secondary); cursor:pointer; border-radius:4px; padding:6px 8px; font-size:11px;';
             delBtn.innerHTML = '✕';
             delBtn.setAttribute('data-tooltip', 'Delete Preset');
-            delBtn.onmouseover = () => { delBtn.style.background = 'rgba(255,60,60,0.2)'; delBtn.style.color = '#ff5555'; };
+            delBtn.onmouseover = () => { delBtn.style.background = 'var(--rfx-fill-active)'; delBtn.style.color = 'var(--text-primary)'; };
             delBtn.onmouseout  = () => { delBtn.style.background = 'transparent'; delBtn.style.color = 'var(--text-secondary)'; };
             delBtn.onclick = () => {
                 renderPresets.splice(index, 1);
@@ -431,7 +431,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const renderModalTitle    = document.getElementById('renderModalTitle');
         const renderModalDesc     = document.getElementById('renderModalDesc');
 
-        if (renderModalTitle) { renderModalTitle.innerText = "Rendering in Progress"; renderModalTitle.style.color = "var(--accent-blue)"; }
+        if (renderModalTitle) { renderModalTitle.innerText = "Rendering in Progress"; renderModalTitle.style.color = "var(--rfx-text-1)"; }
         if (renderModalDesc)  renderModalDesc.innerText = "After Effects will be unresponsive until complete.";
         if (renderProgressModal) renderProgressModal.classList.add('show');
 
@@ -443,7 +443,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 }
 
                 if (res.startsWith("IMPORT_PENDING:::&&:::")) {
-                    if (renderModalTitle) { renderModalTitle.innerText = "Finalizing & Importing"; renderModalTitle.style.color = "rgba(46,160,67,1)"; }
+                    if (renderModalTitle) { renderModalTitle.innerText = "Finalizing & Importing"; renderModalTitle.style.color = "var(--rfx-ok)"; }
                     if (renderModalDesc)  renderModalDesc.innerText = "Dropping file into active composition...";
 
                     const parts = res.split(":::&&:::");
