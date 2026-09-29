@@ -515,18 +515,18 @@ document.addEventListener("DOMContentLoaded", () => {
     tip.id = 'ultimate-tooltip';
     tip.style.cssText = `
         position: fixed !important;
-        background: #111111 !important;
-        color: #ffffff !important;
-        border: 1px solid #444444 !important;
+        background: var(--rfx-menu) !important;
+        color: var(--rfx-text-1) !important;
+        border: 1px solid var(--rfx-line-2) !important;
         padding: 6px 10px !important;
-        border-radius: 4px !important;
+        border-radius: var(--rfx-r-md) !important;
         font-size: 11px !important;
-        font-weight: 500 !important;
+        font-weight: 400 !important;
         white-space: pre-line !important;
         max-width: calc(100vw - 16px) !important;
         overflow-wrap: anywhere !important;
         line-height: 1.4 !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.6) !important;
+        box-shadow: var(--rfx-shadow) !important;
         z-index: 2147483647 !important;
         pointer-events: none !important;
         opacity: 0 !important;

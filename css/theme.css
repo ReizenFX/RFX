@@ -1,0 +1,204 @@
+/* ============================================================================
+   RFX THEME: the only place colours are defined.
+   Loaded before every other stylesheet. js/theme.js sets these attributes on
+   <html> before first paint (from localStorage) and exposes window.RFXTheme:
+     data-rfx-theme    mono (default) | color
+     data-rfx-density  compact | standard (default) | comfortable
+     data-rfx-radius   sharp | standard (default) | round
+     data-rfx-motion   reduce (only when set)
+   A user accent is written as inline --rfx-accent* variables on <html>.
+
+   Rules (see CLAUDE.md "Design system"):
+   - Components use var(--rfx-*) only. No hex/rgb literals outside this file,
+     except content colours (colour pickers, AE label colours, user colours),
+     which carry the marker "rfx-content-color" on the same line.
+   - Highlight with fills (--rfx-fill-*), never with borders or outlines.
+   - The accent marks only: the one primary action of a view, controls that are
+     "on" (toggle, checkbox, radio), slider fill, progress, Graph handles.
+   - No status colours in the mono theme: --rfx-ok/-warn/-err resolve to greys.
+   ========================================================================== */
+
+/* Any element can carry data-rfx-theme to preview a theme inside the panel
+   (the Settings page uses this for its theme cards). */
+:root, [data-rfx-theme="mono"] {
+    /* ---- surfaces (dark to light) ---- */
+    --rfx-bg: #161616;               /* panel background */
+    --rfx-input: #111111;            /* text fields, wells */
+    --rfx-surface-1: #1c1c1c;        /* cards, sections */
+    --rfx-surface-2: #242424;        /* buttons, controls */
+    --rfx-surface-3: #2c2c2c;        /* control hover, raised */
+    --rfx-menu: #1f1f1f;             /* menus, dropdowns, tooltips */
+    --rfx-dialog: #1c1c1c;           /* dialogs */
+    --rfx-overlay: rgba(0, 0, 0, 0.6);
+
+    /* ---- text ---- */
+    --rfx-text-1: #ededed;           /* primary */
+    --rfx-text-2: #a0a0a0;           /* secondary, labels */
+    --rfx-text-3: #6e6e6e;           /* hints, placeholders, metadata */
+    --rfx-text-4: #4a4a4a;           /* disabled */
+
+    /* ---- lines (structure only, never for highlighting) ---- */
+    --rfx-line: #262626;
+    --rfx-line-2: #303030;
+
+    /* ---- state fills (the only way to highlight) ---- */
+    --rfx-fill-hover: rgba(255, 255, 255, 0.06);
+    --rfx-fill-active: rgba(255, 255, 255, 0.10);
+    --rfx-fill-selected: rgba(255, 255, 255, 0.14);
+    --rfx-fill-track: rgba(255, 255, 255, 0.10);   /* slider / progress track */
+    --rfx-fill-dim: rgba(255, 255, 255, 0.03);
+    --rfx-selection: rgba(255, 255, 255, 0.20);    /* text selection (Caption Editor reference) */
+    --rfx-knob: #f2f2f2;                           /* slider and toggle knobs */
+    --rfx-scrollbar: #3a3a3a;
+    --rfx-scrollbar-hover: #4c4c4c;
+    --rfx-grid: rgba(255, 255, 255, 0.05);         /* graph grid */
+    --rfx-grid-strong: rgba(255, 255, 255, 0.12);
+    --rfx-shadow-color: rgba(0, 0, 0, 0.5);
+    --rfx-shadow: 0 8px 24px var(--rfx-shadow-color);
+    --rfx-shadow-lg: 0 20px 56px rgba(0, 0, 0, 0.6);
+    --rfx-scrim: rgba(0, 0, 0, 0.55);              /* over media (video controls, thumbnails) */
+    --rfx-on-media: #ffffff;                       /* text/icons drawn over media */
+
+    /* ---- accent (overridden inline by js/theme.js for a user accent) ---- */
+    --rfx-accent: #e8e8e8;
+    --rfx-accent-hover: #ffffff;
+    --rfx-accent-soft: rgba(232, 232, 232, 0.14);
+    --rfx-on-accent: #111111;
+
+    /* ---- status (greys in mono: meaning comes from icon + wording; what needs
+       attention is brighter, what is fine is quieter) ---- */
+    --rfx-ok: var(--rfx-text-2);
+    --rfx-warn: var(--rfx-text-1);
+    --rfx-err: var(--rfx-text-1);
+    --rfx-ok-soft: var(--rfx-fill-hover);
+    --rfx-warn-soft: var(--rfx-fill-hover);
+    --rfx-err-soft: var(--rfx-fill-hover);
+
+    /* ---- asset type / tag tints (grey in mono) ---- */
+    --rfx-type-folder: var(--rfx-text-2);
+    --rfx-type-expr: var(--rfx-text-2);
+    --rfx-type-video: var(--rfx-text-2);
+    --rfx-type-audio: var(--rfx-text-2);
+    --rfx-type-image: var(--rfx-text-2);
+    --rfx-tag-sat: 0%;               /* saturation of hue-based tag chips */
+
+    /* ---- chart series (Tracker) ---- */
+    --rfx-chart-1: var(--rfx-accent);
+    --rfx-chart-2: #8a8a8a;
+    --rfx-chart-3: #5c5c5c;
+
+    /* ---- typography ---- */
+    --rfx-font: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    --rfx-font-mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+    --rfx-fs-xs: 10px;
+    --rfx-fs-sm: 11px;
+    --rfx-fs-md: 12px;
+    --rfx-fs-lg: 13px;
+    --rfx-fs-xl: 15px;
+    --rfx-fw-regular: 400;
+    --rfx-fw-strong: 600;
+
+    /* ---- sizes (scaled by density) ---- */
+    --rfx-h-sm: 24px;                /* icon buttons, chips */
+    --rfx-h-md: 30px;                /* buttons, inputs, selects */
+    --rfx-h-lg: 36px;                /* bottom action bar */
+    --rfx-sp-1: 4px;
+    --rfx-sp-2: 8px;
+    --rfx-sp-3: 12px;
+    --rfx-sp-4: 16px;
+    --rfx-sp-5: 20px;
+    --rfx-icon-sm: 14px;
+    --rfx-icon-md: 16px;
+    --rfx-icon-stroke: 1.75;
+
+    /* ---- radii (scaled by roundness) ---- */
+    --rfx-r-xs: 3px;
+    --rfx-r-sm: 4px;
+    --rfx-r-md: 6px;
+    --rfx-r-lg: 10px;
+    --rfx-r-xl: 14px;
+    --rfx-r-pill: 999px;
+
+    /* ---- motion ---- */
+    --rfx-dur: 0.15s;
+    --rfx-dur-slow: 0.25s;
+
+    /* ---- legacy names still used by tab styles and scripts ---- */
+    --bg-base: var(--rfx-bg);
+    --bg-panel: var(--rfx-surface-2);
+    --bg-input: var(--rfx-input);
+    --text-primary: var(--rfx-text-1);
+    --text-secondary: var(--rfx-text-2);
+    --border-color: var(--rfx-line);
+    --accent-blue: var(--rfx-accent);
+    --accent-hover: var(--rfx-accent-hover);
+}
+
+/* ---- Theme 2: Color (cool graphite + steel, low saturation) ---- */
+:root[data-rfx-theme="color"], [data-rfx-theme="color"] {
+    --rfx-bg: #14161a;
+    --rfx-input: #101216;
+    --rfx-surface-1: #1a1d22;
+    --rfx-surface-2: #21252b;
+    --rfx-surface-3: #292e35;
+    --rfx-menu: #1c2026;
+    --rfx-dialog: #1a1d22;
+    --rfx-text-1: #e4e8ee;
+    --rfx-text-2: #99a2ae;
+    --rfx-text-3: #6a727d;
+    --rfx-text-4: #474d56;
+    --rfx-line: #242931;
+    --rfx-line-2: #2d333c;
+    --rfx-knob: #eef2f7;
+    --rfx-scrollbar: #363c45;
+    --rfx-scrollbar-hover: #465061;
+
+    --rfx-accent: #7d9cc7;
+    --rfx-accent-hover: #8fabd2;
+    --rfx-accent-soft: rgba(125, 156, 199, 0.16);
+    --rfx-on-accent: #0e1116;
+
+    --rfx-ok: #8db596;
+    --rfx-warn: #c9ae78;
+    --rfx-err: #c98585;
+    --rfx-ok-soft: rgba(141, 181, 150, 0.12);
+    --rfx-warn-soft: rgba(201, 174, 120, 0.12);
+    --rfx-err-soft: rgba(201, 133, 133, 0.12);
+
+    --rfx-type-folder: #c9b27e;
+    --rfx-type-expr: #a99bd0;
+    --rfx-type-video: #8db596;
+    --rfx-type-audio: #c9a07e;
+    --rfx-type-image: #8fa9c8;
+    --rfx-tag-sat: 24%;
+
+    --rfx-chart-2: #8b96a6;
+    --rfx-chart-3: #58616e;
+}
+
+/* ---- Density ---- */
+:root[data-rfx-density="compact"] {
+    --rfx-h-sm: 22px; --rfx-h-md: 26px; --rfx-h-lg: 32px;
+    --rfx-sp-1: 3px; --rfx-sp-2: 6px; --rfx-sp-3: 9px; --rfx-sp-4: 12px; --rfx-sp-5: 16px;
+}
+:root[data-rfx-density="comfortable"] {
+    --rfx-h-sm: 26px; --rfx-h-md: 34px; --rfx-h-lg: 40px;
+    --rfx-sp-1: 5px; --rfx-sp-2: 10px; --rfx-sp-3: 14px; --rfx-sp-4: 18px; --rfx-sp-5: 24px;
+}
+
+/* ---- Roundness ---- */
+:root[data-rfx-radius="sharp"] {
+    --rfx-r-xs: 2px; --rfx-r-sm: 2px; --rfx-r-md: 3px; --rfx-r-lg: 5px; --rfx-r-xl: 7px; --rfx-r-pill: 5px;
+}
+:root[data-rfx-radius="round"] {
+    --rfx-r-xs: 4px; --rfx-r-sm: 6px; --rfx-r-md: 9px; --rfx-r-lg: 14px; --rfx-r-xl: 18px;
+}
+
+/* ---- Reduce motion: no hover/open transitions (busy spinners keep running) ---- */
+:root[data-rfx-motion="reduce"] { --rfx-dur: 0s; --rfx-dur-slow: 0s; }
+:root[data-rfx-motion="reduce"] *,
+:root[data-rfx-motion="reduce"] *::before,
+:root[data-rfx-motion="reduce"] *::after {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+}
