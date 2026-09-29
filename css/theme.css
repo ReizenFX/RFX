@@ -59,6 +59,11 @@
     --rfx-shadow-lg: 0 20px 56px rgba(0, 0, 0, 0.6);
     --rfx-scrim: rgba(0, 0, 0, 0.55);              /* over media (video controls, thumbnails) */
     --rfx-on-media: #ffffff;                       /* text/icons drawn over media */
+    --rfx-scrim-strong: rgba(0, 0, 0, 0.85);       /* bottom fade under video controls */
+    --rfx-glass: rgba(18, 18, 18, 0.72);           /* popups floating over media */
+    --rfx-media-fill: rgba(255, 255, 255, 0.14);   /* hover fill over media */
+    --rfx-media-track: rgba(255, 255, 255, 0.30);  /* slider track over media */
+    --rfx-media-bg: #000000;                       /* letterbox behind video */
 
     /* ---- accent (overridden inline by js/theme.js for a user accent) ---- */
     --rfx-accent: #e8e8e8;
@@ -82,6 +87,7 @@
     --rfx-type-audio: var(--rfx-text-2);
     --rfx-type-image: var(--rfx-text-2);
     --rfx-tag-sat: 0%;               /* saturation of hue-based tag chips */
+    --rfx-viz-sat: 0;                /* saturation scale of the audio thumbnails (Assets) */
 
     /* ---- chart series (Tracker) ---- */
     --rfx-chart-1: var(--rfx-accent);
@@ -172,6 +178,7 @@
     --rfx-type-audio: #c9a07e;
     --rfx-type-image: #8fa9c8;
     --rfx-tag-sat: 24%;
+    --rfx-viz-sat: 0.55;
 
     --rfx-chart-2: #8b96a6;
     --rfx-chart-3: #58616e;

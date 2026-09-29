@@ -346,10 +346,10 @@ function renderAssets(){
     if (!items.length){
         const empty = document.createElement('div'); empty.className = 'assets-empty-state';
         empty.innerHTML = assetsSearchTerm
-            ? `<svg viewBox="0 0 24 24" width="34" height="34" stroke="#555" stroke-width="1.3" fill="none" style="margin-bottom:10px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><div class="title">No matches for “${escHtml(assetsSearchTerm)}”.</div><div class="sub">Try a different search.</div>`
+            ? `<svg viewBox="0 0 24 24" width="34" height="34" stroke="currentColor" stroke-width="1.3" fill="none" style="color:var(--rfx-text-4);margin-bottom:10px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><div class="title">No matches for “${escHtml(assetsSearchTerm)}”.</div><div class="sub">Try a different search.</div>`
             : assetsTagFilter.length
-            ? `<svg viewBox="0 0 24 24" width="34" height="34" stroke="#555" stroke-width="1.3" fill="none" style="margin-bottom:10px;"><path d="M20.6 8.4 12 17l-4-4"></path><path d="M3 7h6"></path><path d="M3 12h4"></path><path d="M3 17h4"></path></svg><div class="title">Nothing tagged ${escHtml(assetsTagFilter.map(t=>'#'+t).join(' '))}.</div><div class="sub">Clear the filter or tag some assets.</div>`
-            : `<svg viewBox="0 0 24 24" width="38" height="38" stroke="#555" stroke-width="1.2" fill="none" style="margin-bottom:12px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg><div class="title">No assets yet.</div><div class="sub">Use the Save menu below to add comps, layers, expressions or media.</div>`;
+            ? `<svg viewBox="0 0 24 24" width="34" height="34" stroke="currentColor" stroke-width="1.3" fill="none" style="color:var(--rfx-text-4);margin-bottom:10px;"><path d="M20.6 8.4 12 17l-4-4"></path><path d="M3 7h6"></path><path d="M3 12h4"></path><path d="M3 17h4"></path></svg><div class="title">Nothing tagged ${escHtml(assetsTagFilter.map(t=>'#'+t).join(' '))}.</div><div class="sub">Clear the filter or tag some assets.</div>`
+            : `<svg viewBox="0 0 24 24" width="38" height="38" stroke="currentColor" stroke-width="1.2" fill="none" style="color:var(--rfx-text-4);margin-bottom:12px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg><div class="title">No assets yet.</div><div class="sub">Use the Save menu below to add comps, layers, expressions or media.</div>`;
         grid.appendChild(empty); return;
     }
 
@@ -442,7 +442,7 @@ function createAssetCard(item){
     const durBadge = (meta.duration && (kind==='comp'||kind==='layers'||kind==='video'||kind==='audio'))
         ? `<span class="asset-duration">${fmtTime(meta.duration)}</span>` : '';
     const playHint = (kind === 'video' || kind === 'audio')
-        ? `<span class="asset-play-hint"><svg viewBox="0 0 24 24" width="30" height="30" fill="#fff" opacity="0.92"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,.45)"/><polygon points="10 8 16 12 10 16" fill="#fff"/></svg></span>` : '';
+        ? `<span class="asset-play-hint"><svg viewBox="0 0 24 24" width="30" height="30" opacity="0.92"><circle cx="12" cy="12" r="12" style="fill:var(--rfx-scrim)"/><polygon points="10 8 16 12 10 16" style="fill:var(--rfx-on-media)"/></svg></span>` : '';
 
     let thumbInner = kindIcon(kind, 30);
     if (item.thumb || meta.hasThumb){
@@ -981,6 +981,10 @@ var VIZ_RAMP = [14, 26, 38, 52, 96, 152, 174, 190, 204, 220, 242, 266, 292];
    two numbers if a library ends up clustering at one end of the ramp. */
 var VIZ_BRIGHT_LO = 0.05, VIZ_BRIGHT_HI = 0.32;
 
+function vizSatScale(){
+    var v = window.RFXTheme ? parseFloat(window.RFXTheme.cssVar('--rfx-viz-sat', '1')) : 1;
+    return isNaN(v) ? 1 : v;
+}
 function vizPalette(key, ink){
     var k = String(key == null ? '' : key), sg = VIZ_SIG[k];
     if (!sg) return { hue: vizHueFor(k), sat: 88, light: (ink === 'light' ? 58 : 55), ripL: (ink === 'light' ? 60 : 68) };
@@ -1048,7 +1052,7 @@ function createPulseViz(canvas, opts){
     var KEY     = String(opts.key == null ? '' : opts.key);
     var INK     = opts.ink;
     var BG      = opts.bg || null;                  // null -> transparent, let the stage show through
-    var BAR     = opts.bar || '#ffffff';
+    var BAR     = opts.bar || '#ffffff';                 // rfx-content-color (bars drawn on the coloured core)
     var RIP_A   = (opts.alpha != null) ? opts.alpha : 0.40;
     /* macro intensity -> how much room the whole figure is allowed to take.
        Sized so the widest possible ring still clears the frame. */
@@ -1219,7 +1223,8 @@ function createPulseViz(canvas, opts){
         /* solid core — swells with the section, kicks on the beat */
         var cr = R * scale * (1 + CORE_E * viz.energy + CORE_P * viz.pulse * (0.7 + 0.6 * mac));
 
-        g.fillStyle = 'hsl(' + pal.hue + ',' + pal.sat + '%,' + pal.light + '%)';
+        // per-file hue; its saturation follows the theme (--rfx-viz-sat: 0 in Monochrome)
+        g.fillStyle = 'hsl(' + pal.hue + ',' + Math.round(pal.sat * vizSatScale()) + '%,' + pal.light + '%)'; // rfx-content-color
         g.beginPath(); g.arc(cx, cy, cr, 0, Math.PI * 2); g.fill();
 
         /* five pill bars, stretching from their own centre line */
@@ -1304,7 +1309,7 @@ function drawWaveform(canvas, primaryPath, onDone){
             vizStoreSignature(primaryPath, ch, decoded.sampleRate);
             var lv = fileEnvelope(ch, 96);
             vizEnvPut(primaryPath, lv);          // the drawer reuses this instead of decoding again
-            paintStaticViz(canvas, lv, primaryPath, '#0a0a0c');
+            paintStaticViz(canvas, lv, primaryPath, window.RFXTheme ? window.RFXTheme.cssVar('--rfx-input') : null);
             try { actx.close(); } catch(e){}
             if (onDone) onDone(true);
         }, function(){ try { actx.close(); } catch(e){} if (onDone) onDone(false); });
@@ -1388,10 +1393,10 @@ function openDrawer(item){
     const primary = findPrimaryFile(item.path);
     let stage = '', controls = '';
     if (kind === 'video' && primary){
-        stage = `<div class="asset-stage" id="ad-stage" style="background:#000;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;max-height:360px;position:relative;"><video id="ad-media" src="${fileUrl(primary)}" playsinline style="width:100%;max-height:360px;object-fit:contain;display:block;background:#000;"></video>${mediaControlsHtml(false)}</div>`;
+        stage = `<div class="asset-stage" id="ad-stage" style="background:var(--rfx-media-bg);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;max-height:360px;position:relative;"><video id="ad-media" src="${fileUrl(primary)}" playsinline style="width:100%;max-height:360px;object-fit:contain;display:block;background:var(--rfx-media-bg);"></video>${mediaControlsHtml(false)}</div>`;
         controls = '';
     } else if (kind === 'audio' && primary){
-        stage = `<div class="asset-stage" id="ad-stage" style="background:#0d0d0d;border-radius:10px;overflow:hidden;position:relative;height:150px;"><canvas class="waveform" id="ad-wave" style="width:100%;height:100%;display:block;"></canvas><audio id="ad-media" src="${fileUrl(primary)}"></audio>${mediaControlsHtml(true)}</div>`;
+        stage = `<div class="asset-stage" id="ad-stage" style="background:var(--rfx-input);border-radius:10px;overflow:hidden;position:relative;height:150px;"><canvas class="waveform" id="ad-wave" style="width:100%;height:100%;display:block;"></canvas><audio id="ad-media" src="${fileUrl(primary)}"></audio>${mediaControlsHtml(true)}</div>`;
         controls = '';
     } else if (kind === 'image' && primary){
         stage = `<div class="asset-stage"><img src="${fileUrl(primary)}" alt=""></div>`;
@@ -1404,10 +1409,10 @@ function openDrawer(item){
     } else if ((kind === 'comp' || kind === 'layers') && meta.previewFormat === 'gif'){
         /* a canvas, not an <img> — see decodeGif: the browser gives no control at
            all over a GIF's playback, so the frames are decoded and driven here */
-        stage = `<div class="asset-stage" id="ad-stage" style="background:#141414;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;max-height:340px;position:relative;"><canvas id="ad-gifcv" style="width:100%;max-height:340px;object-fit:contain;display:block;"></canvas>${flipControlsHtml()}</div>`;
+        stage = `<div class="asset-stage" id="ad-stage" style="background:var(--rfx-input);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;max-height:340px;position:relative;"><canvas id="ad-gifcv" style="width:100%;max-height:340px;object-fit:contain;display:block;"></canvas>${flipControlsHtml()}</div>`;
         controls = '';
     } else if ((kind === 'comp' || kind === 'layers') && meta.previewCount > 0){
-        stage = `<div class="asset-stage" id="ad-stage" style="background:#141414;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;max-height:340px;position:relative;"><img id="ad-flip" style="width:100%;max-height:340px;object-fit:contain;display:block;background:#141414;">${flipControlsHtml()}</div>`;
+        stage = `<div class="asset-stage" id="ad-stage" style="background:var(--rfx-input);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;max-height:340px;position:relative;"><img id="ad-flip" style="width:100%;max-height:340px;object-fit:contain;display:block;background:var(--rfx-input);">${flipControlsHtml()}</div>`;
         controls = '';
     } else if (meta.hasThumb || (window.cep.fs.stat(item.path + "/.thumb.png").err === window.cep.fs.NO_ERROR)){
         stage = `<div class="asset-stage"><img src="${fileUrl(item.thumb || (item.path + "/.thumb.png"))}" alt=""></div>`;
@@ -1435,7 +1440,7 @@ function openDrawer(item){
             <button class="btn-primary" id="ad-import">${importLabel}</button>
             <button class="btn-secondary icon-btn" id="ad-reveal" data-tooltip="Reveal in Explorer"><svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></button>
             <button class="btn-secondary icon-btn" id="ad-rename" data-tooltip="Rename"><svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg></button>
-            <button class="btn-secondary icon-btn" id="ad-delete" data-tooltip="Delete" style="color:#ff6b6b;"><svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+            <button class="btn-secondary icon-btn" id="ad-delete" data-tooltip="Delete"><svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
          </div>`;
 
     scroll.querySelector('#ad-close').onclick = closeDrawer;
@@ -1489,58 +1494,8 @@ function _rfxPortalShow(pop, anchor){
 function _rfxPortalHide(pop){ if (pop) pop.classList.remove('show'); }
 function _rfxCleanPortals(){ var l = document.querySelectorAll('.rfx-portaled'); for (var i=0;i<l.length;i++) l[i].remove(); }
 
-function ensureOvcStyles(){
-    if (document.getElementById('rfx-ovc-styles')) return;
-    var css = ''
-    + '.ovc{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;flex-direction:column;gap:6px;padding:24px 8px 9px;box-sizing:border-box;background:linear-gradient(to top,rgba(0,0,0,.85),rgba(0,0,0,0));font-variant-numeric:tabular-nums;}'
-    + '.ovc-row{display:flex;align-items:center;gap:5px;}'
-    + '.ovc-spacer{flex:1 1 auto;}'
-    + '.ovc button{flex:0 0 auto;width:26px;height:26px;padding:0;background:none;border:none;color:#fff;cursor:pointer;border-radius:7px;display:flex;align-items:center;justify-content:center;line-height:0;opacity:.9;transition:opacity .12s,background .12s;}'
-    + '.ovc button:hover{opacity:1;background:rgba(255,255,255,.14);}'
-    + '.ovc-time{flex:0 0 auto;font-size:11px;color:#ededed;white-space:nowrap;padding-left:2px;}'
-    + '.ovc-row .ovc-speed{width:46px;min-width:46px;padding:0;font-size:11px;font-weight:600;}'   // fixed width so the row/popup never shifts
-    + '.ovc-seek{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:3px;background:rgba(255,255,255,.3);cursor:pointer;}'
-    + '.ovc-seek::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;cursor:pointer;}'
-    + '.ovc-vol{position:relative;flex:0 0 auto;display:flex;align-items:center;}'
-    + '.ovc-speedwrap{position:relative;flex:0 0 auto;display:flex;align-items:center;}'
-    // popups are portaled to the top level / fullscreen element and positioned by JS
-    + '.ovc-volpop{position:fixed;z-index:99999;width:34px;height:106px;background:rgba(15,15,15,.5);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.14);border-radius:11px;box-shadow:0 8px 22px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transform:translateY(10px);transform-origin:bottom center;will-change:transform,opacity;transition:opacity .22s ease,transform .3s cubic-bezier(.22,.61,.36,1);}'
-    + '.ovc-volpop.show{opacity:1;transform:translateY(0);pointer-events:auto;}'
-    + '.ovc-volrange{-webkit-appearance:none;appearance:none;width:82px;height:4px;border-radius:3px;background:rgba(255,255,255,.28);cursor:pointer;transform:rotate(-90deg);}'
-    + '.ovc-volrange::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;cursor:pointer;}'
-    + '.ovc-speedpop{position:fixed;z-index:99999;width:60px;background:rgba(15,15,15,.5);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.14);border-radius:11px;box-shadow:0 8px 22px rgba(0,0,0,.45);padding:4px;display:flex;flex-direction:column;gap:2px;opacity:0;pointer-events:none;transform:translateY(10px);transform-origin:bottom center;will-change:transform,opacity;transition:opacity .2s ease,transform .28s cubic-bezier(.22,.61,.36,1);}'
-    + '.ovc-speedpop.show{opacity:1;transform:translateY(0);pointer-events:auto;}'
-    + '.ovc-speedpop button{width:100%;height:24px;padding:0;border:none;background:none;color:#cfcfcf;font-size:11px;font-weight:600;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;}'
-    + '.ovc-speedpop button:hover{background:rgba(255,255,255,.14);color:#fff;}'
-    + '.ovc-speedpop button.cur{color:#fff;background:rgba(255,255,255,.12);}'
-    /* loop: bright when on, simply dimmed when off */
-    /* Loop: driven by COLOUR, not opacity. The surrounding .ovc rules already set
-       an opacity on every button, so an opacity rule here was being cancelled out —
-       which is why the icon looked identical either way. */
-    + '.ovc-loopbtn{color:#5a5a5a !important;opacity:1 !important;transition:color .13s;}'
-    + '.ovc-loopbtn:hover{color:#8d8d8d !important;}'
-    + '.ovc-loopbtn.on{color:#ffffff !important;}'
-    + '.ovc-loopbtn.on:hover{color:#ffffff !important;}'
-    + '.hvol{position:absolute;right:6px;bottom:6px;z-index:6;display:flex;align-items:center;justify-content:flex-end;}'
-    + '.hvol .spk{flex:0 0 auto;width:26px;height:26px;border:none;border-radius:7px;background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:0;}'
-    + '.hvol .rng{-webkit-appearance:none;appearance:none;width:0;opacity:0;height:4px;margin-right:0;border-radius:3px;background:rgba(255,255,255,.32);cursor:pointer;transition:width .28s cubic-bezier(.22,.61,.36,1),opacity .22s ease,margin-right .28s cubic-bezier(.22,.61,.36,1);}'
-    + '.hvol .rng::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;cursor:pointer;}'
-    + '.hvol.open .rng{width:var(--hvw,64px);opacity:1;margin-right:7px;}'
-    + '.asset-card{position:relative;}'
-    + '.hvol{opacity:0;pointer-events:none;transition:opacity .15s;}'
-    + '.asset-card:hover .hvol{opacity:1;pointer-events:auto;}'
-    + '.hvol-list{right:8px;bottom:auto;top:50%;transform:translateY(-50%);background:rgba(20,20,20,.92);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:9px;padding:3px;}'
-    + '.assets-scroll.list .asset-card:hover .asset-list-kind{opacity:0;transition:opacity .15s;}'
-    + '.asset-stage:fullscreen,.asset-stage:-webkit-full-screen{max-height:none !important;width:100vw;height:100vh;border-radius:0;background:#000;}'
-    + '.asset-stage:fullscreen video,.asset-stage:-webkit-full-screen video{max-height:100vh !important;width:100%;height:100%;object-fit:contain;}'
-    + '.asset-stage:fullscreen img,.asset-stage:-webkit-full-screen img{max-height:100vh !important;width:100%;height:100%;object-fit:contain;}'
-    + '.asset-stage:fullscreen .ovc,.asset-stage:-webkit-full-screen .ovc{padding:48px 10px 22px;gap:8px;}'
-    + '.asset-stage:fullscreen .ovc-time,.asset-stage:-webkit-full-screen .ovc-time{font-size:13px;}';
-    var s = document.createElement('style');
-    s.id = 'rfx-ovc-styles';
-    s.textContent = css;
-    document.head.appendChild(s);
-}
+/* Video overlay control styles live in css/tab-assets.css. */
+function ensureOvcStyles(){}
 /* =====================================================================
    SHARED SPEED MENU
 
@@ -1785,10 +1740,10 @@ function wireMediaControls(media, root, opts){
     function setPlayIcon(){ if (pico) pico.innerHTML = media.paused ? PLAY : PAUSE; }
     function paintSeek(){ var d=media.duration||0;
         if (!seeking && seek){ seek.value = d ? media.currentTime/d*1000 : 0;
-            var p=d?media.currentTime/d*100:0; seek.style.background='linear-gradient(to right,#fff '+p+'%,rgba(255,255,255,.3) '+p+'%)'; }
+            var p=d?media.currentTime/d*100:0; seek.style.background='linear-gradient(to right,var(--rfx-on-media) '+p+'%,var(--rfx-media-track) '+p+'%)'; }
         if (time) time.textContent = fmt(media.currentTime)+' / '+fmt(d); }
     function paintVol(){ var v=Number(vol?vol.value:100); if (volico) volico.innerHTML=(media.muted||v===0)?MUTE:VOL;
-        if (vol) vol.style.background='linear-gradient(to right,#fff '+v+'%,rgba(255,255,255,.3) '+v+'%)'; }
+        if (vol) vol.style.background='linear-gradient(to right,var(--rfx-on-media) '+v+'%,var(--rfx-media-track) '+v+'%)'; }
     function toggle(){ if (media.paused) media.play(); else media.pause(); }
 
     if (play) play.addEventListener('click', function(e){ e.stopPropagation(); toggle(); });
@@ -1799,7 +1754,7 @@ function wireMediaControls(media, root, opts){
     media.addEventListener('loadedmetadata', paintSeek);
 
     if (seek){ seek.addEventListener('input', function(){ seeking=true; var d=media.duration||0, p=seek.value/10;
-        seek.style.background='linear-gradient(to right,#fff '+p+'%,rgba(255,255,255,.3) '+p+'%)';
+        seek.style.background='linear-gradient(to right,var(--rfx-on-media) '+p+'%,var(--rfx-media-track) '+p+'%)';
         if (time) time.textContent=fmt(seek.value/1000*d)+' / '+fmt(d); });
         seek.addEventListener('change', function(){ var d=media.duration||0; media.currentTime=seek.value/1000*d; seeking=false; }); }
 
@@ -1885,7 +1840,7 @@ function wireGifPlayer(root, opts){
         const at = starts[i] || 0;
         if (seek){ const p = total ? (at / total * 100) : 0;
             seek.value = p * 10;
-            seek.style.background = 'linear-gradient(to right,#fff ' + p + '%,rgba(255,255,255,.3) ' + p + '%)'; }
+            seek.style.background = 'linear-gradient(to right,var(--rfx-on-media) ' + p + '%,var(--rfx-media-track) ' + p + '%)'; }
         if (time) time.textContent = fmtTime(at / 1000) + ' / ' + fmtTime(total / 1000);
     }
     function stop(){ playing = false; setIcon(); if (timer){ clearTimeout(timer); timer = null; } }
@@ -1954,7 +1909,7 @@ function wireFlipPlayer(root, opts){
     function show(idx, force){ i = ((idx % n) + n) % n;
         var f = frames[i]; if (f && (f._ok || force)) img.src = f.src;
         if (seek){ var p = n > 1 ? (i / (n - 1) * 100) : 0; seek.value = p * 10;
-            seek.style.background = 'linear-gradient(to right,#fff ' + p + '%,rgba(255,255,255,.3) ' + p + '%)'; }
+            seek.style.background = 'linear-gradient(to right,var(--rfx-on-media) ' + p + '%,var(--rfx-media-track) ' + p + '%)'; }
         if (time) time.textContent = fmtTime(ftime(i)) + ' / ' + fmtTime(dur); }
     function setIcon(){ if (pico) pico.innerHTML = playing ? PAUSE : PLAY; }
     function stop(){ playing = false; setIcon(); if (window.__flipTimer){ clearInterval(window.__flipTimer); window.__flipTimer = null; } }
@@ -2115,16 +2070,14 @@ function openGenPreviewMenu(item, anchor){
     var old = document.getElementById('gen-preview-menu'); if (old) old.remove();
     var cur = (item.meta && item.meta.previewFormat) || '';
     var menu = document.createElement('div'); menu.id = 'gen-preview-menu';
-    menu.style.cssText = 'position:fixed;z-index:2147483647;background:rgba(20,20,20,.97);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid #3a3a3a;border-radius:9px;box-shadow:0 8px 24px rgba(0,0,0,.6);padding:5px;min-width:150px;font-size:12px;';
+    menu.className = 'ctx-menu';
     var opts = [ { fmt:'sequence', label:'Image sequence' }, { fmt:'gif', label:'GIF' } ];
     opts.forEach(function(o){
         var row = document.createElement('div');
         var disabled = (cur === o.fmt);
         row.textContent = o.label + (disabled ? '  (current)' : '');
-        row.style.cssText = 'padding:8px 11px;border-radius:6px;color:' + (disabled ? '#666' : '#eee') + ';cursor:' + (disabled ? 'default' : 'pointer') + ';';
+        row.className = 'ctx-item' + (disabled ? ' ctx-menu-item disabled' : '');
         if (!disabled){
-            row.onmouseenter = function(){ row.style.background = '#5ba4ff'; row.style.color = '#fff'; };
-            row.onmouseleave = function(){ row.style.background = 'transparent'; row.style.color = '#eee'; };
             row.onclick = function(e){ e.stopPropagation(); menu.remove(); generatePreviewFormat(item, o.fmt); };
         }
         menu.appendChild(row);
@@ -2530,140 +2483,7 @@ function wireSheetGesture(){
     });
 }
 
-/* ---------- chrome: grab handle, dark buttons, tags ---------- */
-(function injectAssetChromeCss(){
-    if (document.getElementById('rfx-asset-chrome-css')) return;
-    const st = document.createElement('style'); st.id = 'rfx-asset-chrome-css';
-    st.textContent = [
-        /* ----- sheet + grab handle -----
-           The handle is now a full-width 30px strip with the capsule drawn inside it,
-           so there is a real target to grab. cursor is declared on the strip AND its
-           children, because a bare inline cursor over a repainting region gets dropped
-           by Chromium as soon as the pointer stops moving. */
-        /* height is set inline by JS and must never be overridden, so no rule here
-           declares one. max-height is unpinned for the same reason. */
-        '.asset-drawer{max-height:none !important;display:flex !important;flex-direction:column;overflow:hidden;}',
-        '.asset-drawer.dragging-sheet{transition:none !important;}',
-        /* Flex column: the head and the action row are fixed, the stage takes the
-           slack. Growing the sheet therefore grows the PREVIEW, and the title and
-           buttons stay put instead of being shoved around. */
-        '.asset-drawer .asset-drawer-scroll{flex:1 1 auto !important;min-height:0 !important;max-height:none !important;display:flex !important;flex-direction:column;overflow:hidden !important;}',
-        '.asset-drawer .asset-drawer-head{flex:0 0 auto;}',
-        '.asset-drawer .asset-stage{flex:1 1 auto !important;min-height:84px !important;max-height:none !important;height:auto !important;}',
-        '.asset-drawer .asset-stage>video,.asset-drawer .asset-stage>img{height:100% !important;max-height:100% !important;width:100% !important;object-fit:contain !important;}',
-        '.asset-drawer .asset-stage.expr-stage{overflow:auto !important;}',
-        '.asset-drawer .asset-drawer-actions{flex:0 0 auto !important;margin-top:auto !important;padding-top:10px;}',
-        '.asset-drawer .media-controls,.asset-drawer .ovc-bar,.asset-drawer .gen-preview{flex:0 0 auto;}',
-        '.asset-drawer .asset-drawer-handle{position:relative;display:block;width:100%;height:30px;min-height:30px;margin:0;padding:0;background:transparent;border-radius:0;flex:0 0 auto;-webkit-user-select:none;user-select:none;}',
-        '.asset-drawer .asset-drawer-handle,.asset-drawer .asset-drawer-handle *{cursor:default !important;}',
-        '.asset-drawer .asset-drawer-handle::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:42px;height:4px;border-radius:4px;background:#4c4c4c;transition:background .15s,width .15s;pointer-events:none;}',
-        '.asset-drawer .asset-drawer-handle:hover::after{background:#6f6f6f;width:54px;}',
-        '.asset-drawer.dragging-sheet .asset-drawer-handle::after{background:#8a8a8a;width:54px;}',
-
-        /* ----- buttons: dark, flat, premium ----- */
-        '#tab-assets .btn-primary,#tab-assets .btn-secondary,.asset-drawer .btn-primary,.asset-drawer .btn-secondary,'
-        + '#asset-error-modal .btn-primary,#asset-error-modal .btn-secondary,#tag-editor-modal .btn-primary,#tag-editor-modal .btn-secondary,'
-        + '#asset-delete-modal .btn-primary,#asset-delete-modal .btn-secondary,#asset-save-input-modal .btn-primary,#asset-save-input-modal .btn-secondary{'
-        + 'background:#22252b !important;border:1px solid #33373f !important;color:#d8dbe0 !important;border-radius:10px !important;'
-        + 'box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 1px 3px rgba(0,0,0,.4) !important;'
-        + 'font-weight:500 !important;letter-spacing:.01em;transition:background .15s,border-color .15s,color .15s !important;}',
-        '#tab-assets .btn-primary:hover,#tab-assets .btn-secondary:hover,.asset-drawer .btn-primary:hover,.asset-drawer .btn-secondary:hover,'
-        + '#asset-error-modal .btn-primary:hover,#tag-editor-modal .btn-primary:hover,#tag-editor-modal .btn-secondary:hover,'
-        + '#asset-delete-modal .btn-secondary:hover,#asset-save-input-modal .btn-primary:hover,#asset-save-input-modal .btn-secondary:hover{'
-        + 'background:#2a2e35 !important;border-color:#454b55 !important;color:#f0f2f5 !important;}',
-        '#tab-assets .btn-primary:active,.asset-drawer .btn-primary:active{background:#1d2026 !important;}',
-        /* the single accent: the main action keeps a faintly brighter edge so it still reads first */
-        '.asset-drawer #ad-import{border-color:#454b55 !important;color:#f2f4f7 !important;}',
-        '.asset-drawer #ad-import:hover{border-color:#5d656f !important;background:#2d3138 !important;}',
-        /* destructive, matching the red key in the reference */
-        '.asset-drawer #ad-delete{color:#f08a8a !important;border-color:#4a2c2f !important;background:#241b1d !important;}',
-        '.asset-drawer #ad-delete:hover{background:#2e2023 !important;border-color:#6d3b40 !important;color:#ff9c9c !important;}',
-        '#asset-delete-modal .btn-primary{background:#241b1d !important;border:1px solid #4a2c2f !important;color:#f08a8a !important;}',
-        '#asset-delete-modal .btn-primary:hover{background:#2e2023 !important;border-color:#6d3b40 !important;color:#ff9c9c !important;}',
-
-        /* ----- header meta line ----- */
-        '.ad-metaline{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}',
-        '.ad-kind{opacity:.85;}',
-        '.ad-tagrow{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;}',
-        '.ad-tagadd{width:17px;height:17px;border-radius:50%;border:1px dashed #4a4a4a;background:transparent;color:#888;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:0;transition:all .15s;}',
-        '.ad-tagadd:hover{border-color:#8f98a4;color:#cdd3da;background:rgba(255,255,255,.05);}',
-
-        /* ----- tag chips: brighter text, outline-only selection ----- */
-        /* Tags: low saturation, high lightness text on a soft tinted fill. The colour
-           identifies the tag; it never has to carry the contrast. Borders were the
-           source of the thin-stroke artifacts, so the fill does the work instead. */
-        '.tag-chip{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:500;letter-spacing:.015em;padding:3px 8px;border-radius:6px;border:none;'
-        + 'color:hsl(var(--th),30%,82%);background:hsla(var(--th),26%,52%,.16);white-space:nowrap;}',
-        '.tag-chip-sm{font-size:9px;padding:2px 6px;gap:3px;}',
-        '.tag-chip .tag-x{font-style:normal;cursor:pointer;opacity:.55;font-size:12px;line-height:1;}',
-        '.tag-chip .tag-x:hover{opacity:1;color:#ff9c9c;}',
-
-        /* ----- tag editor + filter popover ----- */
-        '.tag-picked{display:flex;flex-wrap:wrap;gap:5px;min-height:24px;align-items:center;padding:8px;border-radius:8px;background:#1a1a1a;border:1px solid #333;}',
-        '#tg-input{transition:border-color .15s;}',
-        '#tg-input:focus{border-color:#5d656f;}',
-        '.tag-all{display:flex;flex-wrap:wrap;gap:5px;padding:8px 18px 0;max-height:150px;overflow-y:auto;}',
-        '.tag-opt{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:500;padding:4px 9px;border-radius:6px;border:none;cursor:pointer;white-space:nowrap;'
-        + 'color:hsl(var(--th),24%,74%);background:hsla(var(--th),22%,50%,.13);transition:background .13s,color .13s;}',
-        '.tag-opt:hover{background:hsla(var(--th),26%,55%,.22);color:hsl(var(--th),32%,86%);}',
-        /* selected: the fill deepens and the text brightens — no ring, nothing to alias */
-        '.tag-opt.on{color:hsl(var(--th),42%,93%);background:hsla(var(--th),34%,52%,.42);}',
-        '.tag-opt.on:hover{background:hsla(var(--th),36%,55%,.5);}',
-        '.tag-opt .tag-del{font-style:normal;opacity:.45;font-size:12px;line-height:1;margin-left:1px;transition:opacity .13s,color .13s;}',
-        '.tag-opt:hover .tag-del{opacity:.85;}',
-        '.tag-opt .tag-del:hover{opacity:1;color:#ff9c9c;}',
-        '.tag-filter-on{color:#cdd3da !important;}',
-
-        /* ----- busy modal ----- */
-        '#asset-busy{position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;'
-        + 'background:rgba(8,8,10,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);opacity:0;transition:opacity .18s ease;cursor:progress;}',
-        '#asset-busy.in{opacity:1;}',
-        '#asset-busy .ab-card{width:252px;max-width:100%;box-sizing:border-box;padding:22px 20px 19px;border-radius:14px;'
-        + 'background:#1c1c1e;border:1px solid #2e2e30;box-shadow:0 20px 56px rgba(0,0,0,.6);'
-        + 'display:flex;flex-direction:column;align-items:center;text-align:center;'
-        + 'transform:translateY(6px) scale(.985);transition:transform .22s cubic-bezier(.2,.8,.3,1);}',
-        '#asset-busy.in .ab-card{transform:none;}',
-        '#asset-busy .ab-spin{width:26px;height:26px;box-sizing:border-box;border-radius:50%;margin-bottom:14px;'
-        + 'border:2.5px solid rgba(255,255,255,.1);border-top-color:#3b82f6;will-change:transform;animation:abSpin .8s linear infinite;}',
-        '@keyframes abSpin{to{transform:rotate(360deg)}}',
-        '#asset-busy .ab-label{font-size:13px;font-weight:600;color:#e8e8ea;letter-spacing:.01em;line-height:1.35;}',
-        '#asset-busy .ab-detail{margin-top:5px;font-size:11px;color:#8a8a8d;line-height:1.45;overflow-wrap:anywhere;}',
-        '@media (prefers-reduced-motion:reduce){#asset-busy .ab-spin{animation-duration:2.4s;}}',
-
-        /* ----- sort / group / filter menu ----- */
-        '#assets-sort-menu{position:fixed;z-index:2147483647;min-width:208px;max-width:280px;padding:6px;'
-        + 'background:rgba(30,30,32,.985);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);'
-        + 'border:1px solid #3a3d43;border-radius:12px;box-shadow:0 14px 36px rgba(0,0,0,.72);'
-        + 'font-size:12px;color:#d8dbe0;opacity:0;transform:translateY(-4px) scale(.98);transition:opacity .13s ease,transform .13s cubic-bezier(.2,.8,.3,1);}',
-        '#assets-sort-menu.in{opacity:1;transform:none;}',
-        '#assets-sort-menu .sm-head{font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:#6d7278;padding:7px 10px 4px;}',
-        '#assets-sort-menu .sm-sep{height:1px;background:#34373d;margin:5px 6px;}',
-        '#assets-sort-menu .sm-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;transition:background .1s;}',
-        '#assets-sort-menu .sm-row:hover{background:rgba(255,255,255,.07);}',
-        '#assets-sort-menu .sm-row.on{color:#fff;}',
-        '#assets-sort-menu .sm-tick{width:14px;flex:0 0 14px;display:inline-flex;align-items:center;justify-content:center;color:#7fb2ff;}',
-        '#assets-sort-menu .sm-clear{color:#9aa0a8;justify-content:center;margin-top:2px;}',
-        '#assets-sort-menu .sm-tags{display:flex;flex-wrap:wrap;gap:5px;padding:4px 10px 6px;max-height:132px;overflow-y:auto;}',
-        '#assets-sort-menu .sm-empty{font-size:10.5px;color:#6d7278;padding:2px 10px 8px;line-height:1.5;}',
-
-        /* ----- group headers ----- */
-        '.asset-group-head{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:12px 2px 5px;'
-        + 'font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#8b9098;}',
-        '.asset-group-head::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#3a3d43,transparent);}',
-        '.asset-group-head i{font-style:normal;font-size:9.5px;color:#666b72;background:rgba(255,255,255,.06);padding:1px 6px;border-radius:20px;order:-1;margin-left:2px;}',
-        '.asset-group-head span{order:-2;}',
-
-        /* ----- one tag on the card, bottom-left of the thumb ----- */
-        '.asset-thumb{position:relative;}',
-        '.card-tag{position:absolute;left:5px;bottom:5px;z-index:3;max-width:calc(100% - 12px);overflow:hidden;text-overflow:ellipsis;'
-        + 'font-size:9px;font-weight:500;line-height:1;padding:3px 6px;border-radius:5px;white-space:nowrap;pointer-events:none;border:none;'
-        + 'color:hsl(var(--th),30%,86%);background:hsla(var(--th),24%,16%,.9);'
-        + '-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}',
-        '.assets-scroll.list .card-tag{left:4px;bottom:3px;font-size:8.5px;padding:1px 4px;}',
-        '.asset-card:hover .card-tag{opacity:.4;transition:opacity .15s;}'
-    ].join('\n');
-    document.head.appendChild(st);
-})();
+/* ---------- chrome: grab handle, dark buttons, tags: styles live in css/tab-assets.css ---------- */
 
 /* =====================================================================
    TAGS
@@ -2758,22 +2578,22 @@ function openTagEditor(item){
     const deletes = [];                       // tags to remove from the library entirely
 
     const modal = document.createElement('div'); modal.id = 'tag-editor-modal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);z-index:2147483647;display:flex;justify-content:center;align-items:center;';
+    modal.style.cssText = 'position:fixed;inset:0;background:var(--rfx-overlay);z-index:2147483647;display:flex;justify-content:center;align-items:center;';
     const box = document.createElement('div');
-    box.style.cssText = 'background:#232323;border:1px solid #444;border-radius:12px;width:330px;box-shadow:0 10px 30px rgba(0,0,0,.8);overflow:hidden;';
+    box.style.cssText = 'background:var(--rfx-dialog);border:1px solid var(--rfx-line);border-radius:12px;width:330px;box-shadow:var(--rfx-shadow-lg);overflow:hidden;';
     box.innerHTML =
         `<div style="padding:16px 18px 12px;">
-            <div style="font-size:14px;font-weight:600;color:#eee;">Tags</div>
-            <div style="font-size:11px;color:#777;margin-top:3px;">${escHtml(item.name.replace(/\.(aep|expr\.json|props\.json)$/,''))}</div>
+            <div style="font-size:14px;font-weight:600;color:var(--rfx-text-1);">Tags</div>
+            <div style="font-size:11px;color:var(--rfx-text-3);margin-top:3px;">${escHtml(item.name.replace(/\.(aep|expr\.json|props\.json)$/,''))}</div>
          </div>
          <div style="padding:0 18px;"><div class="tag-picked" id="tg-picked"></div></div>
          <div style="padding:10px 18px 0;">
             <input id="tg-input" placeholder="Type a tag and press Enter…" spellcheck="false"
-                   style="width:100%;box-sizing:border-box;background:#1a1a1a;border:1px solid #3a3a3a;border-radius:8px;color:#eee;font-size:12px;padding:8px 10px;outline:none;">
+                   style="width:100%;box-sizing:border-box;background:var(--rfx-input);border:1px solid transparent;border-radius:8px;color:var(--rfx-text-1);font-size:12px;padding:8px 10px;outline:none;">
          </div>
-         <div style="padding:12px 18px 0;font-size:10px;color:#666;letter-spacing:.08em;text-transform:uppercase;">All tags</div>
+         <div style="padding:12px 18px 0;font-size:10px;color:var(--rfx-text-3);letter-spacing:.08em;text-transform:uppercase;">All tags</div>
          <div class="tag-all" id="tg-all"></div>
-         <div id="tg-warn" style="padding:8px 18px 0;font-size:10.5px;color:#d9a05b;line-height:1.5;"></div>
+         <div id="tg-warn" style="padding:8px 18px 0;font-size:10.5px;color:var(--rfx-warn);line-height:1.5;"></div>
          <div style="display:flex;gap:10px;padding:14px 18px 16px;"></div>`;
 
     const picked = box.querySelector('#tg-picked'), allBox = box.querySelector('#tg-all'),
@@ -2786,13 +2606,13 @@ function openTagEditor(item){
     }
     function renderPicked(){
         picked.innerHTML = chosen.length ? tagChipsHtml(chosen, { removable: true })
-            : '<span style="font-size:11px;color:#666;">No tags yet.</span>';
+            : '<span style="font-size:11px;color:var(--rfx-text-3);">No tags yet.</span>';
         picked.querySelectorAll('.tag-x').forEach(x => x.onclick = () => {
             chosen = chosen.filter(t => t !== x.dataset.tag); renderPicked(); renderAll();
         });
     }
     function renderAll(){
-        if (!catalogue.length){ allBox.innerHTML = '<span style="font-size:11px;color:#666;">None created yet — type one above.</span>'; return; }
+        if (!catalogue.length){ allBox.innerHTML = '<span style="font-size:11px;color:var(--rfx-text-3);">None created yet — type one above.</span>'; return; }
         allBox.innerHTML = catalogue.map(t => {
             const on = chosen.some(c => c.toLowerCase() === t.toLowerCase());
             return `<span class="tag-opt${on ? ' on' : ''}" data-tag="${escHtml(t)}" style="--th:${tagHue(t)}">#${escHtml(t)}<i class="tag-del" data-del="${escHtml(t)}" title="Delete this tag everywhere">×</i></span>`;
@@ -3142,16 +2962,16 @@ function wireTagFilterButton(){
 window.openAssetErrorModal = function(title, message, hint){
     const old = document.getElementById('asset-error-modal'); if (old) old.remove();
     const modal = document.createElement('div'); modal.id = 'asset-error-modal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);z-index:2147483647;display:flex;justify-content:center;align-items:center;';
+    modal.style.cssText = 'position:fixed;inset:0;background:var(--rfx-overlay);z-index:2147483647;display:flex;justify-content:center;align-items:center;';
     const box = document.createElement('div');
-    box.style.cssText = 'background:#232323;padding:20px;border-radius:10px;border:1px solid #444;width:300px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.8);';
+    box.style.cssText = 'background:var(--rfx-dialog);padding:20px;border-radius:10px;border:1px solid var(--rfx-line);width:300px;text-align:center;box-shadow:var(--rfx-shadow-lg);';
     box.innerHTML =
-        `<div style="width:38px;height:38px;border-radius:50%;background:rgba(255,170,60,.13);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-            <svg viewBox="0 0 24 24" width="19" height="19" stroke="#ffaa3c" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>
+        `<div style="width:38px;height:38px;border-radius:50%;background:var(--rfx-warn-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+            <svg viewBox="0 0 24 24" width="19" height="19" stroke="currentColor" style="color:var(--rfx-warn)" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>
          </div>
-         <div style="font-size:14px;font-weight:600;color:#eee;margin-bottom:8px;">${escHtml(title)}</div>
-         <div style="font-size:12px;color:#aaa;margin-bottom:${hint?'8px':'18px'};line-height:1.5;">${escHtml(message)}</div>
-         ${hint ? `<div style="font-size:11px;color:#777;margin-bottom:18px;line-height:1.5;">${escHtml(hint)}</div>` : ''}`;
+         <div style="font-size:14px;font-weight:600;color:var(--rfx-text-1);margin-bottom:8px;">${escHtml(title)}</div>
+         <div style="font-size:12px;color:var(--rfx-text-2);margin-bottom:${hint?'8px':'18px'};line-height:1.5;">${escHtml(message)}</div>
+         ${hint ? `<div style="font-size:11px;color:var(--rfx-text-3);margin-bottom:18px;line-height:1.5;">${escHtml(hint)}</div>` : ''}`;
     const ok = mkBtn('Got it','btn-primary');
     ok.onclick = () => modal.remove();
     const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;';
@@ -3503,12 +3323,12 @@ window.assetsNewFolder = function(){ openAssetSaveModal("New Folder Name", "New 
 window.openAssetSaveModal = function(titleText, defaultText, onConfirm, onCancel){
     const old = document.getElementById('asset-save-input-modal'); if (old) old.remove();
     const modal = document.createElement('div'); modal.id = 'asset-save-input-modal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2147483647;display:flex;justify-content:center;align-items:center;';
-    const box = document.createElement('div'); box.style.cssText = 'background:#232323;padding:20px;border-radius:8px;border:1px solid #333;width:280px;box-shadow:0 8px 24px rgba(0,0,0,.8);display:flex;flex-direction:column;';
-    const title = document.createElement('div'); title.style.cssText = 'font-size:14px;font-weight:600;color:#eee;margin-bottom:15px;'; title.textContent = titleText;
+    modal.style.cssText = 'position:fixed;inset:0;background:var(--rfx-overlay);z-index:2147483647;display:flex;justify-content:center;align-items:center;';
+    const box = document.createElement('div'); box.style.cssText = 'background:var(--rfx-dialog);padding:20px;border-radius:8px;border:1px solid var(--rfx-line);width:280px;box-shadow:var(--rfx-shadow-lg);display:flex;flex-direction:column;';
+    const title = document.createElement('div'); title.style.cssText = 'font-size:14px;font-weight:600;color:var(--rfx-text-1);margin-bottom:15px;'; title.textContent = titleText;
     const input = document.createElement('input'); input.type='text'; input.placeholder = defaultText + "..."; input.value='';
-    input.style.cssText = 'width:100%;background:#151515;border:1px solid #333;color:#eee;padding:10px 12px;border-radius:4px;margin-bottom:20px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;';
-    input.onfocus = () => input.style.borderColor = '#555'; input.onblur = () => input.style.borderColor = '#333';
+    input.style.cssText = 'width:100%;background:var(--rfx-input);border:1px solid transparent;color:var(--rfx-text-1);padding:10px 12px;border-radius:4px;margin-bottom:20px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;';
+    input.onfocus = () => input.style.background = 'var(--rfx-surface-2)'; input.onblur = () => input.style.background = 'var(--rfx-input)';
     const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;gap:10px;';
     const cancel = mkBtn('Cancel','btn-secondary'), ok = mkBtn('OK','btn-primary');
     cancel.onclick = () => { modal.remove(); if (onCancel) onCancel(); };
@@ -3533,13 +3353,13 @@ window.openAssetRenameModal = function(currentName, fullPath){
 window.openAssetDeleteModal = function(name, fullPath){
     const old = document.getElementById('asset-delete-modal'); if (old) old.remove();
     const modal = document.createElement('div'); modal.id = 'asset-delete-modal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2147483647;display:flex;justify-content:center;align-items:center;';
-    const box = document.createElement('div'); box.style.cssText = 'background:#232323;padding:20px;border-radius:8px;border:1px solid #444;width:260px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.8);';
-    box.innerHTML = `<div style="font-size:14px;font-weight:600;color:#eee;margin-bottom:10px;">Confirm Delete</div>
-        <div style="font-size:12px;color:#aaa;margin-bottom:20px;line-height:1.4;">Delete “${escHtml(name.replace(/\.(aep|expr\.json|props\.json)$/,''))}”? This cannot be undone.</div>`;
+    modal.style.cssText = 'position:fixed;inset:0;background:var(--rfx-overlay);z-index:2147483647;display:flex;justify-content:center;align-items:center;';
+    const box = document.createElement('div'); box.style.cssText = 'background:var(--rfx-dialog);padding:20px;border-radius:8px;border:1px solid var(--rfx-line);width:260px;text-align:center;box-shadow:var(--rfx-shadow-lg);';
+    box.innerHTML = `<div style="font-size:14px;font-weight:600;color:var(--rfx-text-1);margin-bottom:10px;">Confirm Delete</div>
+        <div style="font-size:12px;color:var(--rfx-text-2);margin-bottom:20px;line-height:1.4;">Delete “${escHtml(name.replace(/\.(aep|expr\.json|props\.json)$/,''))}”? This cannot be undone.</div>`;
     const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;gap:10px;';
     const cancel = mkBtn('Cancel','btn-secondary'); cancel.onclick = () => modal.remove();
-    const del = mkBtn('Delete','btn-primary'); del.style.background = '#ff4a4a'; del.style.border = 'none'; del.style.color = '#fff';
+    const del = mkBtn('Delete','btn-primary');
     del.onclick = () => { modal.remove(); AX.eval(`assetsDeleteJSX("${encodeURIComponent(fullPath)}")`, res => {
         if (res === 'ok'){ showToast("Deleted!"); closeDrawer(); assetsRefresh(); } else showToast("Failed to delete."); }); };
     wrap.appendChild(cancel); wrap.appendChild(del); box.appendChild(wrap); modal.appendChild(box); document.body.appendChild(modal);
@@ -3548,24 +3368,20 @@ window.openAssetDeleteModal = function(name, fullPath){
 function assetContextMenu(e, item){
     e.preventDefault(); e.stopPropagation();
     const old = document.getElementById('asset-ctx-menu'); if (old) old.remove();
-    const menu = document.createElement('div'); menu.id = 'asset-ctx-menu';
-    menu.style.cssText = 'position:fixed;background:#1e1e1e;border:1px solid #444;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.8);z-index:2147483647;min-width:150px;padding:4px 0;font-size:12px;';
+    const menu = document.createElement('div'); menu.id = 'asset-ctx-menu'; menu.className = 'ctx-menu';
     const entries = item.isFolder
         ? [ {label:'Open', action:()=>navigateTo(encodeURIComponent(item.path))},
             {label:'Rename', action:()=>openAssetRenameModal(item.name, item.path)},
-            {sep:true}, {label:'Delete', danger:true, action:()=>openAssetDeleteModal(item.name, item.path)} ]
+            {sep:true}, {label:'Delete', action:()=>openAssetDeleteModal(item.name, item.path)} ]
         : [ {label:'Preview', action:()=>openDrawer(item)},
             {label:(item.kind==='expr'?'Apply':'Import'), action:()=>quickImport(item)},
             {label:'Reveal in Explorer', action:()=>revealInExplorer(item.path)},
             {label:'Edit tags…', action:()=>openTagEditor(item)},
             {sep:true}, {label:'Rename', action:()=>openAssetRenameModal(item.name, item.path)},
-            {label:'Delete', danger:true, action:()=>openAssetDeleteModal(item.name, item.path)} ];
+            {label:'Delete', action:()=>openAssetDeleteModal(item.name, item.path)} ];
     entries.forEach(it => {
-        if (it.sep){ const s = document.createElement('div'); s.style.cssText='height:1px;background:#333;margin:4px 0;'; menu.appendChild(s); return; }
-        const d = document.createElement('div'); d.textContent = it.label;
-        d.style.cssText = `padding:7px 12px;cursor:pointer;color:${it.danger?'#ff4a4a':'#eee'};transition:background .1s;`;
-        d.onmouseenter = () => { d.style.background = it.danger?'rgba(255,74,74,.15)':'#5ba4ff'; d.style.color='#fff'; };
-        d.onmouseleave = () => { d.style.background='transparent'; d.style.color = it.danger?'#ff4a4a':'#eee'; };
+        if (it.sep){ const s = document.createElement('div'); s.className = 'ctx-sep'; menu.appendChild(s); return; }
+        const d = document.createElement('div'); d.className = 'ctx-item'; d.textContent = it.label;
         d.onclick = ev => { ev.stopPropagation(); menu.remove(); it.action(); };
         menu.appendChild(d);
     });
@@ -3661,10 +3477,10 @@ function assetsBoot(){
     /* breadcrumb as drop target (move out of folder) */
     const bc = document.getElementById('assets-breadcrumb');
     if (bc){
-        bc.addEventListener('dragover', e => { const t = e.target.closest('.breadcrumb-root,.breadcrumb-item'); if (t && window._draggedItemData){ e.preventDefault(); t.style.color='#5ba4ff'; t.style.textDecoration='underline'; } });
-        bc.addEventListener('dragleave', e => { const t = e.target.closest('.breadcrumb-root,.breadcrumb-item'); if (t){ t.style.color=''; t.style.textDecoration='none'; } });
+        bc.addEventListener('dragover', e => { const t = e.target.closest('.breadcrumb-root,.breadcrumb-item'); if (t && window._draggedItemData){ e.preventDefault(); t.style.background='var(--rfx-fill-selected)'; t.style.color='var(--rfx-text-1)'; } });
+        bc.addEventListener('dragleave', e => { const t = e.target.closest('.breadcrumb-root,.breadcrumb-item'); if (t){ t.style.color=''; t.style.background=''; } });
         bc.addEventListener('drop', e => { const t = e.target.closest('.breadcrumb-root,.breadcrumb-item');
-            if (t && window._draggedItemData){ e.preventDefault(); t.style.color=''; t.style.textDecoration='none';
+            if (t && window._draggedItemData){ e.preventDefault(); t.style.color=''; t.style.background='';
                 const dest = decodeURIComponent(t.getAttribute('data-path'));
                 if (dest && dest !== currentAssetPath) AX.eval(`assetsMoveItemJSX("${encodeURIComponent(window._draggedItemData.path)}","${encodeURIComponent(dest)}")`, res => {
                     if (res === 'ok'){ showToast("Moved!"); assetsRefresh(); } else showToast("Failed to move."); }); } });
