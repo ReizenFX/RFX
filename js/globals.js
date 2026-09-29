@@ -24,6 +24,53 @@ window.safeEval = function(scriptStr, callback) {
     });
 };
 
+/* Per-tab ExtendScript loader. Each tab creates one for its own jsx file:
+       const fooJsx = window.createJsxLoader('foo.jsx');
+       fooJsx('fooDoSomething()', callback);
+   The file is read from <extension root>/jsx/ and evaluated once per session in the
+   global ExtendScript scope (same eval(decodeURIComponent(...)) technique the caption
+   tab uses). Every call waits for that load; callbacks receive exactly what
+   evalScript returns. If loading fails, the next call tries again. */
+window.createJsxLoader = function(fileName) {
+    let loaded = null;   // Promise<boolean> once a load has started
+
+    function readSource() {
+        let root = csInterface.getSystemPath(SystemPath.EXTENSION) || '';
+        if (root.indexOf('file:') === 0) {
+            root = root.replace(/^file:\/*/, '');
+            try { root = decodeURIComponent(root); } catch (e) {}
+            if (!/^[A-Za-z]:/.test(root)) root = '/' + root;
+        }
+        const file = root.replace(/\\/g, '/').replace(/\/+$/, '') + '/jsx/' + fileName;
+        if (window.cep && window.cep.fs) {
+            const r = window.cep.fs.readFile(file, window.cep.encoding.UTF8);
+            if (r && r.err === window.cep.fs.NO_ERROR && r.data) return r.data;
+        }
+        if (typeof require === 'function') return require('fs').readFileSync(file, 'utf8');
+        throw new Error('cannot read ' + file);
+    }
+
+    function ensureLoaded() {
+        if (loaded) return loaded;
+        loaded = new Promise(function(resolve) {
+            let src;
+            try { src = readSource(); }
+            catch (e) { console.error('[' + fileName + '] ' + e.message); resolve(false); return; }
+            const wrapper = 'eval(decodeURIComponent("' + encodeURIComponent(src) + '"));"JSX_LOADED"';
+            csInterface.evalScript(wrapper, function(r) {
+                if (r !== 'JSX_LOADED') console.error('[' + fileName + '] failed to load: ' + r);
+                resolve(r === 'JSX_LOADED');
+            });
+        }).then(function(ok) { if (!ok) loaded = null; return ok; });
+        return loaded;
+    }
+
+    return function(script, callback) {
+        if (!csInterface) { console.warn("Cannot talk to After Effects."); return; }
+        ensureLoaded().then(function() { window.safeEval(script, callback); });
+    };
+};
+
 window.repositionMenu = function(menuEl, x, y) {
     menuEl.style.visibility = 'hidden'; 
     menuEl.style.display = 'block';

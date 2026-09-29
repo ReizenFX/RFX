@@ -31,10 +31,13 @@ If RFX doesn't appear, check in this order:
 
 - Edits are live through the junction; there is no build step.
 - After JS, CSS or HTML changes, reload the panel. After JSX changes, close and reopen the
-  panel, because `jsx/global.jsx` (the manifest ScriptPath) only runs when the extension loads.
-- Each tab has `js/tab-<name>.js` plus `jsx/<name>.jsx`. `jsx/global.jsx` holds shared
-  helpers and loads the tab jsx files; `assets.jsx` and `caption.jsx` are loaded by their
-  own tab JS.
+  panel: each tab evaluates its jsx file once per panel session, the first time it needs it.
+  Restart After Effects if you renamed or removed a jsx function (the old one stays defined
+  in AE's shared ExtendScript scope until then).
+- Each tab is independent: `js/tab-<name>.js` loads its own `jsx/<name>.jsx` on demand
+  (via `window.createJsxLoader` in `js/globals.js`; Assets and Caption use their own
+  loaders). There is no shared jsx file and no manifest ScriptPath, and no jsx file calls
+  anything defined in another.
 
 ## Renaming or bumping the version
 

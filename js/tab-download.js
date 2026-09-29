@@ -1,3 +1,5 @@
+// This tab's ExtendScript backend (jsx/download.jsx), loaded on first use.
+const downloadJsx = window.createJsxLoader('download.jsx');
 window.addEventListener("DOMContentLoaded", () => {
     const csInterface = new CSInterface();
     let exec, spawn, path, fs, os;
@@ -156,7 +158,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     function updateDlPathDisplay() {
-        csInterface.evalScript(`getAepPath()`, (aepPath) => {
+        downloadJsx(`downloadGetAepPath()`, (aepPath) => {
             let activeCustomPath = getSavedPathForProject(aepPath);
             const disp = document.getElementById('dlPathDisplay');
             if(!disp) return;
@@ -206,7 +208,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const btnChangeFolder = document.getElementById("dlChangeFolderBtn");
     if (btnChangeFolder) {
         btnChangeFolder.addEventListener("click", () => {
-            csInterface.evalScript(`getAepPath()`, (aepPath) => {
+            downloadJsx(`downloadGetAepPath()`, (aepPath) => {
                 let activeCustomPath = getSavedPathForProject(aepPath);
                 if (!activeCustomPath && aepPath !== "UNSAVED") { activeCustomPath = path.join(aepPath, dlRelativeFolder); }
                 currentValidModalPath = activeCustomPath || "";
@@ -250,7 +252,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const shouldMove = document.getElementById('dlMoveAssetsCheck')?.checked;
         let oldFolder = currentValidModalPath;
 
-        csInterface.evalScript(`getAepPath()`, (aepPath) => {
+        downloadJsx(`downloadGetAepPath()`, (aepPath) => {
             if (newFolder === "") savePathForProject(aepPath, null);
             else savePathForProject(aepPath, newFolder);
             
@@ -272,7 +274,7 @@ window.addEventListener("DOMContentLoaded", () => {
                         }
                     });
                     if (movedCount > 0) {
-                        csInterface.evalScript(`relinkDirectoryAssets("${oldFolder.replace(/\\/g, '/')}", "${targetFolder.replace(/\\/g, '/')}")`);
+                        downloadJsx(`relinkDirectoryAssets("${oldFolder.replace(/\\/g, '/')}", "${targetFolder.replace(/\\/g, '/')}")`);
                         showDlNotification(`Moved and relinked ${movedCount} assets!`, "success");
                     }
                 } catch (err) { showDlNotification("Error moving files. Check folder permissions.", "error"); }
@@ -305,7 +307,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const shouldRenameMove = document.getElementById('dlRenameMoveCheck')?.checked;
 
         if (oldName !== newName && shouldRenameMove) {
-            csInterface.evalScript(`getAepPath()`, (aepPath) => {
+            downloadJsx(`downloadGetAepPath()`, (aepPath) => {
                 let baseDir = getSavedPathForProject(aepPath) || (aepPath !== "UNSAVED" ? aepPath : path.join(os.homedir(), 'Downloads'));
                 let oldPath = path.join(baseDir, oldName);
                 let newPath = path.join(baseDir, newName);
@@ -313,7 +315,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 if (fs.existsSync(oldPath)) {
                     try {
                         fs.renameSync(oldPath, newPath);
-                        csInterface.evalScript(`relinkDirectoryAssets("${oldPath.replace(/\\/g, '/')}", "${newPath.replace(/\\/g, '/')}")`);
+                        downloadJsx(`relinkDirectoryAssets("${oldPath.replace(/\\/g, '/')}", "${newPath.replace(/\\/g, '/')}")`);
                         showDlNotification("Folder renamed and assets relinked!", "success");
                     } catch (e) {
                         showDlNotification("Error renaming folder. Close AE bins and try again.", "error");
@@ -335,7 +337,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const dlAeFolderDropdown = document.getElementById('dlAeFolderDropdown');
 
     document.getElementById("dlChangeAeFolderBtn")?.addEventListener("click", () => {
-        csInterface.evalScript(`getAeFolders()`, (foldersString) => {
+        downloadJsx(`downloadGetAeFolders()`, (foldersString) => {
             if (dlAeFolderDropdown) {
                 dlAeFolderDropdown.innerHTML = '<option value="">-- Or select an existing folder --</option>';
                 if (foldersString !== "") {
@@ -858,7 +860,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
             if (totalDownloadSeconds <= 0) totalDownloadSeconds = currentVideoDuration || 1;
 
-            csInterface.evalScript(`getAepPath()`, async (aepPath) => {
+            downloadJsx(`downloadGetAepPath()`, async (aepPath) => {
                 let targetDir = getSavedPathForProject(aepPath) || (aepPath !== "UNSAVED" ? path.join(aepPath, dlRelativeFolder) : path.join(os.homedir(), 'Downloads', dlRelativeFolder));
                 if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
 
@@ -920,7 +922,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
                     const pathStr = files.map(p => p.replace(/\\/g, '/')).join('|||');
                     
-                    csInterface.evalScript(`importDownloadedMedia("${pathStr}", ${importProj}, "${aeFolder}", ${importComp}, ${matchDur}, ${stretch})`, (res) => {
+                    downloadJsx(`importDownloadedMedia("${pathStr}", ${importProj}, "${aeFolder}", ${importComp}, ${matchDur}, ${stretch})`, (res) => {
                         if (res === "OK") {
                             showDlNotification("Downloaded and imported successfully!", "success");
                             document.getElementById('dlUrlInput').value = '';

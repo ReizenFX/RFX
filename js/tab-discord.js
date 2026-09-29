@@ -1,3 +1,5 @@
+// This tab's ExtendScript backend (jsx/discord.jsx), loaded on first use.
+const discordJsx = window.createJsxLoader('discord.jsx');
 (function() {
     let discordrpc = null;
     let fs = null;
@@ -147,7 +149,7 @@
         }
 
         executeScript(props, func) {
-            this.csInterface.evalScript(func, (r) => {
+            discordJsx(func, (r) => {
                 if (r === null || r === "EvalScript error." || r === "undefined") return;
                 if (r != this.stateManager[props]) {
                     this.stateManager[props] = r;

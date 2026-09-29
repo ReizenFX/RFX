@@ -1,7 +1,10 @@
 // ==========================================
 // RENDER TAB — tab-render.js
-// Depends on: globals.js (csInterface, safeEval, showToast)
+// Depends on: globals.js (csInterface, safeEval, createJsxLoader, showToast)
 // ==========================================
+
+// This tab's ExtendScript backend (jsx/render.jsx), loaded on first use.
+const renderJsx = window.createJsxLoader('render.jsx');
 
 // Node modules — must be at top level, outside DOMContentLoaded,
 // so CEP's Node.js context is available when this script first executes.
@@ -68,7 +71,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     function autoUpdateDataFromAE() {
         if (!csInterface) return;
-        csInterface.evalScript('getProjectData()', (aeResult) => {
+        renderJsx('getProjectData()', (aeResult) => {
             try {
                 const parsed = JSON.parse(aeResult);
                 if (parsed.error) return;
@@ -280,7 +283,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 const originalColor   = nameEl.style.color;
 
                 nameEl.style.color = "rgba(46,160,67,1)";
-                csInterface.evalScript(`applyRenderPreset("${tempName}","${safeLoc}","${safeExt}","${safeCustomName}")`, (res) => {
+                renderJsx(`applyRenderPreset("${tempName}","${safeLoc}","${safeExt}","${safeCustomName}")`, (res) => {
                     if (res && res.startsWith("ERROR:")) {
                         showCustomAlert(res.split("ERROR:")[1]);
                         nameEl.style.color = originalColor;
@@ -346,7 +349,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 ? checkedPresets.map(p => safeString(p.templateName || p.name) + ":::&&:::" + safeString(p.ext || ".mp4")).join("|||")
                 : "";
 
-            csInterface.evalScript(`prepareQueue("${batchString}","${safeLoc}","${safeCustomName}","${incNative}")`, (res) => {
+            renderJsx(`prepareQueue("${batchString}","${safeLoc}","${safeCustomName}","${incNative}")`, (res) => {
                 if (!res || res === "EvalScript error.") return;
                 if (res.startsWith("ERROR:")) return showCustomAlert(res.split("ERROR:")[1]);
                 if (res.startsWith("QUEUE_LIST:::&&:::")) {
@@ -433,7 +436,7 @@ window.addEventListener("DOMContentLoaded", () => {
         if (renderProgressModal) renderProgressModal.classList.add('show');
 
         setTimeout(() => {
-            csInterface.evalScript(`executeSpecificRender("${indicesStr}",${doImport})`, (res) => {
+            renderJsx(`executeSpecificRender("${indicesStr}",${doImport})`, (res) => {
                 if (!res || res === "EvalScript error.") {
                     if (renderProgressModal) renderProgressModal.classList.remove('show');
                     return showCustomAlert("Backend rendering error.");
@@ -445,7 +448,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
                     const parts = res.split(":::&&:::");
                     setTimeout(() => {
-                        csInterface.evalScript(`processImport("${parts[1]}","${safeString(parts[2])}")`, (importRes) => {
+                        renderJsx(`processImport("${parts[1]}","${safeString(parts[2])}")`, (importRes) => {
                             if (renderProgressModal) renderProgressModal.classList.remove('show');
                             if (importRes && importRes.startsWith("ERROR:")) showCustomAlert(importRes.split("ERROR:")[1]);
                         });
@@ -486,7 +489,7 @@ window.addEventListener("DOMContentLoaded", () => {
             const name = presetNameInput ? presetNameInput.value.trim() : "";
             if (!name) return showCustomAlert("Please enter a name for your preset.");
 
-            csInterface.evalScript(`saveRenderPreset("${safeString(name)}")`, (result) => {
+            renderJsx(`saveRenderPreset("${safeString(name)}")`, (result) => {
                 if (!result || result === "EvalScript error.") {
                     if (presetModal) presetModal.classList.remove('show');
                     return showCustomAlert("Backend error: Verify the render script is loaded in render.jsx!");

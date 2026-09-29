@@ -1,7 +1,34 @@
 // ----------------------------------------------------------------------------
 // PASTE MODULE
 // ----------------------------------------------------------------------------
-// getAepPath() and getAeFolders() are shared with the Download tab: see global.jsx.
+// This tab's own copies of getAepPath/getAeFolders (the Download and Paste tabs each keep
+// a prefixed copy so neither depends on the other).
+function pasteGetAepPath() {
+    try {
+        if (app.project !== null && app.project.file !== null) {
+            return app.project.file.parent.fsName;
+        } else {
+            return "UNSAVED";
+        }
+    } catch(e) {
+        return "UNSAVED";
+    }
+}
+
+function pasteGetAeFolders() {
+    try {
+        var folders = [];
+        for(var i = 1; i <= app.project.items.length; i++) {
+            if (app.project.items[i] instanceof FolderItem && app.project.items[i].name !== "Solids") {
+                folders.push(app.project.items[i].name);
+            }
+        }
+        return folders.join(":::");
+    } catch(e) {
+        return "";
+    }
+}
+
 function moveAeFolderItems(oldFolderName, newFolderName) {
     app.beginUndoGroup("Move AE Folder Items");
     try {

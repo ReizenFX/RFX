@@ -1,3 +1,5 @@
+// This tab's ExtendScript backend (jsx/color.jsx), loaded on first use.
+const colorJsx = window.createJsxLoader('color.jsx');
 let ctxSvBg, ctxHBg, hueNorm = 0, svNorm = { x: 1, y: 0 }, currentHue = 0, currentHex = "FF0000", currentName = "Red";
 let isDraggingSV = false, isDraggingH = false, savedPresets = [], fs, path, presetsFile, useNodeJS = false;
 
@@ -115,8 +117,8 @@ function processImportData(fileContent) {
 window.copyHexCode = function() {
     const hexInput = document.getElementById('hex-input'); hexInput.select(); hexInput.setSelectionRange(0, 99999); document.execCommand("copy"); showToast("Hex copied!");
 };
-window.applyColorToFill = function() { window.safeEval(`applyHexToFill("${currentHex}")`); };
-window.applyColorToStroke = function() { window.safeEval(`applyHexToStroke("${currentHex}")`); };
+window.applyColorToFill = function() { colorJsx(`applyHexToFill("${currentHex}")`); };
+window.applyColorToStroke = function() { colorJsx(`applyHexToStroke("${currentHex}")`); };
 
 window.addEventListener('tabSwitched', (e) => {
     if(e.detail === 'tab-color') {

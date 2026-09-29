@@ -1,3 +1,32 @@
+// Local JSON writer: ExtendScript may have no native JSON, and this file must not
+// depend on a polyfill from another tab.
+function fxJsonQuote(s) {
+    s = String(s);
+    var out = '"';
+    for (var i = 0; i < s.length; i++) {
+        var c = s.charAt(i), code = s.charCodeAt(i);
+        if (c === '"' || c === '\\') out += '\\' + c;
+        else if (code < 0x20 || code === 0x2028 || code === 0x2029) out += '\\u' + ('000' + code.toString(16)).slice(-4);
+        else out += c;
+    }
+    return out + '"';
+}
+
+function fxToJSON(v) {
+    if (v === null || v === undefined) return 'null';
+    var t = typeof v;
+    if (t === 'number') return isFinite(v) ? String(v) : 'null';
+    if (t === 'boolean') return String(v);
+    if (t === 'string') return fxJsonQuote(v);
+    var parts = [], i, k;
+    if (v instanceof Array) {
+        for (i = 0; i < v.length; i++) parts.push(fxToJSON(v[i]));
+        return '[' + parts.join(',') + ']';
+    }
+    for (k in v) if (v.hasOwnProperty(k)) parts.push(fxJsonQuote(k) + ':' + fxToJSON(v[k]));
+    return '{' + parts.join(',') + '}';
+}
+
 var globalFXStacks = [];
 
 function copySelectedLayerFX() {
@@ -43,7 +72,7 @@ function copySelectedLayerFX() {
     for (var m = 0; m < globalFXStacks.length; m++) {
         uiData.push(globalFXStacks[m].names.join(', '));
     }
-    return JSON.stringify(uiData);
+    return fxToJSON(uiData);
 }
 
 function removeFXBundleFromMemory(index) {

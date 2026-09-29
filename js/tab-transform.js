@@ -1,20 +1,23 @@
-window.runSelectProperties = function() { window.safeEval('selectSameProperties()'); };
-window.runSelectLayerType = function() { const type = document.getElementById('layer-type-select').value; window.safeEval(`selectLayerType("${type}")`); };
-window.runCreateNullParent = function() { window.safeEval('createNullAndParent()'); };
-window.moveAnchor = function(pos) { window.safeEval(`moveAnchorPoint("${pos}")`); };
-window.runFlipLayers = function() { window.safeEval('flipSelectedLayers()'); };
-window.sequenceLayers = function(direction) { const frames = document.getElementById('setting-seq-frames').value; window.safeEval(`sequenceLayers("${direction}", ${frames})`); };
-window.runAlign = function(type) { const el = document.getElementById('align-relative-to'); const rel = el ? el.value : 'selection'; window.safeEval(`alignLayers("${type}", "${rel}")`); };
-window.runCenterAnchorAndLayer = function() { window.safeEval('centerAnchorAndLayer()'); };
-window.runGroupCenter = function(doAnchor) { window.safeEval(`groupCenter(${doAnchor})`); };
-window.runReverseSpatial = function(axis) { window.safeEval(`reverseSpatial("${axis}")`); };
-window.runMatchStartTime = function() { window.safeEval('matchLayerStartTime()'); };
-window.runSequenceChain  = function(dir) { window.safeEval(`sequenceLayersChain("${dir}")`); };
-window.runSetInPoint  = function() { window.safeEval('setLayerInPoint()'); };
-window.runSetOutPoint = function() { window.safeEval('setLayerOutPoint()'); };
-window.runReverseSequence  = function() { window.safeEval('reverseSequence()'); };
-window.runMoveGroupStart   = function() { window.safeEval('moveGroupStartToPlayhead()'); };
-window.runMoveGroupEnd     = function() { window.safeEval('moveGroupEndToPlayhead()'); };
+// This tab's ExtendScript backend (jsx/transform.jsx), loaded on first use.
+const transformJsx = window.createJsxLoader('transform.jsx');
+window.runSortLayers = function(earlyAtBottom) { transformJsx(`sortLayersAE(${earlyAtBottom})`); };
+window.runSelectProperties = function() { transformJsx('selectSameProperties()'); };
+window.runSelectLayerType = function() { const type = document.getElementById('layer-type-select').value; transformJsx(`selectLayerType("${type}")`); };
+window.runCreateNullParent = function() { transformJsx('createNullAndParent()'); };
+window.moveAnchor = function(pos) { transformJsx(`moveAnchorPoint("${pos}")`); };
+window.runFlipLayers = function() { transformJsx('flipSelectedLayers()'); };
+window.sequenceLayers = function(direction) { const frames = document.getElementById('setting-seq-frames').value; transformJsx(`sequenceLayers("${direction}", ${frames})`); };
+window.runAlign = function(type) { const el = document.getElementById('align-relative-to'); const rel = el ? el.value : 'selection'; transformJsx(`alignLayers("${type}", "${rel}")`); };
+window.runCenterAnchorAndLayer = function() { transformJsx('centerAnchorAndLayer()'); };
+window.runGroupCenter = function(doAnchor) { transformJsx(`groupCenter(${doAnchor})`); };
+window.runReverseSpatial = function(axis) { transformJsx(`reverseSpatial("${axis}")`); };
+window.runMatchStartTime = function() { transformJsx('matchLayerStartTime()'); };
+window.runSequenceChain  = function(dir) { transformJsx(`sequenceLayersChain("${dir}")`); };
+window.runSetInPoint  = function() { transformJsx('setLayerInPoint()'); };
+window.runSetOutPoint = function() { transformJsx('setLayerOutPoint()'); };
+window.runReverseSequence  = function() { transformJsx('reverseSequence()'); };
+window.runMoveGroupStart   = function() { transformJsx('moveGroupStartToPlayhead()'); };
+window.runMoveGroupEnd     = function() { transformJsx('moveGroupEndToPlayhead()'); };
 
 // ==========================================
 // NEW LAYERS LOGIC & COLOR ENGINE
@@ -50,7 +53,7 @@ window.addCustomLayer = function(type) {
     let colorIdx = localStorage.getItem('nl_color_' + type) || 0;
     
     let cmd = `addCustomLayerAE('${type}', ${linkOpt}, ${singleOpt}, ${colorIdx})`;
-    if (window.safeEval) window.safeEval(cmd);
+    transformJsx(cmd);
 };
 
 let colorHoverTimer = null;

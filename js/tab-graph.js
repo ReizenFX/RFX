@@ -1,3 +1,5 @@
+// This tab's ExtendScript backend (jsx/graph.jsx), loaded on first use.
+const graphJsx = window.createJsxLoader('graph.jsx');
 (function() {
     window.setEaseType = function(type) {
         window._activeEaseType = type;
@@ -391,7 +393,7 @@
                 ]},
                 { sep: true },
                 { label: 'Apply to keys', sub: [ { label: 'Ease', action: () => window.applyGraphToKeyframesWithCheck('all') }, { label: 'Ease In', action: () => window.applyGraphToKeyframesWithCheck('in') }, { label: 'Ease Out', action: () => window.applyGraphToKeyframesWithCheck('out') } ]},
-                { label: 'Apply to expression', action: () => window.safeEval(`applyBezierEaseToExpression(${cp1.x}, ${cp1.y}, ${cp2.x}, ${cp2.y})`) },
+                { label: 'Apply to expression', action: () => graphJsx(`applyBezierEaseToExpression(${cp1.x}, ${cp1.y}, ${cp2.x}, ${cp2.y})`) },
                 { sep: true },
                 { label: 'Copy value as', sub: [ { label: 'Bezier', action: () => copyTextToClip(`[${formatCoord(cp1.x)}, ${formatCoord(cp1.y)}, ${formatCoord(cp2.x)}, ${formatCoord(cp2.y)}]`) }, { label: 'CSS', action: () => copyTextToClip(`cubic-bezier(${formatCoord(cp1.x)}, ${formatCoord(cp1.y)}, ${formatCoord(cp2.x)}, ${formatCoord(cp2.y)})`) } ]}
             ]);
@@ -537,16 +539,16 @@
     window.applyGraphToKeyframesWithCheck = function(type = 'all') {
         var hasOvershoot = (cp1.y < 0 || cp1.y > 1 || cp2.y < 0 || cp2.y > 1);
         if (hasOvershoot) {
-            window.safeEval('checkPositionLinkState()', function(res) {
+            graphJsx('checkPositionLinkState()', function(res) {
                 if (res === 'linked') { window._pendingApplyType = type; var modal = document.getElementById('linked-pos-modal'); if (modal) modal.style.display = 'flex'; }
-                else window.safeEval(`applyBezierEaseToSelection(${cp1.x}, ${cp1.y}, ${cp2.x}, ${cp2.y}, "${type}")`);
+                else graphJsx(`applyBezierEaseToSelection(${cp1.x}, ${cp1.y}, ${cp2.x}, ${cp2.y}, "${type}")`);
             });
-        } else { window.safeEval(`applyBezierEaseToSelection(${cp1.x}, ${cp1.y}, ${cp2.x}, ${cp2.y}, "${type}")`); }
+        } else { graphJsx(`applyBezierEaseToSelection(${cp1.x}, ${cp1.y}, ${cp2.x}, ${cp2.y}, "${type}")`); }
     };
 
     window.linkedPosSkip = function() { document.getElementById('linked-pos-modal').style.display = 'none'; };
-    window.linkedPosApplyWithoutOvershoot = function() { window.linkedPosSkip(); var cp = window._graphGetCp(); window.safeEval(`linkedPosApplyWithoutOvershoot(${cp.x1}, ${cp.y1}, ${cp.x2}, ${cp.y2}, "${window._pendingApplyType || 'all'}")`); };
-    window.linkedPosSeparateAndApply = function() { window.linkedPosSkip(); var cp = window._graphGetCp(); window.safeEval(`linkedPosSeparateAndApply(${cp.x1}, ${cp.y1}, ${cp.x2}, ${cp.y2}, "${window._pendingApplyType || 'all'}")`); };
+    window.linkedPosApplyWithoutOvershoot = function() { window.linkedPosSkip(); var cp = window._graphGetCp(); graphJsx(`linkedPosApplyWithoutOvershoot(${cp.x1}, ${cp.y1}, ${cp.x2}, ${cp.y2}, "${window._pendingApplyType || 'all'}")`); };
+    window.linkedPosSeparateAndApply = function() { window.linkedPosSkip(); var cp = window._graphGetCp(); graphJsx(`linkedPosSeparateAndApply(${cp.x1}, ${cp.y1}, ${cp.x2}, ${cp.y2}, "${window._pendingApplyType || 'all'}")`); };
 
     window.readGraphValues = function() {
         // 🎯 Bypass the .jsx file completely to avoid AE caching bugs!

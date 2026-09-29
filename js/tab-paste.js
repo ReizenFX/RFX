@@ -1,3 +1,5 @@
+// This tab's ExtendScript backend (jsx/paste.jsx), loaded on first use.
+const pasteJsx = window.createJsxLoader('paste.jsx');
 // Wrapped in DOMContentLoaded to prevent variable crashes with tab-color.js
 window.addEventListener("DOMContentLoaded", () => {
     
@@ -82,7 +84,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     function updateMainPathDisplay() {
-        csInterface.evalScript(`getAepPath()`, (aepPath) => {
+        pasteJsx(`pasteGetAepPath()`, (aepPath) => {
             let activeCustomPath = getSavedPathForProject(aepPath);
             if (activeCustomPath) {
                 document.getElementById('pathDisplay').innerText = "Folder: " + activeCustomPath;
@@ -180,14 +182,14 @@ window.addEventListener("DOMContentLoaded", () => {
         if (oldName !== newName) {
             const shouldMove = document.getElementById('renameMoveCheck').checked;
             if (shouldMove) {
-                csInterface.evalScript(`getAepPath()`, (aepPath) => {
+                pasteJsx(`pasteGetAepPath()`, (aepPath) => {
                     if (aepPath !== "UNSAVED") {
                         let oldPath = path.join(aepPath, oldName);
                         let newPath = path.join(aepPath, newName);
                         if (fs.existsSync(oldPath)) {
                             try {
                                 fs.renameSync(oldPath, newPath);
-                                csInterface.evalScript(`relinkAssets("${safePath(oldPath)}", "${safePath(newPath)}")`, (res) => {
+                                pasteJsx(`relinkAssets("${safePath(oldPath)}", "${safePath(newPath)}")`, (res) => {
                                     if (res && res.startsWith("ERROR:")) showNotification(res.split("ERROR:")[1], "error");
                                 });
                             } catch (e) {
@@ -257,7 +259,7 @@ window.addEventListener("DOMContentLoaded", () => {
     // COPY TO SYSTEM LOGIC
     // ==========================================
     document.getElementById("copyToSystemBtn").addEventListener("click", function() {
-        csInterface.evalScript(`getLayerSourcePaths()`, (result) => {
+        pasteJsx(`getLayerSourcePaths()`, (result) => {
             if (result && result.startsWith("ERROR:")) {
                 showNotification(result.split("ERROR:")[1], "error");
                 return;
@@ -332,7 +334,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const stretchVideo = document.getElementById('stretchVideoCheck').checked;
         const copyLocal = document.getElementById('copyLocalCheck').checked;
 
-        csInterface.evalScript(`getAepPath()`, (aepPath) => {
+        pasteJsx(`pasteGetAepPath()`, (aepPath) => {
             
             let targetFolder = getSavedPathForProject(aepPath);
             if (!targetFolder && aepPath !== "UNSAVED") { 
@@ -514,7 +516,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 if (output.includes("ZLP_RESULT:SUCCESS:")) {
                     const generatedPaths = output.split("ZLP_RESULT:SUCCESS:")[1].trim();
                     const safeGeneratedPaths = safePath(generatedPaths); 
-                    csInterface.evalScript(`importAndPasteImage("${safeGeneratedPaths}", ${matchDuration}, ${stretchVideo}, "${safeString(targetAeFolder)}")`, (result) => {
+                    pasteJsx(`importAndPasteImage("${safeGeneratedPaths}", ${matchDuration}, ${stretchVideo}, "${safeString(targetAeFolder)}")`, (result) => {
                         if (result !== "OK") showNotification("ExtendScript Error: " + result, "error");
                     });
                 } else if (output.includes("ZLP_RESULT:PROJECT_UNSAVED")) {
@@ -543,7 +545,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const customPathInput = document.getElementById('customPathInput');
 
     document.getElementById("changeFolderBtn").addEventListener("click", function() {
-        csInterface.evalScript(`getAepPath()`, (aepPath) => {
+        pasteJsx(`pasteGetAepPath()`, (aepPath) => {
             let activeCustomPath = getSavedPathForProject(aepPath);
             if (!activeCustomPath && aepPath !== "UNSAVED") { activeCustomPath = path.join(aepPath, relativeFolderName); }
             currentValidModalPath = activeCustomPath || "";
@@ -617,7 +619,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const newFolder = customPathInput.value.trim();
         const shouldMoveFiles = document.getElementById('moveAssetsCheck').checked;
 
-        csInterface.evalScript(`getAepPath()`, (aepPath) => {
+        pasteJsx(`pasteGetAepPath()`, (aepPath) => {
             let oldFolder = getSavedPathForProject(aepPath) || (aepPath !== "UNSAVED" ? path.join(aepPath, relativeFolderName) : null);
             
             if (newFolder === "") {
@@ -645,7 +647,7 @@ window.addEventListener("DOMContentLoaded", () => {
                         }
                     });
                     if (filesMoved) {
-                        csInterface.evalScript(`relinkAssets("${safePath(oldFolder)}", "${safePath(targetFolder)}")`, (res) => {
+                        pasteJsx(`relinkAssets("${safePath(oldFolder)}", "${safePath(targetFolder)}")`, (res) => {
                             if (res && res.startsWith("ERROR:")) showNotification(res.split("ERROR:")[1], "error");
                         });
                     }
@@ -664,7 +666,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const aeFolderDropdown = document.getElementById('aeFolderDropdown');
 
     document.getElementById("changeAeFolderBtn").addEventListener("click", function() {
-        csInterface.evalScript(`getAeFolders()`, (foldersString) => {
+        pasteJsx(`pasteGetAeFolders()`, (foldersString) => {
             aeFolderDropdown.innerHTML = '<option value="">-- Or select an existing folder --</option>';
             if (foldersString !== "") {
                 const folders = foldersString.split(":::");
@@ -694,7 +696,7 @@ window.addEventListener("DOMContentLoaded", () => {
             localStorage.setItem('zlp_ae_folder', targetAeFolder);
 
             if (oldAeFolder !== desiredFolder) {
-                csInterface.evalScript(`moveAeFolderItems("${safeString(oldAeFolder)}", "${safeString(desiredFolder)}")`, (res) => {
+                pasteJsx(`moveAeFolderItems("${safeString(oldAeFolder)}", "${safeString(desiredFolder)}")`, (res) => {
                     if (res && res.startsWith("ERROR:")) showNotification(res.split("ERROR:")[1], "error");
                 });
             }
