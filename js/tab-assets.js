@@ -128,13 +128,18 @@ const MEDIA_EXT = { video: ['mp4','mov','webm','m4v','avi','mkv'], audio: ['mp3'
 /* ---------- init ---------- */
 function resolveLibraryRoot(done){
     if (typeof csInterface === 'undefined'){ if (done) done(); return; }
+    /* A folder chosen in Settings always wins over the default, even when it is missing
+       right now (e.g. an unplugged drive): the user is told instead of being switched. */
     const savedPath = localStorage.getItem('ultAssetsLibPath');
-    if (savedPath && window.cep.fs.stat(savedPath).err === window.cep.fs.NO_ERROR){
-        rootAssetPath = currentAssetPath = savedPath; if (done) done(); return;
+    if (savedPath){
+        rootAssetPath = currentAssetPath = savedPath;
+        if (window.cep.fs.stat(savedPath).err !== window.cep.fs.NO_ERROR)
+            showToast("Library folder not found: " + savedPath + " (Settings > Change to pick another)");
+        if (done) done(); return;
     }
     AX.eval('assetsDefaultLibraryJSX()', p => {
         p = (p || '').replace(/^"|"$/g, '');
-        if (!p || p.indexOf('error') === 0) p = window.toNativePath(csInterface.getSystemPath(SystemPath.USER_DATA)) + "/UltimateFXSuite/Library";
+        if (!p || p.indexOf('error') === 0) p = window.toNativePath(csInterface.getSystemPath(SystemPath.MY_DOCUMENTS)) + "/RFX/Library";
         rootAssetPath = currentAssetPath = p; if (done) done();
     });
 }

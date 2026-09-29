@@ -112,13 +112,27 @@ function _copyFolderRecursive(srcFolder, destFolder){
 /* ---------- project / comp state ---------- */
 function assetsCheckProjectSaved(){ return app.project.file ? "saved" : "unsaved"; }
 
+/* Default library when none is chosen in Settings: the first existing RFX/Library in
+   Documents, the user data folder (%APPDATA% / ~/Library/Application Support) or
+   Downloads; otherwise Documents/RFX/Library is created (user data folder if that fails).
+   "RFX/Library" is a data-folder name, not branding: it must not follow renames. */
 function assetsDefaultLibraryJSX(){
     try {
-        var dl = new Folder("~/Downloads");
-        var base = (dl.exists ? dl.fsName : Folder.userData.fsName).replace(/\\/g, "/");
-        var lib = new Folder(base + "/Ultimate FX Suite");
-        if (!lib.exists) lib.create();
-        return lib.fsName.replace(/\\/g, "/");
+        var home = $.getenv("USERPROFILE") || $.getenv("HOME") || "";
+        var bases = [_norm(Folder.myDocuments.fsName), _norm(Folder.userData.fsName)];
+        if (home) bases.push(_norm(home) + "/Downloads");
+        var i, lib, rfx;
+        for (i = 0; i < bases.length; i++){
+            lib = new Folder(bases[i] + "/RFX/Library");
+            if (lib.exists) return _norm(lib.fsName);
+        }
+        for (i = 0; i < 2; i++){
+            rfx = new Folder(bases[i] + "/RFX");
+            if (!rfx.exists) rfx.create();
+            lib = new Folder(bases[i] + "/RFX/Library");
+            if (lib.exists || lib.create()) return _norm(lib.fsName);
+        }
+        return "error: could not create an RFX/Library folder";
     } catch (e){ return "error: " + e.toString(); }
 }
 

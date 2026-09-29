@@ -54,6 +54,13 @@ extension, and CEP keeps localStorage per extension ID, so saved panel settings 
 empty. Internal identifiers are intentionally not part of branding: localStorage keys,
 on-disk data folders, Discord client IDs and `bin/` paths.
 
+## Assets library location
+
+A folder chosen in the Assets tab's Settings always wins, even while it is unavailable (the
+panel then says so). Without one, RFX uses the first existing `RFX/Library` folder in
+Documents, the user data folder (`%APPDATA%` on Windows, `~/Library/Application Support` on
+Mac) or Downloads, and otherwise creates `Documents/RFX/Library`. Nothing is ever moved.
+
 ## bin/
 
 The tabs look for these tools inside the extension folder at runtime (the paths come from

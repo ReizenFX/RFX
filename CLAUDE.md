@@ -17,7 +17,7 @@ After Effects CEP panel. This folder is the extension root (`CSXS/manifest.xml`,
 - Product name, menu name, bundle ID, extension ID and version live ONLY in `branding.json`. After changing it, run `node scripts/apply-branding.js`.
 - Never hand-edit the generated values: manifest `ExtensionBundleId`/`ExtensionBundleName`/`ExtensionBundleVersion`, `<Extension Id>`/`Version`, `<Menu>`; `index.html` `<title>`; `package.json` `name`/`version`; all of `js/branding.js`.
 - User-visible product text in JS reads `window.APP` (from `js/branding.js`, loaded first in `index.html`).
-- A rename must never touch internal identifiers: localStorage keys (`ult*`, `ufx*`, `rfx*`, `zlp_*`, ...), on-disk data folders (`%APPDATA%\UltimateFXSuite`, `%APPDATA%\RFX Suite\Caption Tab`, asset library folders), temp and layer names (`ufx_*`), Discord client IDs and app names (`backend/config.json`, `js/tab-discord.js`), `bin/` paths, JSX global names.
+- A rename must never touch internal identifiers: localStorage keys (`ult*`, `ufx*`, `rfx*`, `zlp_*`, ...), on-disk data folders (`%APPDATA%\UltimateFXSuite`, `%APPDATA%\RFX Suite\Caption Tab`, the Assets default library `Documents/RFX/Library`), temp and layer names (`ufx_*`), Discord client IDs and app names (`backend/config.json`, `js/tab-discord.js`), `bin/` paths, JSX global names.
 - Changing `bundleId`/`extensionId` makes After Effects treat the panel as a new extension with empty localStorage. Only change them deliberately.
 - Paths into the extension must come from `csInterface.getSystemPath(SystemPath.EXTENSION)`, never from a hardcoded folder name.
 
