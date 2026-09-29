@@ -34,7 +34,7 @@
     /* ---- text ---- */
     --rfx-text-1: #ededed;           /* primary */
     --rfx-text-2: #a0a0a0;           /* secondary, labels */
-    --rfx-text-3: #6e6e6e;           /* hints, placeholders, metadata */
+    --rfx-text-3: #7d7d7d;           /* hints, placeholders, metadata */
     --rfx-text-4: #4a4a4a;           /* disabled */
 
     /* ---- lines (structure only, never for highlighting) ---- */
@@ -153,7 +153,7 @@
     --rfx-dialog: #1a1d22;
     --rfx-text-1: #e4e8ee;
     --rfx-text-2: #99a2ae;
-    --rfx-text-3: #6a727d;
+    --rfx-text-3: #7a838f;
     --rfx-text-4: #474d56;
     --rfx-line: #242931;
     --rfx-line-2: #2d333c;
