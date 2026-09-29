@@ -522,7 +522,10 @@ document.addEventListener("DOMContentLoaded", () => {
         border-radius: 4px !important;
         font-size: 11px !important;
         font-weight: 500 !important;
-        white-space: nowrap !important;
+        white-space: pre-line !important;
+        max-width: calc(100vw - 16px) !important;
+        overflow-wrap: anywhere !important;
+        line-height: 1.4 !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.6) !important;
         z-index: 2147483647 !important;
         pointer-events: none !important;
@@ -545,19 +548,26 @@ document.addEventListener("DOMContentLoaded", () => {
         timer = setTimeout(() => {
             tip.innerText = target.getAttribute('data-tooltip');
             
-            // Make it readable for exact measurement
+            // Make it readable for exact measurement. Measure at left:0 so the text wraps
+            // against the full panel width (a fixed element's wrap width shrinks with `left`).
             tip.style.visibility = 'hidden';
             tip.style.opacity = '0';
+            tip.style.left = '0px';
+            tip.style.top = '0px';
+            tip.style.width = '';
 
             const targetRect = target.getBoundingClientRect();
             const tipRect = tip.getBoundingClientRect();
+            // Lock the measured width, otherwise moving it right would re-wrap it narrower and taller.
+            tip.style.width = Math.ceil(tipRect.width) + 'px';
 
             // Center exactly ABOVE the button
             let x = targetRect.left + (targetRect.width / 2);
             let y = targetRect.top - tipRect.height - 8;
 
-            // EDGE DETECTION
+            // EDGE DETECTION: long text wraps (max-width above), then the box is kept inside the panel
             if (y < 8) y = targetRect.bottom + 8; // Flips below if it hits the top edge
+            if (y + tipRect.height > window.innerHeight - 8) y = Math.max(8, window.innerHeight - tipRect.height - 8); // Bottom edge
             if (x - (tipRect.width / 2) < 8) x = (tipRect.width / 2) + 8; // Left edge
             if (x + (tipRect.width / 2) > window.innerWidth - 8) x = window.innerWidth - (tipRect.width / 2) - 8; // Right edge
 
