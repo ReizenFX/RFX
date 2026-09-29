@@ -138,6 +138,7 @@ let rootAssetPath = "", currentAssetPath = "", isAssetsProcessing = false;
 let assetsViewMode = localStorage.getItem('ufxAssetsView') || 'grid';
 let assetsSearchTerm = "";
 let assetsCurrentItems = [];          // last listing for current folder
+let _thumbQueue = [], _thumbBusy = false;   // video/image thumbnails are generated one at a time
 let assetsSelected = null;            // currently open asset in drawer
 const MEDIA_EXT = { video: ['mp4','mov','webm','m4v','avi','mkv'], audio: ['mp3','wav','aac','m4a','ogg','flac','aif','aiff'], image: ['png','jpg','jpeg','gif','webp','bmp','tif','tiff','svg'] };
 
