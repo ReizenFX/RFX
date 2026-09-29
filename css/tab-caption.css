@@ -3,7 +3,7 @@
    Ported from the standalone AutoCaps Pro stylesheet.
    Every selector is either prefixed "cap-" or scoped under #tab-caption,
    so nothing here can reach any other tab.
-   :root variables are NOT re-declared - global.css already defines them.
+   Colours come from css/theme.css; selection and focus are fills.
    ============================================================================ */
 
 /* ---------------------------------------------------------------------------
@@ -89,12 +89,11 @@
     align-self: center;
     will-change: transform;
 }
-#tab-caption .cap-tab-btn:hover { background: #353535; color: var(--text-primary); }
+#tab-caption .cap-tab-btn:hover { background: var(--rfx-fill-hover); color: var(--rfx-text-1); }
 #tab-caption .cap-tab-btn.active {
-    background: rgba(20, 115, 230, 0.15);
-    color: #5ba4ff;
-    border: 1px solid rgba(20, 115, 230, 0.4);
-    font-weight: 500 !important;
+    background: var(--rfx-fill-active);
+    color: var(--rfx-text-1);
+    border-color: transparent;
 }
 #tab-caption .cap-tab-btn.dragging {
     opacity: 1 !important;
@@ -120,50 +119,46 @@
 .cap-btn-secondary,
 .cap-btn-danger {
     border: none;
-    border-radius: 4px;
+    border-radius: var(--rfx-r-md);
     cursor: pointer;
-    transition: all 0.15s ease;
-    font-weight: 500 !important;
+    transition: background var(--rfx-dur), color var(--rfx-dur);
     outline: none !important;
     font-family: inherit;
 }
 
 .cap-btn-primary {
-    background-color: var(--accent-blue);
-    color: #fff;
+    background-color: var(--rfx-accent);
+    color: var(--rfx-on-accent);
+    font-weight: var(--rfx-fw-strong);
     width: 100%;
     padding: 8px 12px;
     font-size: 12px;
     margin-top: 0;
-    border-radius: 4px;
 }
-.cap-btn-primary:hover:not(:disabled) { background-color: var(--accent-hover); }
+.cap-btn-primary:hover:not(:disabled) { background-color: var(--rfx-accent-hover); }
 .cap-btn-primary:disabled { opacity: 0.5; cursor: default; }
 
 .cap-btn-secondary {
-    background-color: var(--bg-panel);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
+    background-color: var(--rfx-surface-2);
+    border: 1px solid transparent;
+    color: var(--rfx-text-1);
     padding: 8px 12px;
     font-size: 12px;
-    border-radius: 4px;
     flex: 1;
 }
-.cap-btn-secondary:hover:not(:disabled) { background-color: #353535; }
+.cap-btn-secondary:hover:not(:disabled) { background-color: var(--rfx-surface-3); }
 .cap-btn-secondary:disabled { opacity: 0.5; cursor: default; }
 
+/* Delete buttons look like every other button (no red). */
 .cap-btn-danger {
-    background-color: rgba(255, 74, 74, 0.12);
-    color: #ff4a4a;
+    background-color: var(--rfx-surface-2);
+    color: var(--rfx-text-1);
     padding: 8px 12px;
     font-size: 12px;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 74, 74, 0.25);
+    border: 1px solid transparent;
 }
 .cap-btn-danger:hover:not(:disabled) {
-    background-color: rgba(255, 74, 74, 0.22);
-    color: #ff6b6b;
-    border-color: rgba(255, 74, 74, 0.4);
+    background-color: var(--rfx-surface-3);
 }
 .cap-btn-danger:disabled { opacity: 0.5; cursor: default; }
 
@@ -183,14 +178,13 @@
     margin-bottom: 6px;
     color: var(--text-primary);
     font-size: 13px;
-    font-weight: 500;
 }
 
 #tab-caption .cap-panel {
-    background-color: var(--bg-panel);
+    background-color: var(--rfx-surface-1);
     padding: 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
+    border: 1px solid transparent;
+    border-radius: var(--rfx-r-lg);
 }
 
 #tab-caption .cap-editor-header {
@@ -207,16 +201,16 @@
 /* Refresh square button */
 #tab-caption .cap-refresh-btn {
     width: 38px; height: 38px;
-    background: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    background: var(--rfx-surface-2);
+    color: var(--rfx-text-1);
+    border: 1px solid transparent;
+    border-radius: var(--rfx-r-md);
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: 0.2s;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+    cursor: pointer; transition: background var(--rfx-dur), transform 0.1s;
     padding: 0; flex-shrink: 0;
 }
-#tab-caption .cap-refresh-btn:hover { border-color: #555; }
-#tab-caption .cap-refresh-btn:active { background: var(--bg-panel); transform: scale(0.95); }
+#tab-caption .cap-refresh-btn:hover { background: var(--rfx-surface-3); }
+#tab-caption .cap-refresh-btn:active { background: var(--rfx-fill-selected); transform: scale(0.95); }
 .cap-refresh-spin { transform-origin: 50px 50px; }
 
 /* ---------------------------------------------------------------------------
@@ -231,15 +225,15 @@
     outline: none !important; padding: 0; border: none;
 }
 #tab-caption input[type=range].cap-slider::-webkit-slider-runnable-track {
-    width: 100%; height: 4px;
-    background: rgba(255,255,255,0.1);
+    width: 100%; height: 3px;
+    background: var(--rfx-fill-track);
     border-radius: 2px; border: none;
 }
 #tab-caption input[type=range].cap-slider::-webkit-slider-thumb {
     -webkit-appearance: none; height: 12px; width: 12px;
-    border-radius: 50%; background: #fff; cursor: pointer;
-    margin-top: -4px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-    border: 2px solid #fff; transition: transform 0.15s ease;
+    border-radius: 50%; background: var(--rfx-knob); cursor: pointer;
+    margin-top: -4.5px; box-shadow: 0 1px 3px var(--rfx-shadow-color);
+    border: none; transition: transform var(--rfx-dur) ease;
 }
 #tab-caption input[type=range].cap-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
 #tab-caption input[type=range].cap-slider:focus { outline: none; }
@@ -257,39 +251,39 @@
    --------------------------------------------------------------------------- */
 #tab-caption .cap-toggle-label {
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    background: var(--bg-base);
-    border: 1px solid var(--border-color);
-    padding: 10px 14px; border-radius: 8px;
-    cursor: pointer; transition: all 0.2s ease;
+    background: var(--rfx-surface-1);
+    border: 1px solid transparent;
+    padding: 10px 14px; border-radius: var(--rfx-r-lg);
+    cursor: pointer; transition: background var(--rfx-dur) ease;
     flex: 1 1 calc(50% - 12px);
     min-width: 85px; color: var(--text-primary);
     font-size: 13px; box-sizing: border-box;
     margin-bottom: 0 !important;
 }
-#tab-caption .cap-toggle-label:hover { border-color: #555; }
-#tab-caption .cap-toggle-label:focus-within { border-color: var(--accent-blue); }
+#tab-caption .cap-toggle-label:hover { background: var(--rfx-surface-2); }
+#tab-caption .cap-toggle-label:focus-within { background: var(--rfx-surface-2); }
 
 #tab-caption .cap-toggle-label input[type="radio"],
 #tab-caption .cap-toggle-label input[type="checkbox"] {
     appearance: none; -webkit-appearance: none;
     width: 16px; height: 16px;
-    border: 2px solid var(--text-secondary);
+    border: 2px solid var(--rfx-text-3);
     border-radius: 50%; margin: 0;
     background-color: transparent; cursor: pointer;
-    transition: border-color 0.2s ease;
+    transition: border-color var(--rfx-dur) ease, background-color var(--rfx-dur) ease;
     position: relative; flex-shrink: 0;
 }
 #tab-caption .cap-toggle-label input[type="checkbox"] { border-radius: 4px; }
-#tab-caption .cap-toggle-label input:checked { border-color: var(--accent-blue); }
+#tab-caption .cap-toggle-label input:checked { border-color: var(--rfx-accent); background-color: var(--rfx-accent); }
 #tab-caption .cap-toggle-label input[type="radio"]::before {
-    content: ''; width: 8px; height: 8px; background-color: #ffffff;
+    content: ''; width: 6px; height: 6px; background-color: var(--rfx-on-accent);
     border-radius: 50%; position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%) scale(0);
     transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 #tab-caption .cap-toggle-label input[type="checkbox"]::before {
-    content: ''; width: 8px; height: 8px; background-color: #ffffff;
-    border-radius: 2px; position: absolute; top: 50%; left: 50%;
+    content: ''; width: 6px; height: 6px; background-color: var(--rfx-on-accent);
+    border-radius: 1px; position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%) scale(0);
     transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -300,20 +294,20 @@
    --------------------------------------------------------------------------- */
 .cap-punc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .cap-punc-item {
-    background: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: 8px; padding: 12px 0;
+    background: var(--rfx-surface-1);
+    border: 1px solid transparent;
+    border-radius: var(--rfx-r-lg); padding: 12px 0;
     display: flex; flex-direction: column; align-items: center;
-    cursor: pointer; transition: all 0.2s ease;
+    cursor: pointer; transition: background var(--rfx-dur) ease;
 }
-.cap-punc-item.active { background: #6E2828; border-color: #853333; }
-.cap-punc-char { font-size: 24px; font-weight: bold; color: #fff; margin-bottom: 4px; line-height: 1; }
+.cap-punc-item:hover { background: var(--rfx-surface-2); }
+.cap-punc-item.active { background: var(--rfx-fill-selected); border-color: transparent; }
+.cap-punc-char { font-size: 24px; font-weight: var(--rfx-fw-strong); color: var(--rfx-text-1); margin-bottom: 4px; line-height: 1; }
 .cap-punc-item span {
-    font-size: 11px; color: var(--text-secondary);
+    font-size: 11px; color: var(--rfx-text-3);
     text-transform: uppercase; letter-spacing: 0.5px;
-    font-weight: 500 !important;
 }
-.cap-punc-item.active span { color: #fff; }
+.cap-punc-item.active span { color: var(--rfx-text-1); }
 
 /* ---------------------------------------------------------------------------
    SELECTS + DROPDOWN OVERRIDES
@@ -321,12 +315,12 @@
    only restore the Caption sizing inside the Caption tab and its overlays.
    --------------------------------------------------------------------------- */
 #tab-caption select {
-    background-color: var(--bg-input); color: #fff;
-    border: 1px solid var(--border-color) !important;
-    padding: 10px 34px 10px 14px; border-radius: 6px;
-    font-size: 13px; font-weight: 500; min-height: 38px;
+    background-color: var(--rfx-input); color: var(--rfx-text-1);
+    border: 1px solid transparent !important;
+    padding: 10px 34px 10px 14px; border-radius: var(--rfx-r-md);
+    font-size: 13px; min-height: 38px;
     appearance: none; -webkit-appearance: none;
-    cursor: pointer; transition: all 0.2s ease;
+    cursor: pointer; transition: background-color var(--rfx-dur) ease;
     box-shadow: none !important; outline: none !important;
 }
 
@@ -336,7 +330,7 @@
     padding: 10px 34px 10px 14px !important;
     min-height: 38px !important;
     font-size: 13px !important;
-    border-radius: 6px !important;
+    border-radius: var(--rfx-r-md) !important;
 }
 #tab-caption .custom-select-option,
 .cap-alert-box .custom-select-option,
@@ -355,25 +349,25 @@
    --------------------------------------------------------------------------- */
 #tab-caption .cap-status-box {
     padding: 12px;
-    background-color: var(--bg-panel);
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
+    background-color: var(--rfx-surface-1);
+    border-radius: var(--rfx-r-lg);
+    border: 1px solid transparent;
     margin-top: 0;
 }
 #tab-caption .cap-progress-track {
     width: 100%; height: 4px;
-    background-color: #111;
+    background-color: var(--rfx-fill-track);
     border-radius: 2px; margin-top: 0;
     overflow: hidden; display: block;
 }
 #tab-caption .cap-progress-fill {
     height: 100%; width: 0%;
-    background-color: var(--accent-blue);
+    background-color: var(--rfx-accent);
     transition: width 0.3s ease-out;
 }
 #tab-caption .cap-progress-fill.cap-indeterminate {
     width: 100% !important;
-    background: linear-gradient(90deg, var(--accent-blue) 0%, #4facfe 50%, var(--accent-blue) 100%);
+    background: linear-gradient(90deg, var(--rfx-accent) 0%, var(--rfx-accent-hover) 50%, var(--rfx-accent) 100%);
     background-size: 200% 100%;
     animation: capShimmer 1.5s infinite linear;
 }
@@ -389,38 +383,38 @@
 
 #tab-caption .cap-srt-row {
     display: flex; flex-direction: column; gap: 8px; align-items: stretch;
-    background-color: var(--bg-input);
-    padding: 10px; border-radius: 6px;
+    background-color: var(--rfx-surface-1);
+    padding: 10px; border-radius: var(--rfx-r-lg);
     border: 1px solid transparent;
-    transition: border-color 0.2s ease;
+    transition: background-color var(--rfx-dur) ease;
 }
-#tab-caption .cap-srt-row:focus-within { border-color: var(--accent-blue); }
+#tab-caption .cap-srt-row:focus-within { background-color: var(--rfx-surface-2); }
 
 /* Paired highlight used by the Split-at-Playhead feature */
 #tab-caption .cap-srt-row.cap-active-split {
-    border-color: var(--accent-blue) !important;
-    background-color: rgba(20, 115, 230, 0.15) !important;
+    border-color: transparent !important;
+    background-color: var(--rfx-fill-selected) !important;
 }
 
 #tab-caption .cap-srt-text { display: flex; width: 100%; }
 #tab-caption .cap-srt-text-input {
     width: 100%; min-width: 0; height: 48px;
-    background: var(--bg-base);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    font-size: 13px; resize: none; padding: 8px; border-radius: 4px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    transition: border-color 0.2s; box-sizing: border-box;
+    background: var(--rfx-input);
+    border: 1px solid transparent;
+    color: var(--rfx-text-1);
+    font-size: 13px; resize: none; padding: 8px; border-radius: var(--rfx-r-md);
+    font-family: inherit;
+    transition: background var(--rfx-dur); box-sizing: border-box;
 }
-#tab-caption .cap-srt-text-input:focus { border-color: var(--accent-blue); outline: none; }
+#tab-caption .cap-srt-text-input:focus { outline: none; }
 
 #tab-caption .cap-srt-times { display: flex; flex-direction: row; gap: 12px; width: 100%; }
 #tab-caption .cap-srt-time-box {
     flex: 1; display: flex; align-items: center; gap: 6px;
-    background: var(--bg-base); border-radius: 4px;
-    padding-left: 8px; border: 1px solid var(--border-color);
+    background: var(--rfx-input); border-radius: var(--rfx-r-md);
+    padding-left: 8px; border: 1px solid transparent;
 }
-#tab-caption .cap-srt-time-label { font-size: 10px; color: var(--text-secondary); font-weight: 600; }
+#tab-caption .cap-srt-time-label { font-size: 10px; color: var(--rfx-text-3); font-weight: var(--rfx-fw-strong); }
 #tab-caption .cap-srt-time-input {
     background: transparent; border: none; color: var(--text-primary);
     font-size: 11px; padding: 6px 4px 6px 0;
@@ -433,20 +427,20 @@
    --------------------------------------------------------------------------- */
 #tab-caption .cap-val-wrapper {
     display: inline-flex; align-items: center; justify-content: center;
-    background: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: 4px; padding: 0;
-    box-shadow: none; transition: border-color 0.2s; cursor: text;
+    background: var(--rfx-input);
+    border: 1px solid transparent;
+    border-radius: var(--rfx-r-sm); padding: 0;
+    box-shadow: none; transition: background var(--rfx-dur); cursor: text;
 }
 #tab-caption .cap-val-wrapper:focus-within,
-#tab-caption .cap-val-wrapper.active { border-color: var(--border-color); box-shadow: none; }
+#tab-caption .cap-val-wrapper.active { background: var(--rfx-surface-2); border-color: transparent; box-shadow: none; }
 #tab-caption .cap-val-input {
     width: 32px; background: transparent; color: var(--text-primary);
     border: none; text-align: center; padding: 4px 0;
     font-size: 11px; margin: 0; outline: none !important;
     font-family: inherit; cursor: text;
 }
-#tab-caption .cap-val-input::selection { background: rgba(255, 255, 255, 0.2); color: #fff; }
+#tab-caption .cap-val-input::selection { background: var(--rfx-selection); color: var(--rfx-text-1); }
 #tab-caption .cap-val-unit {
     color: var(--text-secondary); font-size: 10px;
     padding: 4px 6px 4px 0; margin-left: -4px;
@@ -461,8 +455,8 @@
 .cap-numpad-popup {
     position: fixed;
     bottom: 0; left: 0; width: 100%;
-    background: var(--bg-panel);
-    border-top: 1px solid var(--border-color);
+    background: var(--rfx-surface-1);
+    border-top: 1px solid var(--rfx-line);
     padding: 8px;
     z-index: 10006;
     display: grid;
@@ -475,42 +469,41 @@
 }
 .cap-numpad-popup.active {
     transform: translateY(0);
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 -4px 20px var(--rfx-shadow-color);
     display: grid;
 }
 .cap-numpad-btn {
-    background: var(--bg-input); color: var(--text-primary);
-    border: 1px solid var(--border-color); border-radius: 6px;
+    background: var(--rfx-surface-2); color: var(--rfx-text-1);
+    border: 1px solid transparent; border-radius: var(--rfx-r-md);
     padding: 12px 0; text-align: center; font-size: 14px;
-    font-weight: 500 !important; cursor: pointer;
+    cursor: pointer;
     transition: background 0.1s, transform 0.1s; user-select: none;
 }
-.cap-numpad-btn:hover { background: #1a1a1a; border-color: #555; }
-.cap-numpad-btn:active { background: #3a3a3a; transform: scale(0.96); }
-.cap-numpad-btn.cap-numpad-action { background: var(--accent-blue); color: #fff; border: none; }
-.cap-numpad-btn.cap-numpad-action:hover { background: var(--accent-hover); }
+.cap-numpad-btn:hover { background: var(--rfx-surface-3); }
+.cap-numpad-btn:active { background: var(--rfx-fill-selected); transform: scale(0.96); }
+.cap-numpad-btn.cap-numpad-action { background: var(--rfx-accent); color: var(--rfx-on-accent); border: none; }
+.cap-numpad-btn.cap-numpad-action:hover { background: var(--rfx-accent-hover); }
 .cap-numpad-btn.cap-numpad-clear {
-    background: rgba(255, 74, 74, 0.15); color: #ff4a4a;
-    border-color: rgba(255, 74, 74, 0.3);
+    background: var(--rfx-surface-2); color: var(--rfx-text-1);
+    border-color: transparent;
 }
-.cap-numpad-btn.cap-numpad-clear:hover { background: rgba(255, 74, 74, 0.3); color: #ff6b6b; }
+.cap-numpad-btn.cap-numpad-clear:hover { background: var(--rfx-surface-3); }
 
 /* ---------------------------------------------------------------------------
    OVERLAYS / MODALS  (live outside #tab-caption - prefix-scoped only)
    --------------------------------------------------------------------------- */
 .cap-alert-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background: var(--rfx-overlay);
     z-index: 10001;
     display: flex; justify-content: center; align-items: center;
-    backdrop-filter: blur(2px);
 }
 .cap-alert-box {
-    background-color: var(--bg-panel);
-    border: 1px solid var(--border-color);
-    border-radius: 6px; padding: 20px;
+    background-color: var(--rfx-dialog);
+    border: 1px solid var(--rfx-line);
+    border-radius: var(--rfx-r-xl); padding: 20px;
     width: 80%; max-width: 280px; text-align: center;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--rfx-shadow-lg);
     backface-visibility: hidden; -webkit-font-smoothing: antialiased;
 }
 .cap-alert-box p { color: var(--text-primary); font-size: 13px; margin: 0 0 20px 0; line-height: 1.5; }
@@ -519,13 +512,13 @@
 
 .cap-prompt-input {
     width: 100%; padding: 10px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-input); color: var(--text-primary);
-    border-radius: 4px; margin-bottom: 16px;
+    border: 1px solid transparent;
+    background: var(--rfx-input); color: var(--rfx-text-1);
+    border-radius: var(--rfx-r-md); margin-bottom: 16px;
     outline: none; box-sizing: border-box;
     font-family: inherit; font-size: 13px;
 }
-.cap-prompt-input:focus { border-color: var(--accent-blue); }
+.cap-prompt-input:focus { background: var(--rfx-surface-2); }
 
 /* Shared popup shell (colour picker, punctuation, extra, multi-delete, WAV) */
 @keyframes capSmoothPop {
@@ -535,13 +528,12 @@
 .cap-popup {
     position: fixed; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    background: #1e1e1e;
-    border: 1px solid var(--border-color);
-    border-radius: 12px; padding: 16px;
-    box-shadow: 0 15px 50px rgba(0,0,0,0.8);
+    background: var(--rfx-dialog);
+    border: 1px solid var(--rfx-line);
+    border-radius: var(--rfx-r-xl); padding: 16px;
+    box-shadow: var(--rfx-shadow-lg);
     display: none;
     z-index: 10002; width: 240px;
-    backdrop-filter: blur(5px);
     flex-direction: column; gap: 12px;
     backface-visibility: hidden; -webkit-font-smoothing: antialiased;
 }
@@ -561,58 +553,56 @@
    --------------------------------------------------------------------------- */
 #tab-caption .cap-color-cube {
     width: 48px; height: 26px;
-    border: 1px solid var(--border-color); border-radius: 6px;
-    cursor: pointer; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
-    transition: border-color 0.2s ease, transform 0.1s ease;
+    border: 1px solid var(--rfx-line-2); border-radius: var(--rfx-r-md);
+    cursor: pointer;
+    transition: transform 0.1s ease, filter var(--rfx-dur);
 }
-#tab-caption .cap-color-cube:hover { border-color: #777; }
+#tab-caption .cap-color-cube:hover { filter: brightness(1.1); }
 #tab-caption .cap-color-cube:active { transform: scale(0.95); }
 
 .cap-cp-preview {
-    width: 100%; height: 50px; border-radius: 6px;
-    border: 1px solid #111;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    width: 100%; height: 50px; border-radius: var(--rfx-r-md);
+    border: 1px solid var(--rfx-line);
     margin-bottom: 4px;
 }
 .cap-cp-row { display: flex; flex-direction: column; gap: 6px; }
 .cap-cp-row label {
-    font-size: 11px; color: var(--text-secondary); margin: 0;
-    font-weight: 500 !important; text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 11px; color: var(--rfx-text-3); margin: 0;
+    text-transform: uppercase; letter-spacing: 0.5px;
 }
 
 input[type=range].cap-cp-slider {
     appearance: none; -webkit-appearance: none;
     width: 100%; height: 12px;
-    background: var(--bg-input);
+    background: var(--rfx-input);
     background-image: none;
-    border: 1px solid #222; border-radius: 6px;
+    border: 1px solid transparent; border-radius: var(--rfx-r-md);
 }
 input[type=range].cap-cp-slider::-webkit-slider-runnable-track {
     width: 100%; height: 100%; background: transparent; border: none; cursor: pointer;
 }
 input[type=range].cap-cp-slider::-webkit-slider-thumb {
     -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%;
-    background: #ffffff; cursor: pointer; margin-top: -4px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.8); border: 2px solid #333;
+    background: var(--rfx-knob); cursor: pointer; margin-top: -4px;
+    box-shadow: 0 1px 4px var(--rfx-shadow-color); border: 2px solid var(--rfx-bg);
 }
 input[type=range].cap-cp-slider:focus { outline: none; }
 
 .cap-cp-slider-hue {
-    background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%) !important;
+    background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%) !important; /* rfx-content-color: hue strip */
 }
 
 .cap-cp-hex-input {
-    background: var(--bg-input);
-    border: 1px solid var(--border-color);
-    color: #fff; padding: 8px 10px; border-radius: 6px;
+    background: var(--rfx-input);
+    border: 1px solid transparent;
+    color: var(--rfx-text-1); padding: 8px 10px; border-radius: var(--rfx-r-md);
     width: 100%; text-transform: uppercase;
-    font-family: monospace; font-size: 13px;
-    text-align: center; font-weight: bold !important;
+    font-family: var(--rfx-font-mono); font-size: 13px;
+    text-align: center;
     box-sizing: border-box;
 }
 .cap-cp-hex-input:focus {
-    border-color: var(--accent-blue);
-    box-shadow: 0 0 0 2px rgba(20, 115, 230, 0.2);
+    background: var(--rfx-surface-2);
 }
 
 /* ---------------------------------------------------------------------------
@@ -620,26 +610,26 @@ input[type=range].cap-cp-slider:focus { outline: none; }
    --------------------------------------------------------------------------- */
 .cap-checkbox-wrapper {
     display: flex; align-items: center; gap: 10px; padding: 10px;
-    background: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: 6px; cursor: pointer;
-    color: var(--text-primary);
-    font-size: 12px; transition: 0.2s; margin-bottom: 0;
+    background: var(--rfx-surface-1);
+    border: 1px solid transparent;
+    border-radius: var(--rfx-r-md); cursor: pointer;
+    color: var(--rfx-text-1);
+    font-size: 12px; transition: background var(--rfx-dur); margin-bottom: 0;
 }
-.cap-checkbox-wrapper:hover { border-color: #555; }
+.cap-checkbox-wrapper:hover { background: var(--rfx-surface-2); }
 .cap-checkbox-wrapper input[type="checkbox"] {
     appearance: none; -webkit-appearance: none;
     width: 16px; height: 16px; flex-shrink: 0; margin: 0;
-    border: 2px solid var(--text-secondary); border-radius: 4px;
+    border: 2px solid var(--rfx-text-3); border-radius: var(--rfx-r-sm);
     background: transparent; cursor: pointer; position: relative;
-    transition: 0.2s; outline: none !important;
+    transition: background var(--rfx-dur), border-color var(--rfx-dur); outline: none !important;
 }
-.cap-checkbox-wrapper input[type="checkbox"]:checked { border-color: #6E2828; background: #6E2828; }
+.cap-checkbox-wrapper input[type="checkbox"]:checked { border-color: var(--rfx-accent); background: var(--rfx-accent); }
 .cap-checkbox-wrapper input[type="checkbox"]:checked::after {
     content: '';
     position: absolute; left: 50%; top: 50%;
     width: 4px; height: 8px;
-    border: solid white; border-width: 0 2px 2px 0;
+    border: solid var(--rfx-on-accent); border-width: 0 2px 2px 0;
     transform: translate(-50%, -60%) rotate(45deg);
 }
 
@@ -679,14 +669,14 @@ input[type=range].cap-cp-slider:focus { outline: none; }
     align-items: center;
     justify-content: center;
     padding: 0;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--bg-input);
-    color: var(--text-secondary);
+    border: none;
+    border-radius: var(--rfx-r-md);
+    background: transparent;
+    color: var(--rfx-text-2);
     cursor: pointer;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    transition: background var(--rfx-dur), color var(--rfx-dur);
 }
-#tab-caption .cap-settings-btn:hover { background: #2a2a2a; border-color: #555; color: var(--text-primary); }
+#tab-caption .cap-settings-btn:hover { background: var(--rfx-fill-hover); color: var(--rfx-text-1); }
 
 #caption-tabs-header {
     overflow-x: auto;

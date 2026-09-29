@@ -405,7 +405,7 @@ function initSliders() {
         const updateFill = () => {
             const min = parseFloat(slider.min) || 0, max = parseFloat(slider.max) || 100, val = parseFloat(slider.value) || 0;
             const percent = ((val - min) / (max - min)) * 100;
-            slider.style.backgroundImage = 'linear-gradient(var(--accent-blue), var(--accent-blue))'; slider.style.backgroundRepeat = 'no-repeat'; slider.style.backgroundSize = Math.max(0, Math.min(100, percent)) + '% 100%';
+            slider.style.backgroundImage = 'linear-gradient(var(--rfx-accent), var(--rfx-accent))'; slider.style.backgroundRepeat = 'no-repeat'; slider.style.backgroundSize = Math.max(0, Math.min(100, percent)) + '% 100%';
         };
         updateFill(); slider.addEventListener('input', updateFill);
     });

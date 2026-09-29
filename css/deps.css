@@ -127,6 +127,9 @@
     background: var(--rfx-surface-1); color: var(--rfx-text-2); font-size: 11.5px; line-height: 1.4;
 }
 .rfxdep-notice .rfxdep-btn { margin-left: auto; flex-shrink: 0; }
+/* the tab's own main action keeps the accent; the notice button is secondary */
+.rfxdep-notice .rfxdep-btn.is-primary { background: var(--rfx-surface-3); color: var(--rfx-text-1); font-weight: var(--rfx-fw-regular); }
+.rfxdep-notice .rfxdep-btn.is-primary:hover:not(:disabled) { background: var(--rfx-fill-selected); }
 
 /* small pill used by the Download tab to surface yt-dlp updates */
 .rfxdep-pill {

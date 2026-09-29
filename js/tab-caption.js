@@ -64,7 +64,7 @@ var DEFAULT_SETTINGS = {
     chars: 7, minDur: 1.2, gap: 0, lines: 'single',
     puncComma: true, puncPeriod: true, puncQuestion: false, puncExclaim: false,
     bgEnable: false, bgPadX: 0, bgPadY: 0, bgRound: 25, bgOpacity: 70,
-    bgColor: "#FF1493", bgAdj: false,
+    bgColor: "#FF1493", bgAdj: false, // rfx-content-color (default box colour)
     textLabelColor: "1", boxLabelColor: "8"
 };
 
@@ -1420,7 +1420,7 @@ function renderEditorList() {
         row.className = 'cap-srt-row cap-editor-row';
         row.dataset.idx = item.index;
 
-        if (capSelectedEditorIndex === item.index) row.style.borderColor = 'var(--accent-blue)';
+        if (capSelectedEditorIndex === item.index) row.style.backgroundColor = 'var(--rfx-surface-2)';
 
         row.innerHTML =
             '<div class="cap-srt-text">' +
@@ -1433,9 +1433,9 @@ function renderEditorList() {
             document.querySelectorAll('#tab-caption .cap-editor-row').forEach(function(el) {
                 el.classList.remove('cap-active-split');
                 el.style.borderColor = 'transparent';
-                el.style.backgroundColor = 'var(--bg-input)';
+                el.style.backgroundColor = '';
             });
-            row.style.borderColor = 'var(--accent-blue)';
+            row.style.backgroundColor = 'var(--rfx-surface-2)';
         });
 
         list.appendChild(row);
@@ -1558,7 +1558,7 @@ function captionSyncScrollTo(idx, isFromSplit) {
         document.querySelectorAll('#tab-caption .cap-editor-row').forEach(function(el) {
             el.classList.remove('cap-active-split');
             el.style.borderColor = 'transparent';
-            el.style.backgroundColor = 'var(--bg-input)';
+            el.style.backgroundColor = '';
 
             var currentIdx = parseInt(el.dataset.idx, 10);
             if (currentIdx !== capSelectedEditorIndex) return;
@@ -1598,7 +1598,7 @@ function captionSyncScrollTo(idx, isFromSplit) {
                     container.scrollTo({ top: midY - (container.clientHeight / 2), behavior: 'smooth' });
                 }
             } else {
-                el.style.borderColor = 'var(--accent-blue)';
+                el.style.backgroundColor = 'var(--rfx-surface-2)';
 
                 if (container) {
                     var cRect = container.getBoundingClientRect();
@@ -2159,7 +2159,7 @@ function initColorPicker() {
     function updateFromSliders() {
         var h = hueSlider.value, s = satSlider.value, l = litSlider.value;
         satSlider.style.background = 'linear-gradient(to right, hsl(' + h + ', 0%, ' + l + '%), hsl(' + h + ', 100%, ' + l + '%))';
-        litSlider.style.background = 'linear-gradient(to right, #000, hsl(' + h + ', ' + s + '%, 50%), #fff)';
+        litSlider.style.background = 'linear-gradient(to right, #000, hsl(' + h + ', ' + s + '%, 50%), #fff)'; // rfx-content-color
         var hex = hslToHex(h, s, l);
         hexInput.value = hex;
         $id('cap-cp-preview').style.backgroundColor = hex;
@@ -2182,7 +2182,7 @@ function initColorPicker() {
     hexInput.addEventListener('blur', function() {
         var hex = hexInput.value;
         if (hex.charAt(0) !== '#') hex = '#' + hex;
-        if (!/^#[0-9A-F]{6}$/i.test(hex)) hexInput.value = '#FF1493';
+        if (!/^#[0-9A-F]{6}$/i.test(hex)) hexInput.value = '#FF1493'; // rfx-content-color
         updateFromHex();
     });
 }
