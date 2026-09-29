@@ -743,11 +743,16 @@
             return info;
         } finally {
             if (staging) rmrf(staging);
-            // Remove this install's downloads unless another queued install of the same file will reuse them.
+            // Remove the downloaded files (including one reused from another tab's install)
+            // unless a queued install of the same source will reuse them next.
             downloaded.forEach(d => {
-                if (d.shared || !exists(d.path)) return;
-                const reusedLater = d.file.sha256 && queue.some(q => { try { return (depDef(q.tab, q.id).sourceKey || '') === (def.sourceKey || '-') ; } catch (e) { return false; } });
-                if (!reusedLater) { try { fs.unlinkSync(d.path); } catch (e) {} if (d.file.sha256) delete verifiedArtifacts[d.file.sha256]; }
+                if (!exists(d.path)) return;
+                const reusedLater = d.file.sha256 && def.sourceKey && queue.some(q => {
+                    try { return depDef(q.tab, q.id).sourceKey === def.sourceKey; } catch (e) { return false; }
+                });
+                if (reusedLater) return;
+                try { fs.unlinkSync(d.path); } catch (e) {}
+                if (d.file.sha256) delete verifiedArtifacts[d.file.sha256];
             });
         }
     }

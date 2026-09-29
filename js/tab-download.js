@@ -27,11 +27,122 @@ window.addEventListener("DOMContentLoaded", () => {
         extPath = extPath.substring(1);
     }
 
-    const binDir = path.join(extPath, 'bin', 'win', 'download');
-    
-    // Define the exact paths to the executables based on the OS
-    const localYtDlpPath = path.join(binDir, isWin ? 'yt-dlp.exe' : 'yt-dlp');
-    const localFfmpegPath = path.join(binDir, isWin ? 'ffmpeg.exe' : 'ffmpeg');
+    const legacyBinDir = path.join(extPath, 'bin', 'win', 'download');
+
+    // ==========================================
+    // TOOLS (yt-dlp, FFmpeg, Deno) via js/deps.js
+    // This tab's managed install (Download settings) wins, else the existing copy in
+    // bin\win\download. Resolved when a fetch or download starts; a running download
+    // keeps the programs it started with.
+    // ==========================================
+    registerDownloadDeps();
+    const toolPath = (id, file) => {
+        if (window.RFXDeps) { const r = RFXDeps.resolve('download', id); if (r.path) return r.path; }
+        return path.join(legacyBinDir, isWin ? file : file.replace(/\.exe$/, ''));
+    };
+    const ytDlpPath = () => toolPath('ytdlp', 'yt-dlp.exe');
+    const ffmpegPath = () => toolPath('ffmpeg', 'ffmpeg.exe');
+    // yt-dlp needs a JavaScript runtime for full YouTube support: this tab's Deno (the
+    // runtime yt-dlp recommends) when installed, and Node.js from PATH as before.
+    const jsRuntimeArgs = () => {
+        const d = window.RFXDeps && RFXDeps.resolve('download', 'deno');
+        return d && d.path ? ['--js-runtimes', 'deno:' + d.path, '--js-runtimes', 'node'] : ['--js-runtimes', 'node'];
+    };
+    /* Friendly stop when a tool is missing: explains and opens the settings. */
+    const toolsReady = (needFfmpeg) => {
+        const missing = [];
+        if (!fs.existsSync(ytDlpPath())) missing.push('yt-dlp');
+        if (needFfmpeg && !fs.existsSync(ffmpegPath())) missing.push('FFmpeg');
+        if (!missing.length) return true;
+        openDownloadSettings('Downloading needs ' + missing.join(' and ') + ', which ' + (missing.length > 1 ? 'are' : 'is') + ' not installed yet. Install below; the files come from the official sources.');
+        return false;
+    };
+
+    function registerDownloadDeps() {
+        if (!window.RFXDeps || RFXDeps.tabs().some(t => t.tab === 'download')) return;
+        const S = RFXDeps.sources;
+        RFXDeps.register('download', { label: 'Download', deps: [
+            { id: 'ytdlp', label: 'yt-dlp', sizeHint: '18 MB',
+              description: 'Downloads the media. Websites change often, so update it whenever downloads start failing.',
+              main: 'yt-dlp.exe', latest: S.githubLatest({ repo: 'yt-dlp/yt-dlp', asset: /^yt-dlp\.exe$/, sums: /^SHA2-256SUMS$/ }),
+              verify: { args: ['--version'], expect: /^\d{4}\.\d{2}\.\d{2}/m },
+              legacy: { main: 'yt-dlp.exe' } },
+            { id: 'ffmpeg', label: 'FFmpeg + FFprobe', sizeHint: '185 MB',
+              description: 'Merges, trims and converts downloads (BtbN stable build, this tab\'s own copy).',
+              main: 'ffmpeg.exe', latest: S.ffmpegStable(), sourceKey: 'ffmpeg-btbn',
+              extractPatterns: ['*/bin/ffmpeg.exe', '*/bin/ffprobe.exe'],
+              collect: (x, out, h) => ['ffmpeg.exe', 'ffprobe.exe'].forEach(n => { const p = h.findFile(x, n, 4); if (p) h.moveInto(p, path.join(out, n)); }),
+              verify: { args: ['-version'], expect: /ffmpeg version/ },
+              legacy: { main: 'ffmpeg.exe' } },
+            { id: 'deno', label: 'Deno (JavaScript runtime)', sizeHint: '41 MB',
+              description: 'yt-dlp needs a JavaScript runtime for full YouTube support; Deno is the one yt-dlp recommends. Without it, Node.js is used if it is installed on this PC.',
+              main: 'deno.exe',
+              latest: S.githubLatest({ repo: 'denoland/deno', asset: /^deno-x86_64-pc-windows-msvc\.zip$/, sums: /^deno-x86_64-pc-windows-msvc\.zip\.sha256sum$/, archive: 'zip' }),
+              collect: (x, out, h) => { const p = h.findFile(x, 'deno.exe', 2); if (p) h.moveInto(p, path.join(out, 'deno.exe')); },
+              verify: { args: ['--version'], expect: /^deno \d/m } }
+        ] });
+    }
+
+    /* Download settings (same look as the Assets settings): this tab's tools with
+       install / update / roll back, and its dependencies folder. */
+    function openDownloadSettings(reason, opts) {
+        if (!window.RFXDeps) { showDlNotification('Settings need Node.js, which is not available in this panel.', 'error'); return; }
+        registerDownloadDeps();
+        const ui = RFXDeps.ui;
+        const m = ui.modal('dl-settings-modal', 'Download settings');
+        if (reason) {
+            const note = ui.el('div', 'rfxdep-msg is-error', reason);
+            note.style.margin = '0 0 16px';
+            m.body.appendChild(note);
+        }
+        const sec = ui.section('Tools');
+        sec.appendChild(ui.el('div', 'rfxdep-text', 'yt-dlp downloads the media, FFmpeg merges and trims it, and Deno lets yt-dlp handle YouTube fully. Each downloads from its official source into this tab\'s own folder. yt-dlp is checked for updates once a day; a download that is already running keeps the versions it started with.'));
+        const host = ui.el('div');
+        sec.appendChild(host);
+        m.body.appendChild(sec);
+        ui.renderPanel(host, 'download');
+        if (opts && opts.checkYtDlp) RFXDeps.checkForUpdate('download', 'ytdlp').catch(() => {});
+    }
+    window.downloadOpenSettings = () => openDownloadSettings();
+
+    /* Always-visible yt-dlp status in the tab header: version, update available or missing. */
+    function updateYtDlpPill() {
+        const pill = document.getElementById('dlDepsPill');
+        if (!pill) return;
+        if (!window.RFXDeps) { pill.style.display = 'none'; return; }
+        const r = RFXDeps.resolve('download', 'ytdlp');
+        const c = RFXDeps.lastCheck('download', 'ytdlp');
+        pill.classList.remove('is-update', 'is-missing');
+        if (r.state === 'missing') {
+            pill.classList.add('is-missing');
+            pill.textContent = 'yt-dlp missing';
+            pill.setAttribute('data-tooltip', 'yt-dlp is not installed. Click to install it.');
+        } else if (r.state === 'managed' && c && c.updateAvailable) {
+            pill.classList.add('is-update');
+            pill.textContent = 'yt-dlp update';
+            pill.setAttribute('data-tooltip', 'yt-dlp ' + c.version + ' is available (you have ' + r.version + '). Click to update.');
+        } else if (r.state === 'managed') {
+            pill.textContent = 'yt-dlp ' + r.version;
+            pill.setAttribute('data-tooltip', 'yt-dlp is up to date as of the last check. Click to check for updates.');
+        } else {
+            pill.textContent = 'yt-dlp';
+            pill.setAttribute('data-tooltip', 'Using the existing yt-dlp copy (version unknown). Click to install a managed copy that can be kept up to date.');
+        }
+    }
+    const dlDepsPill = document.getElementById('dlDepsPill');
+    if (dlDepsPill) dlDepsPill.addEventListener('click', () => openDownloadSettings(null, { checkYtDlp: true }));
+    const dlSettingsBtn = document.getElementById('dlSettingsBtn');
+    if (dlSettingsBtn) dlSettingsBtn.addEventListener('click', () => openDownloadSettings());
+    if (window.RFXDeps) {
+        updateYtDlpPill();
+        let pillTimer = null;
+        RFXDeps.on(evt => {
+            if (evt.tab && evt.tab !== 'download') return;
+            clearTimeout(pillTimer);
+            pillTimer = setTimeout(updateYtDlpPill, 250);
+        });
+        setTimeout(() => RFXDeps.dailyCheck('download').then(updateYtDlpPill), 15000);   // quiet, at most once a day
+    }
     // ----------------------
 
     // ==========================================
@@ -531,12 +642,13 @@ window.addEventListener("DOMContentLoaded", () => {
         fetchBtn.addEventListener('click', () => {
             const url = document.getElementById('dlUrlInput').value.trim();
             if (!url) { showDlNotification("Please paste a URL first.", "error"); return; }
+            if (!toolsReady(false)) return;
             
             fetchBtn.style.opacity = '0.5';
             fetchBtn.style.pointerEvents = 'none';
             
             // Includes JS Engine fix for the initial fetch parsing
-            exec(`"${localYtDlpPath}" --js-runtimes node --dump-json --no-playlist "${url}"`, { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
+            exec(`"${ytDlpPath()}" ${jsRuntimeArgs().map(a => `"${a}"`).join(' ')} --dump-json --no-playlist "${url}"`, { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
                 fetchBtn.style.opacity = '1';
                 fetchBtn.style.pointerEvents = 'auto';
                 
@@ -776,6 +888,7 @@ window.addEventListener("DOMContentLoaded", () => {
             const opMode = document.getElementById('dlOperationMode').value;
             const quality = document.getElementById('dlQualitySelect') ? document.getElementById('dlQualitySelect').value : 'best';
             const trimMethod = document.getElementById('dlTrimMethod') ? document.getElementById('dlTrimMethod').value : 'local';
+            if (!toolsReady(true)) return;   // before any UI switches to "downloading"
             
             isDownloading = true;
             isDlAborted = false;
@@ -860,6 +973,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
             if (totalDownloadSeconds <= 0) totalDownloadSeconds = currentVideoDuration || 1;
 
+            const ytDlpBin = ytDlpPath(), ffmpegBin = ffmpegPath(), jsRuntime = jsRuntimeArgs();   // fixed for this job
             downloadJsx(`downloadGetAepPath()`, async (aepPath) => {
                 let targetDir = getSavedPathForProject(aepPath) || (aepPath !== "UNSAVED" ? path.join(aepPath, dlRelativeFolder) : path.join(os.homedir(), 'Downloads', dlRelativeFolder));
                 if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
@@ -1000,8 +1114,8 @@ window.addEventListener("DOMContentLoaded", () => {
                     // 3. I RESTORED THE "--downloader-args" 
                     // This allows FFmpeg to output progress to the file we are watching
                     let baseArgs = [
-                        '--newline', '--no-colors', '--no-continue', '--js-runtimes', 'node',
-                        '--ffmpeg-location', localFfmpegPath, // CRITICAL: Fixes silent crash in Network Trim
+                        '--newline', '--no-colors', '--no-continue', ...jsRuntime,
+                        '--ffmpeg-location', ffmpegBin, // CRITICAL: Fixes silent crash in Network Trim
                         '--downloader-args', `ffmpeg:-nostdin -nostats -progress "${progressFile}"`
                     ];
                     let finalImportFiles = [];
@@ -1027,7 +1141,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                 url
                             ];
                             if (quality !== 'best') videoArgs.push('-S', `res:${quality}`);
-                            let vCode = await runProcessAsync(localYtDlpPath, videoArgs, `Video Chunk ${i+1}`);
+                            let vCode = await runProcessAsync(ytDlpBin, videoArgs, `Video Chunk ${i+1}`);
                             if (isDlAborted) break;
                             if (vCode !== 0) { finalizeDownload(vCode, []); return; } // CRITICAL: Stop silent crashes
 
@@ -1044,7 +1158,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                 '-o', tempAudioPath,
                                 url
                             ];
-                            let aCode = await runProcessAsync(localYtDlpPath, audioArgs, `Audio Chunk ${i+1}`);
+                            let aCode = await runProcessAsync(ytDlpBin, audioArgs, `Audio Chunk ${i+1}`);
                             if (isDlAborted) break;
                             if (aCode !== 0) { finalizeDownload(aCode, []); return; } // CRITICAL: Stop silent crashes
 
@@ -1087,7 +1201,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                 ];
                             }
 
-                            await runProcessAsync(localFfmpegPath, ffmpegArgs, `Local Merge ${i+1}`);
+                            await runProcessAsync(ffmpegBin, ffmpegArgs, `Local Merge ${i+1}`);
 
                             try { fs.unlinkSync(tempVideoPath); } catch(e){}
                             try { fs.unlinkSync(tempAudioPath); } catch(e){}
@@ -1117,7 +1231,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                 filterArgs.push('-filter_complex', filterStr, '-map', '[outv]', '-map', '[outa]', '-c:v', 'libx264', '-preset', 'fast', '-crf', '18', '-c:a', 'aac', mergedPath);
                             }
                             
-                            await runProcessAsync(localFfmpegPath, filterArgs, "Final Concat");
+                            await runProcessAsync(ffmpegBin, filterArgs, "Final Concat");
                             if (isDlAborted) return;
                             
                             if (fs.existsSync(mergedPath)) {
@@ -1143,7 +1257,7 @@ window.addEventListener("DOMContentLoaded", () => {
                         let outFile = path.join(targetDir, `%(title)s_%(section_start)s.%(ext)s`);
                         stdArgs.push('-o', outFile, url);
                         
-                        let code = await runProcessAsync(localYtDlpPath, stdArgs, "Standard Download");
+                        let code = await runProcessAsync(ytDlpBin, stdArgs, "Standard Download");
                         if (isDlAborted) return;
 
                         let afterFiles = fs.readdirSync(targetDir);
@@ -1170,7 +1284,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                     '-c:a', 'aac', 
                                     outPath
                                 ];
-                                await runProcessAsync(localFfmpegPath, trimArgs, `Local Trim ${i+1}`);
+                                await runProcessAsync(ffmpegBin, trimArgs, `Local Trim ${i+1}`);
                                 slicedFiles.push(outPath);
                             }
                             try { fs.unlinkSync(baseFile); } catch(e){} 
@@ -1199,7 +1313,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                 filterArgs.push('-filter_complex', filterStr, '-map', '[outv]', '-map', '[outa]', '-c:v', 'libx264', '-preset', 'fast', '-crf', '18', '-c:a', 'aac', mergedPath);
                             }
                             
-                            await runProcessAsync(localFfmpegPath, filterArgs, "Final Concat");
+                            await runProcessAsync(ffmpegBin, filterArgs, "Final Concat");
                             if (isDlAborted) return;
                             
                             if (fs.existsSync(mergedPath)) {

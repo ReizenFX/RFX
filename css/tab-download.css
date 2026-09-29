@@ -43,3 +43,11 @@
     font-size: 11px;
     align-self: flex-end;
 }
+/* Header tools: yt-dlp status pill (css/deps.css .rfxdep-pill) + settings gear */
+#tab-download .dl-deps-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+#tab-download .dl-settings-btn {
+    width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; padding: 0;
+    border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-input);
+    color: var(--text-secondary); cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+}
+#tab-download .dl-settings-btn:hover { background: #2a2a2a; border-color: #555; color: var(--text-primary); }
