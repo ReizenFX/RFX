@@ -741,8 +741,8 @@ window.addEventListener("DOMContentLoaded", () => {
         
         div.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 10px; font-weight: 800; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 0.5px;">Segment ${partCounter}</span>
-                ${partCounter > 1 ? `<button class="dl-part-remove" style="background: transparent; border: none; color: #ff5b5b; cursor: pointer; padding: 2px; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" title="Remove Segment"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>` : '<div></div>'}
+                <span style="font-size: 10px; font-weight: 600; color: var(--rfx-text-2); text-transform: uppercase; letter-spacing: 0.5px;">Segment ${partCounter}</span>
+                ${partCounter > 1 ? `<button class="dl-part-remove" style="background: transparent; border: none; color: var(--rfx-text-3); cursor: pointer; padding: 2px; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" title="Remove Segment"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>` : '<div></div>'}
             </div>
             <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
                 <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
@@ -755,10 +755,10 @@ window.addEventListener("DOMContentLoaded", () => {
                 </div>
             </div>
             <div style="position:relative; height:16px; display:flex; align-items:center; margin: 8px 4px 4px 4px;">
-                <div class="range-slider-container" style="position:relative; width:100%; height:4px; background: rgba(255,255,255,0.1); border-radius:2px;">
-                    <div class="range-slider-fill" style="position:absolute; height:100%; background:var(--accent-blue); left:0%; right:0%; border-radius:2px;"></div>
-                    <div class="range-thumb left-thumb" style="position:absolute; width:14px; height:14px; background:#fff; border-radius:50%; top:-5px; left:0%; transform:translateX(-50%); cursor:ew-resize; box-shadow:0 1px 4px rgba(0,0,0,0.5); z-index: 2;"></div>
-                    <div class="range-thumb right-thumb" style="position:absolute; width:14px; height:14px; background:#fff; border-radius:50%; top:-5px; left:100%; transform:translateX(-50%); cursor:ew-resize; box-shadow:0 1px 4px rgba(0,0,0,0.5); z-index: 2;"></div>
+                <div class="range-slider-container" style="position:relative; width:100%; height:4px; background: var(--rfx-fill-track); border-radius:2px;">
+                    <div class="range-slider-fill" style="position:absolute; height:100%; background:var(--rfx-accent); left:0%; right:0%; border-radius:2px;"></div>
+                    <div class="range-thumb left-thumb" style="position:absolute; width:14px; height:14px; background:var(--rfx-knob); border-radius:50%; top:-5px; left:0%; transform:translateX(-50%); cursor:ew-resize; box-shadow:0 1px 4px var(--rfx-shadow-color); z-index: 2;"></div>
+                    <div class="range-thumb right-thumb" style="position:absolute; width:14px; height:14px; background:var(--rfx-knob); border-radius:50%; top:-5px; left:100%; transform:translateX(-50%); cursor:ew-resize; box-shadow:0 1px 4px var(--rfx-shadow-color); z-index: 2;"></div>
                 </div>
             </div>
         `;
@@ -896,9 +896,9 @@ window.addEventListener("DOMContentLoaded", () => {
             lastTerminalLineWasProgress = false;
             
             if(dlBtnText) dlBtnText.innerText = "STOP";
-            confirmDlBtn.style.background = "#ff5b5b";
-            confirmDlBtn.style.borderColor = "#ff5b5b";
-            confirmDlBtn.style.color = "#ffffff";
+            confirmDlBtn.style.background = "var(--rfx-surface-3)";
+            confirmDlBtn.style.borderColor = "transparent";
+            confirmDlBtn.style.color = "var(--rfx-text-1)";
             
             const progWrap = document.getElementById('dlProgressWrapper');
             if(progWrap) {
@@ -906,7 +906,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 document.getElementById('dlProgressBar').style.width = '0%';
                 document.getElementById('dlProgressStatus').innerText = "Starting engine...";
                 document.getElementById('dlProgressEta').innerText = "ETA: Calc...";
-                document.getElementById('dlProgressBar').style.background = "var(--accent-blue)";
+                document.getElementById('dlProgressBar').style.background = "var(--rfx-accent)";
                 
                 const debugConsole = document.getElementById('dlDebugConsole');
                 if (debugConsole) debugConsole.textContent = "";
@@ -999,7 +999,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                 
                                 document.getElementById('dlProgressBar').style.width = perc + '%';
                                 document.getElementById('dlProgressStatus').innerText = `FFmpeg Network Seek: ${perc}%`;
-                                document.getElementById('dlProgressBar').style.background = '#e6a100'; // Yellow to indicate network processing
+                                document.getElementById('dlProgressBar').style.background = 'var(--rfx-text-3)'; // Yellow to indicate network processing
                             }
                         } catch(e) {}
                     }
@@ -1068,7 +1068,7 @@ window.addEventListener("DOMContentLoaded", () => {
                     if (code !== 0 && (!finalFilesOverride || finalFilesOverride.length === 0)) {
                         document.getElementById('dlProgressStatus').innerText = `Finished / Failed (Code ${code})`;
                         document.getElementById('dlProgressBar').style.width = '100%';
-                        document.getElementById('dlProgressBar').style.background = '#ff5b5b'; 
+                        document.getElementById('dlProgressBar').style.background = 'var(--rfx-err)'; 
                         showDlNotification("Download failed. Read black box.", "error");
                         return; 
                     }
@@ -1094,18 +1094,18 @@ window.addEventListener("DOMContentLoaded", () => {
                         if (percMatch) {
                             document.getElementById('dlProgressBar').style.width = percMatch[1] + '%';
                             document.getElementById('dlProgressStatus').innerText = `Downloading: ${percMatch[1]}%`;
-                            document.getElementById('dlProgressBar').style.background = 'var(--accent-blue)';
+                            document.getElementById('dlProgressBar').style.background = 'var(--rfx-accent)';
                         } else if (fragMatch) {
                             let fragPerc = ((parseInt(fragMatch[1]) / parseInt(fragMatch[2])) * 100).toFixed(1);
                             document.getElementById('dlProgressBar').style.width = fragPerc + '%';
                             document.getElementById('dlProgressStatus').innerText = `Downloading Chunks: ${fragPerc}%`;
-                            document.getElementById('dlProgressBar').style.background = 'var(--accent-blue)';
+                            document.getElementById('dlProgressBar').style.background = 'var(--rfx-accent)';
                         }
 
                         // 2. I RESTORED THE "SEEKING" WARNING
                         if (cleanLine.includes('[download] Destination:') && trimMethod === 'network') {
                             document.getElementById('dlProgressStatus').innerText = "Network Probe... (Can take 60s)";
-                            document.getElementById('dlProgressBar').style.background = '#e6a100';
+                            document.getElementById('dlProgressBar').style.background = 'var(--rfx-text-3)';
                         }
                     }
                 }
@@ -1128,7 +1128,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
                             document.getElementById('dlProgressStatus').innerText = `[Step 1/3] Video Probe...`;
                             document.getElementById('dlProgressBar').style.width = '33%'; 
-                            document.getElementById('dlProgressBar').style.background = 'var(--accent-blue)';
+                            document.getElementById('dlProgressBar').style.background = 'var(--rfx-accent)';
                             
                             let tempVideoPath = path.join(targetDir, `temp_vid_${i}_${Date.now()}.mp4`).replace(/\\/g, '/');
                             

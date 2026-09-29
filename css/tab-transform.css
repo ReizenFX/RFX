@@ -32,7 +32,7 @@
 #tab-transform select.tf-rel-select {
     font-size: var(--rfx-fs-sm); height: var(--rfx-h-sm); min-height: 0; padding: 0 24px 0 9px;
     border-radius: var(--rfx-r-md); background-color: var(--rfx-surface-2); color: var(--rfx-text-1);
-    background-position: calc(100% - 13px) 52%, calc(100% - 9px) 52%; background-size: 4px 4px, 4px 4px;
+    background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%; background-size: 5px 5px, 5px 5px;
 }
 #tab-transform select.tf-rel-select:hover { background-color: var(--rfx-surface-3); }
 

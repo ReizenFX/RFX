@@ -1,7 +1,7 @@
 .dl-part-row {
-    background: var(--bg-panel);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    background: var(--rfx-surface-1);
+    border: 1px solid transparent;
+    border-radius: var(--rfx-r-lg);
     padding: 10px;
     margin-bottom: 8px;
     display: flex;
@@ -21,24 +21,24 @@
 }
 .dl-time-box label {
     font-size: 9px;
-    color: var(--text-secondary);
-    font-weight: bold;
+    color: var(--rfx-text-3);
+    font-weight: var(--rfx-fw-strong);
     text-transform: uppercase;
 }
 .dl-time-box input {
-    background: var(--bg-input);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
+    background: var(--rfx-input);
+    color: var(--rfx-text-1);
+    border: 1px solid transparent;
+    border-radius: var(--rfx-r-md);
     padding: 6px;
-    font-family: monospace;
+    font-family: var(--rfx-font-mono);
     font-size: 12px;
     text-align: center;
 }
 .dl-part-remove {
     background: transparent;
     border: none;
-    color: #ff5b5b;
+    color: var(--rfx-text-3);
     cursor: pointer;
     font-size: 11px;
     align-self: flex-end;
@@ -47,7 +47,8 @@
 #tab-download .dl-deps-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; }
 #tab-download .dl-settings-btn {
     width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; padding: 0;
-    border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-input);
-    color: var(--text-secondary); cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+    border: none; border-radius: var(--rfx-r-md); background: transparent;
+    color: var(--rfx-text-2); cursor: pointer; transition: background var(--rfx-dur), color var(--rfx-dur);
 }
-#tab-download .dl-settings-btn:hover { background: #2a2a2a; border-color: #555; color: var(--text-primary); }
+#tab-download .dl-settings-btn:hover { background: var(--rfx-fill-hover); color: var(--rfx-text-1); }
+.dl-part-remove:hover { color: var(--rfx-text-1) !important; }
