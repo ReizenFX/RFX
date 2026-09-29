@@ -1,3 +1,12 @@
+// ============================================================================
+// FX TAB BACKEND
+// Copies effect stacks from the selected layers and pastes stored stacks onto the
+// selected layers. The panel (js/tab-fx.js) keeps the stacks; this file keeps no
+// state, so loading it twice is harmless. Every function returns a JSON string:
+//   { ok: true, ... }  or  { ok: false, error: "message for the user" }
+// All globals are prefixed "fx". ES3 only; depends on no other jsx file.
+// ============================================================================
+
 // Local JSON writer: ExtendScript may have no native JSON, and this file must not
 // depend on a polyfill from another tab.
 function fxJsonQuote(s) {
@@ -27,109 +36,183 @@ function fxToJSON(v) {
     return '{' + parts.join(',') + '}';
 }
 
-var globalFXStacks = [];
-
-function copySelectedLayerFX() {
-    var comp = app.project.activeItem;
-    if (!comp || !(comp instanceof CompItem)) return "none";
-    var layers = comp.selectedLayers;
-    if (layers.length !== 1) return "none";
-    
-    var l = layers[0];
-    var currentStack = [];
-    var names = [];
-    
-    var fxGroup = l.property("ADBE Effect Parade");
-    if (fxGroup) {
-        for (var i = 1; i <= fxGroup.numProperties; i++) {
-            var fx = fxGroup.property(i);
-            var fxData = { type: "effect", matchName: fx.matchName, values: [] };
-            names.push(fx.name);
-            for (var j = 1; j <= fx.numProperties; j++) {
-                try { fxData.values.push(fx.property(j).value); } catch (e) { fxData.values.push(null); }
-            }
-            currentStack.push(fxData);
-        }
-    }
-    
-    if (l instanceof TextLayer) {
-        var textProps = l.property("ADBE Text Properties");
-        var animators = textProps.property("ADBE Text Animators");
-        if (animators) {
-            for (var k = 1; k <= animators.numProperties; k++) {
-                var anim = animators.property(k);
-                names.push(anim.name + " (Animator)");
-                currentStack.push({ type: "animator", name: anim.name });
-            }
-        }
-    }
-    
-    if (names.length === 0) return "none";
-    
-    globalFXStacks.push({ names: names, effects: currentStack });
-    
-    var uiData = [];
-    for (var m = 0; m < globalFXStacks.length; m++) {
-        uiData.push(globalFXStacks[m].names.join(', '));
-    }
-    return fxToJSON(uiData);
+function fxError(message) {
+    return fxToJSON({ ok: false, error: message });
 }
 
-function removeFXBundleFromMemory(index) {
-    globalFXStacks.splice(index, 1);
+function fxActiveComp() {
+    var comp = app.project ? app.project.activeItem : null;
+    return (comp && comp instanceof CompItem) ? comp : null;
 }
 
-function removeAllFX() {
-    var comp = app.project.activeItem;
-    if (!comp || !(comp instanceof CompItem)) return;
-    var layers = comp.selectedLayers;
-    if (layers.length === 0) return;
+// ----------------------------------------------------------------------------
+// COPY
+// ----------------------------------------------------------------------------
 
-    app.beginUndoGroup("Remove FX");
-    for (var i = 0; i < layers.length; i++) {
-        var fx = layers[i].property("ADBE Effect Parade");
-        if (fx) {
-            for (var j = fx.numProperties; j >= 1; j--) { fx.property(j).remove(); }
+/* Installed effects' display names by match name, used to tell renamed effects apart. */
+function fxDisplayNames() {
+    var map = {}, list = app.effects;
+    for (var i = 0; i < list.length; i++) map[list[i].matchName] = list[i].displayName;
+    return map;
+}
+
+/* True for the name AE gives an effect by default: "Glow", or "Glow 2" for a duplicate. */
+function fxIsDefaultName(name, base) {
+    if (name === base) return true;
+    return name.indexOf(base + ' ') === 0 && /^\d+$/.test(name.substring(base.length + 1));
+}
+
+/* Walks an effect's parameters (including nested groups) and records every value and
+   expression that can be set again: { path: [indices], matchName, value?, expression? }. */
+function fxCaptureParams(group, path, out) {
+    for (var i = 1; i <= group.numProperties; i++) {
+        var p = group.property(i), here = path.concat([i]);
+        if (p.propertyType !== PropertyType.PROPERTY) {
+            fxCaptureParams(p, here, out);
+            continue;
         }
-        if (layers[i] instanceof TextLayer) {
-            var animators = layers[i].property("ADBE Text Properties").property("ADBE Text Animators");
-            if (animators) {
-                for (var k = animators.numProperties; k >= 1; k--) { animators.property(k).remove(); }
+        var t = p.propertyValueType;
+        if (t === PropertyValueType.NO_VALUE || t === PropertyValueType.CUSTOM_VALUE) continue;
+        var entry = { path: here, matchName: p.matchName }, v = null;
+        try { v = p.value; } catch (e) { v = null; }
+        if (typeof v === 'number' || v instanceof Array) entry.value = v;
+        try {
+            if (p.canSetExpression && p.expression !== '') {
+                entry.expression = p.expression;
+                entry.expressionEnabled = p.expressionEnabled;
             }
-        }
+        } catch (e2) {}
+        if (entry.value !== undefined || entry.expression !== undefined) out.push(entry);
     }
-    app.endUndoGroup();
 }
 
-function pasteSpecificFX(indexesStr) {
-    if (!indexesStr || globalFXStacks.length === 0) return;
-    var comp = app.project.activeItem;
-    if (!comp || !(comp instanceof CompItem)) return;
-    var layers = comp.selectedLayers;
-    if (layers.length === 0) return;
+function fxCaptureEffect(effect, displayNames) {
+    var params = [], base = displayNames[effect.matchName] || effect.name;
+    fxCaptureParams(effect, [], params);
+    return {
+        matchName: effect.matchName,
+        name: effect.name,
+        displayName: base,
+        renamed: !fxIsDefaultName(effect.name, base),
+        enabled: effect.enabled,
+        params: params
+    };
+}
 
-    var selectedIndexes = indexesStr.split(',');
-    
-    app.beginUndoGroup("Paste Specific FX Bundles");
-    for (var i = 0; i < layers.length; i++) {
-        var l = layers[i];
-        var fxGroup = l.property("ADBE Effect Parade");
-        
-        for (var idx = 0; idx < selectedIndexes.length; idx++) {
-            var pIdx = parseInt(selectedIndexes[idx]);
-            var stack = globalFXStacks[pIdx];
-            if (!stack) continue;
-            
-            for (var e = 0; e < stack.effects.length; e++) {
-                var data = stack.effects[e];
-                if (data.type === "effect" && fxGroup) {
-                    var newFX = fxGroup.addProperty(data.matchName);
-                    for (var k = 0; k < data.values.length; k++) {
-                        try { if (data.values[k] !== null) newFX.property(k + 1).setValue(data.values[k]); } catch (err) {}
-                    }
+/* One stack per selected layer that has effects. If effects are selected in the
+   timeline or Effect Controls, only those are copied from that layer. */
+function fxCopyFromSelection() {
+    try {
+        var comp = fxActiveComp();
+        if (!comp) return fxError('Select a layer with effects in a composition first.');
+        var layers = comp.selectedLayers;
+        if (layers.length === 0) return fxError('Select a layer with effects first.');
+
+        var displayNames = fxDisplayNames(), entries = [], empty = [];
+        for (var i = 0; i < layers.length; i++) {
+            var layer = layers[i], parade = layer.property('ADBE Effect Parade'), picked = [], j;
+            if (parade) {
+                for (j = 1; j <= parade.numProperties; j++) if (parade.property(j).selected) picked.push(parade.property(j));
+                if (picked.length === 0) for (j = 1; j <= parade.numProperties; j++) picked.push(parade.property(j));
+            }
+            if (picked.length === 0) { empty.push(layer.name); continue; }
+            var effects = [];
+            for (j = 0; j < picked.length; j++) effects.push(fxCaptureEffect(picked[j], displayNames));
+            entries.push({ layer: layer.name, effects: effects });
+        }
+        if (entries.length === 0) {
+            return fxError(layers.length === 1 ? 'No effects on "' + layers[0].name + '".' : 'No effects on the selected layers.');
+        }
+        return fxToJSON({ ok: true, entries: entries, empty: empty });
+    } catch (e) {
+        return fxError('Copy failed: ' + e.toString());
+    }
+}
+
+// ----------------------------------------------------------------------------
+// PASTE
+// ----------------------------------------------------------------------------
+
+function fxApplyEffectData(effect, data) {
+    for (var i = 0; i < data.params.length; i++) {
+        var p = data.params[i], prop = effect;
+        try {
+            for (var d = 0; d < p.path.length && prop; d++) prop = prop.property(p.path[d]);
+            if (!prop || prop.matchName !== p.matchName) continue;   // effect version differs
+            if (p.value !== undefined && p.value !== null) prop.setValue(p.value);
+            if (p.expression !== undefined && prop.canSetExpression) {
+                prop.expression = p.expression;
+                prop.expressionEnabled = p.expressionEnabled !== false;
+            }
+        } catch (e) {}   // hidden or locked parameters keep their default
+    }
+    try { if (data.renamed) effect.name = data.name; } catch (e1) {}
+    try { if (data.enabled === false) effect.enabled = false; } catch (e2) {}
+}
+
+/* stacks: [{ effects: [...] }] in paste order. replace: remove each layer's existing
+   effects first. Effects that cannot be added (plugin missing, not allowed on that
+   layer) are skipped and reported by name. */
+function fxPasteToSelection(stacks, replace) {
+    var comp = fxActiveComp();
+    if (!comp) return fxError('Select the layers to paste onto in a composition first.');
+    var layers = comp.selectedLayers;
+    if (layers.length === 0) return fxError('Select the layers to paste onto first.');
+    if (!stacks || stacks.length === 0) return fxError('No effect stacks to paste.');
+
+    var added = 0, layersChanged = 0, missing = {}, noEffects = [], skipped = [], k;
+    app.beginUndoGroup('Paste FX');
+    try {
+        for (var i = 0; i < layers.length; i++) {
+            var parade = layers[i].property('ADBE Effect Parade');
+            if (!parade) { noEffects.push(layers[i].name); continue; }
+            var before = added;
+            if (replace) for (var r = parade.numProperties; r >= 1; r--) parade.property(r).remove();
+            for (var s = 0; s < stacks.length; s++) {
+                for (var e = 0; e < stacks[s].effects.length; e++) {
+                    var data = stacks[s].effects[e];
+                    if (!parade.canAddProperty(data.matchName)) { missing[data.displayName || data.name] = true; continue; }
+                    fxApplyEffectData(parade.addProperty(data.matchName), data);
+                    added++;
                 }
             }
+            if (added > before) layersChanged++;
         }
+    } catch (err) {
+        app.endUndoGroup();
+        return fxError('Paste failed: ' + err.toString());
     }
     app.endUndoGroup();
+    for (k in missing) if (missing.hasOwnProperty(k)) skipped.push(k);
+    return fxToJSON({ ok: true, added: added, layers: layersChanged, skipped: skipped, noEffects: noEffects });
+}
+
+// ----------------------------------------------------------------------------
+// REMOVE
+// ----------------------------------------------------------------------------
+
+/* Removes every effect and text animator from the selected layers. */
+function fxRemoveAllFromSelection() {
+    var comp = fxActiveComp();
+    if (!comp) return fxError('Select the layers to clear in a composition first.');
+    var layers = comp.selectedLayers;
+    if (layers.length === 0) return fxError('Select the layers to clear first.');
+
+    var effects = 0, animators = 0;
+    app.beginUndoGroup('Remove FX');
+    try {
+        for (var i = 0; i < layers.length; i++) {
+            var parade = layers[i].property('ADBE Effect Parade'), j;
+            if (parade) for (j = parade.numProperties; j >= 1; j--) { parade.property(j).remove(); effects++; }
+            if (layers[i] instanceof TextLayer) {
+                var anims = layers[i].property('ADBE Text Properties').property('ADBE Text Animators');
+                if (anims) for (j = anims.numProperties; j >= 1; j--) { anims.property(j).remove(); animators++; }
+            }
+        }
+    } catch (err) {
+        app.endUndoGroup();
+        return fxError('Remove failed: ' + err.toString());
+    }
+    app.endUndoGroup();
+    return fxToJSON({ ok: true, effects: effects, animators: animators, layers: layers.length });
 }

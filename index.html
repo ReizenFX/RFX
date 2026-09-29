@@ -146,19 +146,44 @@
     </div>
 
     <div class="tab-content" id="tab-fx">
-        <div class="flex-column-container">
-            <div class="editor-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
-                <label style="color: var(--text-secondary); font-size: 12px; font-weight: bold;">FX Bundle Library</label>
+        <div class="fxt-root">
+            <div class="fxt-actions">
+                <button class="fxt-btn" id="fxt-copy" data-tooltip="Copy the selected layers' effects (or just the selected effects)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    <span>Copy FX</span>
+                </button>
+                <button class="fxt-btn fxt-btn-accent" id="fxt-paste" data-tooltip="Paste the checked stacks onto the selected layers">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+                    <span>Paste</span>
+                    <span class="fxt-badge" id="fxt-paste-count">0</span>
+                </button>
             </div>
-            <div class="scrollable-content" style="padding-bottom: 8px;">
-                <div id="fx-list-container" style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
-                    <p style="color: var(--text-secondary); text-align: center; margin-top: 10px; font-size: 12px;">No effects copied yet.</p>
-                </div>
+
+            <div class="fxt-search" id="fxt-search-wrap">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="fxt-search" placeholder="Search stacks or effects" spellcheck="false" autocomplete="off">
+                <button class="fxt-search-clear" id="fxt-search-clear" data-tooltip="Clear search (Esc)"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
             </div>
-            <div class="fixed-bottom" style="display: flex; gap: 12px; justify-content: center; padding-top: 12px; background: var(--bg-base); border-top: 1px solid var(--border-color);">
-                <button class="btn-icon-square" data-tooltip="Copy FX" onclick="copyFX()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
-                <button class="btn-icon-square" data-tooltip="Paste FX" onclick="pasteFX()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></button>
-                <button class="btn-icon-square danger-hover" data-tooltip="Clear All FX" onclick="removeFX()"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+
+            <div class="fxt-listhead">
+                <button class="fxt-all" id="fxt-all" data-tooltip="Check all / none"><span class="fxt-check"></span></button>
+                <span class="fxt-listtitle">Library</span>
+                <span class="fxt-count" id="fxt-count">0</span>
+                <label class="fxt-switch" data-tooltip="Remove a layer's existing effects before pasting">
+                    <input type="checkbox" id="fxt-replace">
+                    <span class="fxt-switch-track"></span>
+                    <span class="fxt-switch-label">Replace</span>
+                </label>
+            </div>
+
+            <div class="fxt-list" id="fxt-list"></div>
+
+            <div class="fxt-footer">
+                <button class="fxt-link" id="fxt-clear">Clear library</button>
+                <button class="fxt-btn fxt-btn-danger" id="fxt-remove" data-tooltip="Remove all effects and text animators from the selected layers">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    <span>Remove FX</span>
+                </button>
             </div>
         </div>
     </div>

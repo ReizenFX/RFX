@@ -1,0 +1,385 @@
+/* ============================================================================
+   FX TAB
+   Everything is scoped to #tab-fx and prefixed "fxt-" so nothing leaks into other
+   tabs. Colours build on the shared tokens in global.css (--bg-*, --accent-blue...).
+   Note: global.css forces `* { font-weight: 400 !important; outline: none !important }`,
+   so weights here need !important and focus is shown with box-shadow.
+   ========================================================================== */
+
+#tab-fx {
+    --fxt-surface: #1f1f21;
+    --fxt-surface-hover: #262629;
+    --fxt-line: #2e2e32;
+    --fxt-line-strong: #3d3d42;
+    --fxt-muted: #8b8b91;
+    --fxt-accent: var(--accent-blue, #5ba4ff);
+    --fxt-accent-soft: rgba(91, 164, 255, 0.10);
+    --fxt-accent-line: rgba(91, 164, 255, 0.45);
+    --fxt-danger: #ff6b6b;
+    --fxt-danger-soft: rgba(255, 107, 107, 0.10);
+    --fxt-radius: 8px;
+    --fxt-focus: 0 0 0 2px rgba(91, 164, 255, 0.45);
+}
+
+#tab-fx .fxt-root {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    padding: 10px;
+    min-height: 0;
+}
+
+/* ---------------------------------------------------------------- buttons */
+#tab-fx .fxt-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex-shrink: 0; }
+
+#tab-fx .fxt-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: var(--fxt-radius);
+    border: 1px solid var(--fxt-line-strong);
+    background: linear-gradient(180deg, #2a2a2e 0%, #232326 100%);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600 !important;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.08s, box-shadow 0.15s, opacity 0.15s;
+    white-space: nowrap;
+}
+#tab-fx .fxt-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+#tab-fx .fxt-btn:hover { background: #303035; border-color: #4a4a50; }
+#tab-fx .fxt-btn:active { transform: scale(0.97); }
+#tab-fx .fxt-btn:focus-visible { box-shadow: var(--fxt-focus); }
+
+#tab-fx .fxt-btn-accent {
+    background: linear-gradient(180deg, #6aaeff 0%, #4b95ef 100%);
+    border-color: #5ba4ff;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(91, 164, 255, 0.22);
+}
+#tab-fx .fxt-btn-accent:hover { background: linear-gradient(180deg, #78b6ff 0%, #559ff5 100%); border-color: #78b6ff; }
+#tab-fx .fxt-btn:disabled,
+#tab-fx .fxt-btn:disabled:hover {
+    opacity: 0.4;
+    cursor: default;
+    transform: none;
+    box-shadow: none;
+}
+
+#tab-fx .fxt-badge {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: rgba(0, 0, 0, 0.25);
+    font-size: 10.5px;
+    font-weight: 700 !important;
+    line-height: 18px;
+    text-align: center;
+}
+
+#tab-fx .fxt-btn-danger {
+    height: 30px;
+    background: transparent;
+    border-color: var(--fxt-line-strong);
+    color: #d6d6da;
+    font-size: 11.5px;
+}
+#tab-fx .fxt-btn-danger svg { width: 13px; height: 13px; }
+#tab-fx .fxt-btn-danger:hover { background: var(--fxt-danger-soft); border-color: rgba(255, 107, 107, 0.55); color: var(--fxt-danger); }
+
+#tab-fx .fxt-link {
+    height: 30px;
+    padding: 0 6px;
+    border: none;
+    background: none;
+    color: var(--fxt-muted);
+    font-size: 11.5px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+}
+#tab-fx .fxt-link:hover:not(:disabled) { color: var(--text-primary); }
+#tab-fx .fxt-link:disabled { opacity: 0.35; cursor: default; }
+#tab-fx .fxt-link.fxt-armed { color: var(--fxt-danger); background: var(--fxt-danger-soft); font-weight: 600 !important; }
+
+/* ---------------------------------------------------------------- search
+   Same look as the Assets tab search bar. */
+#tab-fx .fxt-search { position: relative; flex-shrink: 0; }
+#tab-fx .fxt-search > svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    opacity: 0.7;
+    pointer-events: none;
+}
+#tab-fx #fxt-search {
+    width: 100%;
+    height: 34px;
+    padding: 0 30px;
+    border-radius: var(--fxt-radius);
+    border: 1px solid var(--border-color);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 13px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+#tab-fx #fxt-search:focus { border-color: #555; }
+#tab-fx #fxt-search::placeholder { color: var(--text-secondary); }
+#tab-fx .fxt-search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none;
+    padding: 2px;
+    border: none;
+    background: none;
+    color: var(--text-secondary);
+    line-height: 0;
+    opacity: 0.5;
+    cursor: pointer;
+}
+#tab-fx .fxt-search-clear:hover { opacity: 1; }
+#tab-fx .fxt-search.has-text .fxt-search-clear { display: block; }
+
+#tab-fx .fxt-hit { color: var(--fxt-accent); }
+#tab-fx .fxt-item-name .fxt-hit { color: #8fc1ff; }
+
+#tab-fx .fxt-divider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 2px 0;
+    font-size: 10px;
+    font-weight: 600 !important;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--fxt-muted);
+}
+#tab-fx .fxt-divider::after { content: ""; flex: 1; height: 1px; background: var(--fxt-line); }
+
+/* ---------------------------------------------------------------- list header */
+#tab-fx .fxt-listhead {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 2px 0 10px;
+    flex-shrink: 0;
+}
+#tab-fx .fxt-listtitle {
+    font-size: 10.5px;
+    font-weight: 600 !important;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--fxt-muted);
+}
+#tab-fx .fxt-count {
+    min-width: 18px;
+    padding: 1px 6px;
+    border-radius: 9px;
+    background: #2a2a2e;
+    color: #c9c9ce;
+    font-size: 10px;
+    font-weight: 600 !important;
+    text-align: center;
+}
+
+#tab-fx .fxt-all {
+    display: flex;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+#tab-fx .fxt-all:disabled { opacity: 0.35; cursor: default; }
+#tab-fx .fxt-all:focus-visible { box-shadow: var(--fxt-focus); }
+
+/* Replace switch */
+#tab-fx .fxt-switch {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    user-select: none;
+}
+#tab-fx .fxt-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+#tab-fx .fxt-switch-track {
+    position: relative;
+    width: 26px;
+    height: 15px;
+    border-radius: 8px;
+    background: #3a3a3f;
+    transition: background 0.18s;
+}
+#tab-fx .fxt-switch-track::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #d0d0d5;
+    transition: transform 0.18s, background 0.18s;
+}
+#tab-fx .fxt-switch input:checked + .fxt-switch-track { background: var(--fxt-accent); }
+#tab-fx .fxt-switch input:checked + .fxt-switch-track::after { transform: translateX(11px); background: #fff; }
+#tab-fx .fxt-switch-label { font-size: 11px; color: var(--fxt-muted); }
+#tab-fx .fxt-switch input:checked ~ .fxt-switch-label { color: var(--text-primary); }
+
+/* ---------------------------------------------------------------- checkbox */
+#tab-fx .fxt-check {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    border: 1.5px solid #55555c;
+    background: #151517;
+    transition: background 0.15s, border-color 0.15s;
+}
+/* The tick / dash are SVGs centred on the whole box (inset: 0 + background-position:
+   center), so they stay optically centred at any size. A rotated CSS border tick never
+   is, because its visual centre is not its box centre. */
+#tab-fx .fxt-check::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2.6 6.3 4.9 8.5 9.4 3.6' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / 11px 11px no-repeat;
+    transform: scale(0);
+    transition: transform 0.15s;
+}
+#tab-fx .fxt-item.is-checked .fxt-check,
+#tab-fx .fxt-all.is-all .fxt-check,
+#tab-fx .fxt-all.is-some .fxt-check { background: var(--fxt-accent); border-color: var(--fxt-accent); }
+#tab-fx .fxt-item.is-checked .fxt-check::after,
+#tab-fx .fxt-all.is-all .fxt-check::after,
+#tab-fx .fxt-all.is-some .fxt-check::after { transform: scale(1); }
+#tab-fx .fxt-all.is-some .fxt-check::after {   /* dash for "some checked" */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M3 6h6' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round'/></svg>");
+}
+
+/* ---------------------------------------------------------------- list */
+#tab-fx .fxt-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-right: 2px;
+}
+
+#tab-fx .fxt-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 8px 9px 10px;
+    border-radius: var(--fxt-radius);
+    border: 1px solid var(--fxt-line);
+    background: var(--fxt-surface);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+#tab-fx .fxt-item:hover { background: var(--fxt-surface-hover); border-color: var(--fxt-line-strong); }
+#tab-fx .fxt-item.is-checked {
+    background: var(--fxt-accent-soft);
+    border-color: var(--fxt-accent-line);
+    box-shadow: inset 3px 0 0 var(--fxt-accent);
+}
+
+#tab-fx .fxt-item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+#tab-fx .fxt-item-name {
+    font-size: 12.5px;
+    font-weight: 500 !important;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#tab-fx .fxt-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-size: 10.5px;
+    color: var(--fxt-muted);
+}
+#tab-fx .fxt-pill {
+    flex-shrink: 0;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #c9c9ce;
+    font-size: 9.5px;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px;
+}
+#tab-fx .fxt-item.is-checked .fxt-pill { background: rgba(91, 164, 255, 0.18); color: #cfe3ff; }
+#tab-fx .fxt-item-source { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+#tab-fx .fxt-item-actions { display: flex; gap: 2px; flex-shrink: 0; opacity: 0.45; transition: opacity 0.15s; }
+#tab-fx .fxt-item:hover .fxt-item-actions { opacity: 1; }
+#tab-fx .fxt-icon-btn {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #b4b4ba;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+#tab-fx .fxt-icon-btn svg { width: 14px; height: 14px; }
+#tab-fx .fxt-icon-btn:focus-visible { box-shadow: var(--fxt-focus); }
+#tab-fx .fxt-row-paste:hover { background: rgba(91, 164, 255, 0.16); color: var(--fxt-accent); }
+#tab-fx .fxt-row-delete:hover { background: var(--fxt-danger-soft); color: var(--fxt-danger); }
+
+#tab-fx .fxt-rename {
+    width: 100%;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 5px;
+    border: 1px solid var(--fxt-accent);
+    background: #121214;
+    color: var(--text-primary);
+    font-size: 12.5px;
+    box-shadow: var(--fxt-focus);
+}
+
+/* ---------------------------------------------------------------- empty state */
+#tab-fx .fxt-empty {
+    margin-top: 4px;
+    padding: 26px 16px;
+    border-radius: var(--fxt-radius);
+    border: 1px dashed var(--fxt-line-strong);
+    text-align: center;
+}
+#tab-fx .fxt-empty-title { font-size: 12.5px; font-weight: 600 !important; color: #d6d6da; margin-bottom: 6px; }
+#tab-fx .fxt-empty-hint { font-size: 11px; line-height: 1.5; color: var(--fxt-muted); }
+
+/* ---------------------------------------------------------------- footer */
+#tab-fx .fxt-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--fxt-line);
+    flex-shrink: 0;
+}
