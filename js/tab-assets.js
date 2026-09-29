@@ -2137,35 +2137,9 @@ function openGenPreviewMenu(item, anchor){
     setTimeout(function(){ document.addEventListener('mousedown', function close(ev){ if (!menu.contains(ev.target)){ menu.remove(); document.removeEventListener('mousedown', close); } }); }, 10);
 }
 
-/* Settings modal (gear button): library folder + preview format. */
-function ensureSettingsStyles(){
-    if (document.getElementById('rfx-settings-styles')) return;
-    var css = ''
-    + '.rfxset-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);z-index:2147483647;display:flex;align-items:center;justify-content:center;}'
-    + '.rfxset{width:400px;max-width:calc(100vw - 32px);background:#1c1c1e;border:1px solid #2e2e30;border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.6);padding:22px 22px 16px;color:#e8e8ea;}'
-    + '.rfxset-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}'
-    + '.rfxset-title{font-size:16px;font-weight:650;letter-spacing:.2px;}'
-    + '.rfxset-x{width:30px;height:30px;border:none;background:none;color:#9a9a9c;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:0;transition:background .12s,color .12s;}'
-    + '.rfxset-x:hover{background:rgba(255,255,255,.08);color:#fff;}'
-    + '.rfxset-section{margin-bottom:22px;}'
-    + '.rfxset-label{font-size:10.5px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:#7d7d80;margin:0 2px 9px;}'
-    + '.rfxset-librow{display:flex;align-items:center;gap:9px;background:#151517;border:1px solid #2c2c2e;border-radius:10px;padding:6px 6px 6px 12px;}'
-    + '.rfxset-libicon{flex:0 0 auto;color:#8a8a8c;display:flex;line-height:0;}'
-    + '.rfxset-libpath{flex:1;min-width:0;font-size:12px;color:#cdcdd0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl;text-align:left;}'
-    + '.rfxset-change{flex:0 0 auto;height:30px;padding:0 15px;border:none;border-radius:8px;background:#2f2f33;color:#e8e8ea;font-size:12px;font-weight:600;cursor:pointer;transition:background .12s;}'
-    + '.rfxset-change:hover{background:#3a3a3f;}'
-    + '.rfxset-seg{display:flex;background:#151517;border:1px solid #2c2c2e;border-radius:12px;padding:4px;gap:4px;}'
-    + '.rfxset-opt{flex:1;border:none;background:none;color:#b8b8bb;border-radius:9px;padding:11px 8px;cursor:pointer;text-align:center;transition:background .16s,color .16s;}'
-    + '.rfxset-opt .t{font-size:12.5px;font-weight:600;display:block;}'
-    + '.rfxset-opt .d{font-size:10px;color:#7d7d80;margin-top:3px;display:block;}'
-    + '.rfxset-opt:hover:not(.on){background:rgba(255,255,255,.05);color:#e8e8ea;}'
-    + '.rfxset-opt.on{background:#3b82f6;color:#fff;box-shadow:0 2px 8px rgba(59,130,246,.35);}'
-    + '.rfxset-opt.on .d{color:rgba(255,255,255,.82);}'
-    + '.rfxset-foot{display:flex;justify-content:flex-end;}'
-    + '.rfxset-done{height:32px;padding:0 20px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .12s;}'
-    + '.rfxset-done:hover{background:#4f8ff8;}';
-    var st = document.createElement('style'); st.id = 'rfx-settings-styles'; st.textContent = css; document.head.appendChild(st);
-}
+/* Settings modal (gear button): library folder + preview format.
+   Its rfxset-* styles are shared by every settings dialog and live in css/settings.css. */
+function ensureSettingsStyles(){}
 window.assetsOpenSettings = function(){
     ensureSettingsStyles();
     var old = document.getElementById('assets-settings-modal'); if (old) old.remove();
