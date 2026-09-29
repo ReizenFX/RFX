@@ -8,7 +8,9 @@ Premiere Pro as hosts.
 
 1. **Node modules.** From this folder run `npm install`. It recreates `node_modules/` from
    `package.json` (discord-rpc 4.0.1, node-fetch 2.7.0, ws 7.5.10).
-2. **Binaries.** Put the tools listed under [bin/](#bin) in place. `bin/` is not in git.
+2. **Extra programs.** Nothing to do by hand: on first launch the welcome dialog offers to
+   download what the Caption, Download and Assets tabs need (see
+   [Dependencies](#dependencies)). An existing `bin/` folder is still used if present.
 3. **Link the panel.** Run `scripts\dev-link.bat` (or
    `powershell -ExecutionPolicy Bypass -File scripts\dev-link.ps1`). It creates the
    junction `%APPDATA%\Adobe\CEP\extensions\RFX` pointing at this folder. It's safe to re-run
@@ -61,10 +63,41 @@ panel then says so). Without one, RFX uses the first existing `RFX/Library` fold
 Documents, the user data folder (`%APPDATA%` on Windows, `~/Library/Application Support` on
 Mac) or Downloads, and otherwise creates `Documents/RFX/Library`. Nothing is ever moved.
 
-## bin/
+## Dependencies
 
-The tabs look for these tools inside the extension folder at runtime (the paths come from
-the code; this repo does not track `bin/`, so check what you actually have there):
+Three tabs need programs that are too large to ship with the panel. `js/deps.js` downloads
+them from their official sources, verifies them (published sha256 where available, else the
+exact size), extracts them and checks that they run. Each tab has its own copies; nothing
+needs admin rights.
+
+| Tab | Needs | Source | Check |
+|---|---|---|---|
+| Caption | Faster-Whisper-XXL | GitHub `Purfview/whisper-standalone-win`, tag `Faster-Whisper-XXL` (newest free Windows `.7z`) | size (no hash is published) |
+| Caption | Speech model large-v3 | Hugging Face `Systran/faster-whisper-large-v3`, pinned revision | LFS sha256 + git blob sha1 per file |
+| Caption, Download, Assets | FFmpeg (Download also gets FFprobe) | GitHub `BtbN/FFmpeg-Builds`, newest stable line, win64 GPL | sha256 |
+| Download | yt-dlp | GitHub `yt-dlp/yt-dlp` latest release | sha256 |
+| Download | Deno (JavaScript runtime for yt-dlp) | GitHub `denoland/deno` latest release | sha256 |
+| (Caption, only if needed) | 7zr.exe to extract `.7z` when Windows' `tar` cannot | GitHub `ip7z/7zip` | sha256 |
+
+- **Where:** `%APPDATA%\RFX\Dependencies\<tab>\<dependency>\<version>\`, with `deps.json`
+  recording the active and previous version, source, hashes and install date. Each tab's
+  settings can move its folder (nothing is moved automatically).
+- **Where to manage:** the welcome dialog (Dependencies button at the right of the tab bar),
+  Caption settings (gear next to its sub-tabs), Download settings (gear or the yt-dlp pill in
+  its header), Assets settings.
+- **Updates:** checked on request and at most once a day in the background. An update is
+  installed next to the current version, then switched to; "Roll back" switches back. Old
+  versions are deleted only when you choose "Delete".
+- **Lookup order:** managed version, else an existing copy in `bin/win/<tab>` (shown as
+  "existing install, version unknown"), else missing. `bin/` is never modified.
+- **GitHub limits:** GitHub allows 60 unauthenticated API calls per hour per network. When
+  they are used up (other programs share them), release information is read from the
+  public release pages instead.
+
+## bin/ (existing installs)
+
+Older setups kept the tools inside the extension folder. They are still used when no
+managed copy is installed (the paths come from the code; this repo does not track `bin/`):
 
 | Path | Used by | What goes there |
 |---|---|---|
@@ -74,12 +107,7 @@ the code; this repo does not track `bin/`, so check what you actually have there
 | `bin/win/caption/models/` or `models/` at the root | Caption tab | the model folder `faster-whisper-large-v3` (the HuggingFace cache layout `models--Systran--faster-whisper-large-v3` also works) |
 | `bin/mac/caption/` | Caption tab on macOS | `ffmpeg`, `faster-whisper-xxl` |
 
-Where to get them:
-- **ffmpeg.** Windows static builds are linked from https://ffmpeg.org/download.html (for
-  example gyan.dev or BtbN builds). Use `ffmpeg.exe` from the build's `bin` folder.
-- **yt-dlp.** `yt-dlp.exe` from https://github.com/yt-dlp/yt-dlp/releases.
-- **Faster-Whisper-XXL.** Purfview's standalone build from
-  https://github.com/Purfview/whisper-standalone-win/releases. The archive contains
-  `faster-whisper-xxl.exe` and `_xxl_data`.
-- **Model.** `faster-whisper-large-v3` from https://huggingface.co/Systran/faster-whisper-large-v3
-  (about 3 GB). The caption tab never downloads it on its own.
+You don't need to fill `bin/` any more: the [Dependencies](#dependencies) installs above come
+from the same official sources and can be updated and rolled back. Placing files here by hand
+still works as a fallback. The Caption tab never lets the engine download the model on its
+own during a transcription; the model is only downloaded when you install it.

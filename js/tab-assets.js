@@ -39,6 +39,22 @@ window.toNativePath = function(p){
     return p.replace(/\\/g, '/');
 };
 
+/* This tab's own FFmpeg (js/deps.js), used only for GIF previews. The managed copy
+   (Settings) wins; otherwise the existing one under bin/win/assets is used. */
+(function registerAssetsDeps(){
+    if (!window.RFXDeps || typeof require !== 'function') return;
+    var nodePath = require('path');
+    RFXDeps.register('assets', { label: 'Assets', deps: [
+        { id: 'ffmpeg', label: 'FFmpeg', sizeHint: '185 MB',
+          description: 'Only needed for GIF previews (BtbN stable build, this tab\'s own copy). Image-sequence previews work without it.',
+          main: 'ffmpeg.exe', latest: RFXDeps.sources.ffmpegStable(), sourceKey: 'ffmpeg-btbn', extractPatterns: ['*/bin/ffmpeg.exe'],
+          collect: function(x, out, h){ var f = h.findFile(x, 'ffmpeg.exe', 4); if (f) h.moveInto(f, nodePath.join(out, 'ffmpeg.exe')); },
+          verify: { args: ['-version'], expect: /ffmpeg version/ },
+          legacy: { main: 'ffmpeg.exe' } }
+    ] });
+    setTimeout(function(){ RFXDeps.dailyCheck('assets'); }, 25000);   // quiet, at most once a day
+})();
+
 /* Load this tab's ExtendScript backend (assets.jsx) into the AE engine.
    Reads the file and evals its contents — more reliable than $.evalFile. */
 (function loadAssetsBackend() {
@@ -1984,6 +2000,9 @@ function setPreviewFormat(v){ try { localStorage.setItem('rfx_preview_format', v
 /* Locate ffmpeg.exe, breadth-first by folder level starting at bin/, depth-capped,
    pruning heavy/irrelevant folders. Resolved path is cached. */
 function findFfmpeg(){
+    if (window.RFXDeps){
+        try { var managed = RFXDeps.resolve('assets', 'ffmpeg'); if (managed.state === 'managed') return managed.path.replace(/\\/g, '/'); } catch(e){}
+    }
     if (typeof csInterface === 'undefined' || !window.cep || !window.cep.fs) return null;
     var root = window.toNativePath(csInterface.getSystemPath(SystemPath.EXTENSION));
     var base = root + '/bin/win/assets';          // ffmpeg lives ONLY here (or deeper) — nowhere else
@@ -2019,7 +2038,7 @@ function findFfmpeg(){
 /* Encode the rendered PNG frames in <previewDir> into preview.gif via ffmpeg. */
 function encodeGif(previewDir, fps, width, cb){
     var ff = findFfmpeg();
-    if (!ff){ cb(false, 'ffmpeg.exe not found under the extension /bin folder'); return; }
+    if (!ff){ cb(false, 'GIF previews need FFmpeg, which is not installed. Install it in Assets settings (gear icon), or switch the preview format to Image sequence.'); return; }
     if (!window.cep.process || !window.cep.process.createProcess){ cb(false, 'process API unavailable'); return; }
     var input = previewDir + '/f%03d.png';
     var out   = previewDir + '/preview.gif';
@@ -2187,6 +2206,20 @@ window.assetsOpenSettings = function(){
     overlay.querySelector('#rfxset-done').onclick = close;
     overlay.addEventListener('mousedown', function(e){ if (e.target === overlay) close(); });
     document.addEventListener('keydown', onKey);
+
+    // GIF previews need this tab's FFmpeg (install / update / roll back via js/deps.js)
+    if (window.RFXDeps){
+        var card = overlay.querySelector('.rfxset');
+        var tools = document.createElement('div');
+        tools.className = 'rfxset-section';
+        tools.innerHTML = '<div class="rfxset-label">GIF previews · FFmpeg</div>';
+        var host = document.createElement('div');
+        tools.appendChild(host);
+        card.insertBefore(tools, overlay.querySelector('.rfxset-foot'));
+        card.style.maxHeight = 'calc(100vh - 24px)';
+        card.style.overflowY = 'auto';
+        RFXDeps.ui.renderPanel(host, 'assets');
+    }
 };
 function generatePreview(item, el){
     if (el) el.classList.add('busy');

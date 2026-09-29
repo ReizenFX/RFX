@@ -22,18 +22,21 @@
     <script src="js/CSInterface.js"></script>
 </head>
 <body>
-    <div class="tabs-header">
-        <button class="tab-btn active" id="btn-tab-transform" onclick="switchTab('tab-transform')">Transform</button>
-        <button class="tab-btn" id="btn-tab-fx" onclick="switchTab('tab-fx')">FX</button>
-        <button class="tab-btn" id="btn-tab-color" onclick="switchTab('tab-color')">Color</button>
-        <button class="tab-btn" id="btn-tab-graph" onclick="switchTab('tab-graph')">Graph</button>
-        <button class="tab-btn" id="btn-tab-assets" onclick="switchTab('tab-assets')">Assets</button>
-        <button id="btn-tab-paste" class="tab-btn" onclick="switchTab('tab-paste')">Paste</button>
-        <button id="btn-tab-render" class="tab-btn" onclick="switchTab('tab-render')">Render</button>
-        <button class="tab-btn" id="btn-tab-tracker" onclick="switchTab('tab-tracker')">Tracker</button>
-        <button class="tab-btn" id="btn-tab-discord" onclick="switchTab('tab-discord')">Discord</button>
-        <button class="tab-btn" id="btn-tab-download" onclick="switchTab('tab-download')">Download</button>
-        <button class="tab-btn" id="btn-tab-caption" onclick="switchTab('tab-caption')">Caption</button>
+    <div class="rfx-app-header">
+        <div class="tabs-header">
+            <button class="tab-btn active" id="btn-tab-transform" onclick="switchTab('tab-transform')">Transform</button>
+            <button class="tab-btn" id="btn-tab-fx" onclick="switchTab('tab-fx')">FX</button>
+            <button class="tab-btn" id="btn-tab-color" onclick="switchTab('tab-color')">Color</button>
+            <button class="tab-btn" id="btn-tab-graph" onclick="switchTab('tab-graph')">Graph</button>
+            <button class="tab-btn" id="btn-tab-assets" onclick="switchTab('tab-assets')">Assets</button>
+            <button id="btn-tab-paste" class="tab-btn" onclick="switchTab('tab-paste')">Paste</button>
+            <button id="btn-tab-render" class="tab-btn" onclick="switchTab('tab-render')">Render</button>
+            <button class="tab-btn" id="btn-tab-tracker" onclick="switchTab('tab-tracker')">Tracker</button>
+            <button class="tab-btn" id="btn-tab-discord" onclick="switchTab('tab-discord')">Discord</button>
+            <button class="tab-btn" id="btn-tab-download" onclick="switchTab('tab-download')">Download</button>
+            <button class="tab-btn" id="btn-tab-caption" onclick="switchTab('tab-caption')">Caption</button>
+        </div>
+        <button id="rfx-deps-btn" data-tooltip="Dependencies"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg><span class="rfx-deps-badge"></span></button>
     </div>
 
     <div class="tab-content active" id="tab-transform">
@@ -2079,6 +2082,7 @@
     <script src="js/tab-discord.js"></script>
     <script src="js/tab-download.js"></script>
     <script src="js/tab-caption.js"></script>
+    <script src="js/welcome.js"></script>
     <div id="notificationOverlay" class="notification-overlay">
         <div class="notification-content" id="notificationContent">
             <svg id="notif-icon-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="notif-icon" style="display:none;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>

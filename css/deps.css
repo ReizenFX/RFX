@@ -126,3 +126,24 @@
 .rfxdep-pill:hover { border-color: #4a4a50; color: #e8e8ea; }
 .rfxdep-pill.is-update { border-color: rgba(91, 164, 255, .55); background: rgba(91, 164, 255, .12); color: #9ecaff; }
 .rfxdep-pill.is-missing { border-color: rgba(255, 107, 107, .5); background: rgba(255, 107, 107, .10); color: #ff9d9d; }
+
+/* main tab bar + Dependencies button (js/welcome.js). The row carries the bar's
+   bottom border so the tabs keep scrolling while the button stays on the right. */
+.rfx-app-header {
+    display: flex; align-items: center; flex-shrink: 0;
+    border-bottom: 1px solid var(--border-color); background: var(--bg-base);
+}
+.rfx-app-header > .tabs-header { flex: 1; min-width: 0; border-bottom: none; }
+#rfx-deps-btn {
+    position: relative; flex-shrink: 0; height: 28px; min-width: 30px; margin: 0 8px 0 2px; padding: 0 7px;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-input);
+    color: var(--text-secondary); cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+}
+#rfx-deps-btn:hover { background: #2a2a2a; border-color: #555; color: var(--text-primary); }
+#rfx-deps-btn .rfx-deps-badge { font-size: 10px; font-weight: 600 !important; font-variant-numeric: tabular-nums; }
+#rfx-deps-btn .rfx-deps-badge:empty { display: none; }
+#rfx-deps-btn.is-busy { color: #8fc1ff; border-color: rgba(91, 164, 255, .55); background: rgba(91, 164, 255, .10); }
+#rfx-deps-btn.is-missing::after {
+    content: ""; position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; background: #f0c060;
+}

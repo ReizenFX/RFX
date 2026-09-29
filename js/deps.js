@@ -955,6 +955,9 @@
             if (text !== undefined && text !== null) n.textContent = text;
             return n;
         }
+        /* Paths are shown right-to-left so long ones lose their start, not their end;
+           left-to-right marks keep leading/trailing punctuation in place. */
+        function ltr(s) { const m = String.fromCharCode(0x200E); return m + s + m; }
         function button(label, cls, onClick, tooltip) {
             const b = el('button', 'rfxdep-btn ' + (cls || ''), label);
             if (tooltip) b.setAttribute('data-tooltip', tooltip);
@@ -1003,7 +1006,7 @@
             else if (r.state === 'legacy') status = 'Existing install in the extension folder, version unknown. It is used as is.';
             else status = r.brokenManaged ? 'The installed files are missing. Install again.' : 'Not installed.' + (def.sizeHint ? ' Download size about ' + def.sizeHint + '.' : '');
             row.appendChild(el('div', 'rfxdep-status', status));
-            if (r.path) { const p = el('div', 'rfxdep-path', r.dir); p.title = r.path; row.appendChild(p); }
+            if (r.path) { const p = el('div', 'rfxdep-path', ltr(r.dir)); p.title = r.path; row.appendChild(p); }
 
             if (busy) {
                 const bar = el('div', 'rfxdep-progress');
@@ -1100,7 +1103,7 @@
             const wrap = el('div', 'rfxdep-folder');
             wrap.appendChild(el('div', 'rfxdep-label', 'Dependencies folder'));
             const rowEl = el('div', 'rfxdep-folder-row');
-            const p = el('span', 'rfxdep-folder-path', tabRoot(tab));
+            const p = el('span', 'rfxdep-folder-path', ltr(tabRoot(tab)));
             p.title = tabRoot(tab);
             rowEl.appendChild(p);
             rowEl.appendChild(button('Change', '', () => {
@@ -1150,7 +1153,7 @@
             return s;
         }
 
-        return { renderPanel: renderPanel, folderRow: folderRow, modal: modal, section: section, el: el, button: button };
+        return { renderPanel: renderPanel, folderRow: folderRow, modal: modal, section: section, el: el, button: button, ltr: ltr };
     })();
 
     const api = {

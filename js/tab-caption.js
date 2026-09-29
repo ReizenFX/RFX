@@ -2415,7 +2415,7 @@ function capOpenSettings(reason) {
     var presets = ui.section('Caption presets folder');
     presets.appendChild(ui.el('div', 'rfxdep-text', 'Format, style, box and effect presets are saved here, each kind in its own subfolder (Format Presets, Text Styles, Effect Presets, Box Presets, Box Formats, Style Formats).'));
     var row = ui.el('div', 'rfxdep-folder-row');
-    var p = ui.el('span', 'rfxdep-folder-path', extDataDir);
+    var p = ui.el('span', 'rfxdep-folder-path', ui.ltr(extDataDir));
     p.title = extDataDir;
     row.appendChild(p);
     var reopen = function() { m.close(); capOpenSettings(); };
