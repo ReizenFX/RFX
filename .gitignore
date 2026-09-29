@@ -3,3 +3,4 @@ bin/
 *.zxp
 .DS_Store
 Thumbs.db
+.debug

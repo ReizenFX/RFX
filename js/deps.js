@@ -32,7 +32,7 @@
     const IS_WIN = process.platform === 'win32';
     const DAY = 24 * 60 * 60 * 1000;
     const UA = 'RFX-Dependency-Manager';
-    const config = { depsRoot: null, extensionRoot: null, storage: null, tarExe: null };   // tarExe: test hook
+    const config = { depsRoot: null, extensionRoot: null, storage: null, tarExe: null, noCurl: false };   // tarExe, noCurl: test hooks
 
     // ------------------------------------------------------------------ basics
     function memoryStorage() {
@@ -499,10 +499,109 @@
 
     // ------------------------------------------------------------------ download + verify
     function cancelledError() { return Object.assign(new Error('Cancelled'), { code: 'CANCELLED' }); }
+    function pausedError() { return Object.assign(new Error('Paused'), { code: 'PAUSED' }); }
+    function stopError(job) { return job.pauseRequested ? pausedError() : cancelledError(); }
+
+    /* Downloads use Windows' own curl.exe when it exists (Windows 10 1803+): it verifies
+       certificates with the Windows certificate store, follows redirects and resumes with
+       HTTP Range, independent of the panel's older embedded Node. Node's https is the
+       fallback. Progress is read from the growing .part file, so it is accurate either way. */
+    let curlInfo;
+    function curlExe() {
+        if (!IS_WIN || config.noCurl) return null;   // noCurl: test hook for the Node fallback
+        if (curlInfo !== undefined) return curlInfo;
+        curlInfo = null;
+        const p = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'curl.exe');
+        if (!exists(p)) return null;
+        try {
+            const out = cp.execFileSync(p, ['--version'], { windowsHide: true, timeout: 10000 }).toString();
+            const m = /curl (\d+)\.(\d+)/.exec(out);
+            const v = m ? Number(m[1]) * 1000 + Number(m[2]) : 0;
+            curlInfo = { path: p, revoke: v >= 7070 };   // --ssl-revoke-best-effort needs curl 7.70
+        } catch (e) { curlInfo = null; }
+        return curlInfo;
+    }
+
+    function curlError(code, stderr, url) {
+        const host = hostOf(url), detail = firstLine(stderr).replace(/^curl: \(\d+\)\s*/, '');
+        const known = {
+            6: 'Could not find ' + host + '. Check your internet connection.',
+            7: 'Could not connect to ' + host + '. Check your internet connection or firewall.',
+            22: host + ' refused the download (' + detail + ').',
+            23: 'Could not write the download to disk (disk full or no permission).',
+            28: 'The download stalled (no data for a minute). Try again: it resumes where it stopped.',
+            35: 'Secure connection to ' + host + ' failed (' + detail + ').',
+            56: 'The connection to ' + host + ' was interrupted. Try again: it resumes where it stopped.',
+            60: 'Windows did not trust the certificate of ' + host + ' (' + detail + ').'
+        };
+        return Object.assign(new Error(known[code] || ('Download failed (curl ' + code + (detail ? ': ' + detail : '') + ').')), { code: 'CURL_' + code });
+    }
+
+    /* Keeps job.received / speed current from the size of the .part file. */
+    function startProgressWatch(job, part, base) {
+        let lastT = Date.now(), lastB = job.received;
+        const tick = () => {
+            let size = 0;
+            try { size = fs.statSync(part).size; } catch (e) {}
+            job.fileReceived = size;
+            job.received = base + size;
+            const now = Date.now(), dt = now - lastT;
+            if (dt >= 250) {
+                const inst = Math.max(0, (job.received - lastB) * 1000 / dt);
+                job.speed = job.speed ? job.speed * 0.6 + inst * 0.4 : inst;
+                lastT = now; lastB = job.received;
+            }
+            emit({ tab: job.tab, id: job.id, job: job, progress: true });
+        };
+        const timer = setInterval(tick, 300);
+        return () => { clearInterval(timer); tick(); };
+    }
+
+    function fetchWithCurl(job, file, part, start, curl) {
+        return new Promise((resolveP, reject) => {
+            const args = ['-L', '--fail', '--silent', '--show-error', '--connect-timeout', '20',
+                          '--speed-limit', '1', '--speed-time', '60', '--retry', '3', '--retry-delay', '2',
+                          '-A', UA, '-o', part];
+            if (curl.revoke) args.push('--ssl-revoke-best-effort');   // offline revocation servers must not block downloads
+            if (start > 0) args.push('-C', '-');
+            args.push(file.url);
+            let stderr = '';
+            let child;
+            try { child = cp.spawn(curl.path, args, { windowsHide: true }); }
+            catch (e) { return reject(e); }
+            job.child = child;
+            job.fileTotal = file.size;
+            const stopWatch = startProgressWatch(job, part, job.received - start);
+            child.stderr.on('data', d => { if (stderr.length < 4000) stderr += d; });
+            child.on('error', e => { stopWatch(); job.child = null; reject(e); });
+            child.on('close', code => {
+                stopWatch();
+                job.child = null;
+                if (job.pauseRequested || job.cancelled) return reject(stopError(job));
+                if (code === 0) return resolveP();
+                if (code === 33 || code === 36) return reject(Object.assign(new Error('The server cannot resume this download.'), { code: 'NO_RANGE' }));
+                reject(curlError(code, stderr, file.url));
+            });
+        });
+    }
 
     async function fetchToPart(job, file, part, start) {
+        const curl = curlExe();
+        if (curl) {
+            try { return await fetchWithCurl(job, file, part, start, curl); }
+            catch (e) {
+                if (e.code !== 'NO_RANGE') throw e;
+                try { fs.unlinkSync(part); } catch (e2) {}   // cannot resume: start this file over
+                job.received -= start;
+                return fetchWithCurl(job, file, part, 0, curl);
+            }
+        }
+        return fetchWithNode(job, file, part, start);
+    }
+
+    async function fetchWithNode(job, file, part, start) {
         const r = await httpGet(file.url, start ? { Range: 'bytes=' + start + '-' } : {});
-        if (job.cancelled) { r.req.destroy(); throw cancelledError(); }
+        if (job.cancelled || job.pauseRequested) { r.req.destroy(); throw stopError(job); }
         const status = r.res.statusCode;
         let append = false;
         if (status === 206) append = true;
@@ -514,7 +613,7 @@
         job.fileReceived = start;
         let lastT = Date.now(), lastB = job.received;
         const step = Math.max(256 * 1024, (job.fileTotal || 0) / 50);   // report at least every 2% (fast links)
-        job.abort = () => r.req.destroy(cancelledError());
+        job.abort = () => r.req.destroy(stopError(job));
         r.res.on('data', chunk => {
             job.fileReceived += chunk.length;
             job.received += chunk.length;
@@ -524,14 +623,14 @@
                 const inst = (job.received - lastB) * 1000 / dt;
                 job.speed = job.speed ? job.speed * 0.7 + inst * 0.3 : inst;
                 lastT = now; lastB = job.received;
-                emit({ tab: job.tab, id: job.id, job: job });
+                emit({ tab: job.tab, id: job.id, job: job, progress: true });
             }
         });
         await new Promise((resolveP, reject) => {
             stream.pipeline(r.res, fs.createWriteStream(part, { flags: append ? 'a' : 'w' }), err => (err ? reject(err) : resolveP()));
-        }).catch(e => { throw job.cancelled ? cancelledError() : e; });
+        }).catch(e => { throw (job.cancelled || job.pauseRequested) ? stopError(job) : e; });
         job.abort = null;
-        if (job.cancelled) throw cancelledError();
+        if (job.cancelled || job.pauseRequested) throw stopError(job);
         const got = fs.statSync(part).size;
         if (file.size && got < file.size) throw Object.assign(new Error('The download stopped early. Try again: it resumes where it stopped.'), { code: 'INCOMPLETE' });
     }
@@ -575,6 +674,13 @@
         const key = (file.sha256 || file.sha1git || crypto.createHash('sha1').update(file.url).digest('hex')).slice(0, 16);
         const done = path.join(dir, key + '-' + safeName(file.name));
         const part = done + '.part', meta = part + '.json';
+        job.currentPart = part;
+        // Already downloaded and verified (e.g. before a pause): reuse it.
+        if (exists(done) && (!file.size || fs.statSync(done).size === file.size)) {
+            job.received += file.size || fs.statSync(done).size;
+            if (file.sha256) verifiedArtifacts[file.sha256] = done;
+            return { path: done, shared: false, check: file.sha256 ? 'sha256' : file.sha1git ? 'sha1' : 'size' };
+        }
         let start = 0;
         try {
             const m = JSON.parse(fs.readFileSync(meta, 'utf8'));
@@ -743,10 +849,12 @@
             return info;
         } finally {
             if (staging) rmrf(staging);
+            // Paused: remember the finished files kept for the resume (a later cancel deletes them).
+            if (job.pauseRequested) job.keptFiles = downloaded.filter(d => !d.shared).map(d => d.path);
             // Remove the downloaded files (including one reused from another tab's install)
             // unless a queued install of the same source will reuse them next.
             downloaded.forEach(d => {
-                if (!exists(d.path)) return;
+                if (job.pauseRequested || !exists(d.path)) return;   // paused: keep finished files for the resume
                 const reusedLater = d.file.sha256 && def.sourceKey && queue.some(q => {
                     try { return depDef(q.tab, q.id).sourceKey === def.sourceKey; } catch (e) { return false; }
                 });
@@ -803,16 +911,74 @@
             const info = await performInstall(job);
             result = { ok: true, version: info.version, label: info.label || info.version };
         } catch (e) {
-            result = { ok: false, cancelled: job.cancelled || e.code === 'CANCELLED', error: job.cancelled ? 'Cancelled. The partial download is kept and continues where it stopped next time.' : friendlyError(e), code: e.code };
+            if (job.pauseRequested && !job.cancelled) {
+                // Paused: the partial file stays; resume() puts the job back in the queue.
+                job.stage = 'paused';
+                job.speed = 0;
+                job.abort = null;
+                job.child = null;
+                running = null;
+                emit({ tab: job.tab, id: job.id, job: job });
+                pump();
+                return;
+            }
+            const cancelled = job.cancelled || e.code === 'CANCELLED';
+            if (cancelled) discardPartial(job);
+            result = { ok: false, cancelled: cancelled, error: cancelled ? 'Cancelled. The partial download was deleted.' : friendlyError(e), code: e.code };
             job.error = result.error;
         }
+        finishJob(job, result);
+        running = null;
+        pump();
+    }
+
+    function finishJob(job, result) {
         job.finished = true;
         job.stage = result.ok ? 'done' : (result.cancelled ? 'cancelled' : 'failed');
         job.abort = null;
-        running = null;
         emit({ tab: job.tab, id: job.id, job: job });
         job.resolve(result);
+    }
+
+    /* Deletes what a cancelled job downloaded: the current .part (+ its note) and any
+       finished files kept from a pause. */
+    function discardPartial(job) {
+        const files = [].concat(job.keptFiles || []);
+        if (job.currentPart) files.push(job.currentPart, job.currentPart + '.json');
+        files.forEach(f => { try { fs.unlinkSync(f); } catch (e) {} });
+        job.keptFiles = [];
+    }
+
+    /* Pause: only while downloading (or while waiting in the queue). The partial file is
+       kept; resume() continues from it with an HTTP Range request. */
+    function pause(tab, id) {
+        const job = jobs[tab + '/' + id];
+        if (!job || job.finished || job.stage === 'paused') return false;
+        const i = queue.indexOf(job);
+        if (i !== -1) {
+            queue.splice(i, 1);
+            job.stage = 'paused';
+            emit({ tab: tab, id: id, job: job });
+            return true;
+        }
+        if (job !== running || job.stage !== 'downloading') return false;
+        job.pauseRequested = true;
+        if (job.abort) job.abort();
+        if (job.child) { try { job.child.kill(); } catch (e) {} }
+        return true;
+    }
+
+    function resume(tab, id) {
+        const job = jobs[tab + '/' + id];
+        if (!job || job.finished || job.stage !== 'paused') return false;
+        job.pauseRequested = false;
+        job.stage = 'queued';
+        job.received = 0;
+        job.speed = 0;
+        queue.push(job);
+        emit({ tab: tab, id: id, job: job });
         pump();
+        return true;
     }
 
     function cancel(tab, id) {
@@ -820,13 +986,11 @@
         if (!job || job.finished) return;
         job.cancelled = true;
         const i = queue.indexOf(job);
-        if (i !== -1) {
-            queue.splice(i, 1);
-            job.finished = true;
-            job.stage = 'cancelled';
-            job.error = 'Cancelled before it started.';
-            emit({ tab: tab, id: id, job: job });
-            job.resolve({ ok: false, cancelled: true, error: job.error });
+        if (i !== -1 || (job.stage === 'paused' && job !== running)) {
+            if (i !== -1) queue.splice(i, 1);
+            discardPartial(job);
+            job.error = job.currentPart ? 'Cancelled. The partial download was deleted.' : 'Cancelled before it started.';
+            finishJob(job, { ok: false, cancelled: true, error: job.error });
             return;
         }
         [job, job.subJob].forEach(j => {
@@ -835,6 +999,34 @@
             if (j.abort) j.abort();
             if (j.child) { try { j.child.kill(); } catch (e) {} }
         });
+    }
+
+    /* Removes every installed (managed) version of a dependency. The tab then uses the
+       legacy copy in bin\<platform>\<tab> if there is one, else it is missing again. */
+    function uninstall(tab, id) {
+        const j = jobFor(tab, id);
+        if (j && !j.finished) throw new Error('Wait for the running download to finish (or cancel it) first.');
+        const st = readState(tab), rec = st.deps[id];
+        if (!rec || !rec.versions) return 0;
+        let bytes = 0;
+        const failed = [];
+        Object.keys(rec.versions).forEach(k => {
+            const dir = path.join(tabRoot(tab), id, k);
+            if (exists(dir)) {
+                const b = dirSize(dir);
+                rmrf(dir);
+                if (exists(dir)) failed.push(dir); else bytes += b;
+            }
+            if (!exists(dir)) delete rec.versions[k];
+        });
+        if (rec.active && !rec.versions[rec.active.dir]) rec.active = null;
+        if (rec.previous && !rec.versions[rec.previous.dir]) rec.previous = null;
+        if (!Object.keys(rec.versions).length) delete st.deps[id];
+        if (st.checks[id]) st.checks[id].updateAvailable = false;
+        writeState(tab, st);
+        emit({ tab: tab, id: id });
+        if (failed.length) throw new Error('Some files are in use and were not removed (' + failed.join(', ') + '). Close anything using them, for example a running transcription, and try again.');
+        return bytes;
     }
 
     function jobFor(tab, id) { return jobs[tab + '/' + id] || null; }
@@ -964,14 +1156,17 @@
             b.addEventListener('click', ev => { ev.stopPropagation(); onClick(b); });
             return b;
         }
+        function progressPct(job) { return job.total ? Math.min(100, job.received / job.total * 100) : 0; }
+
         function stageText(job) {
             if (job.stage === 'queued') return 'Waiting for other downloads...';
             if (job.stage === 'checking') return 'Looking up the latest version...';
-            if (job.stage === 'downloading') {
-                const pct = job.total ? Math.min(100, job.received / job.total * 100) : 0;
-                const left = job.speed ? formatDuration((job.total - job.received) / job.speed) : '';
-                return pct.toFixed(0) + '%  -  ' + formatBytes(job.received) + ' of ' + formatBytes(job.total) +
-                    (job.speed ? '  -  ' + formatBytes(job.speed) + '/s' : '') + (left ? '  -  ' + left + ' left' : '');
+            if (job.stage === 'downloading' || job.stage === 'paused') {
+                const pct = progressPct(job);
+                const sizes = formatBytes(job.received) + ' of ' + formatBytes(job.total);
+                if (job.stage === 'paused') return 'Paused at ' + pct.toFixed(0) + '%  -  ' + sizes + '. Resume continues from here.';
+                const left = job.speed > 1 ? formatDuration((job.total - job.received) / job.speed) : '';
+                return pct.toFixed(0) + '%  -  ' + sizes + (job.speed > 1 ? '  -  ' + formatBytes(job.speed) + '/s' : '') + (left ? '  -  ' + left + ' left' : '');
             }
             if (job.stage === 'verifying') return 'Verifying the download...';
             if (job.stage === 'extracting') return 'Extracting...';
@@ -981,7 +1176,9 @@
             return '';
         }
 
-        function renderDep(tab, def, msgs) {
+        /* refs[id] = { stage, fill, text } lets progress events update a row in place, so
+           its buttons are never rebuilt under the mouse (a rebuilt button loses the click). */
+        function renderDep(tab, def, msgs, refs) {
             const r = resolve(tab, def.id);
             const job = jobFor(tab, def.id);
             const busy = job && !job.finished;
@@ -989,10 +1186,10 @@
             const row = el('div', 'rfxdep-item');
 
             const head = el('div', 'rfxdep-head');
-            const title = el('div', 'rfxdep-name', def.label);
-            head.appendChild(title);
+            head.appendChild(el('div', 'rfxdep-name', def.label));
             let chip;
-            if (busy) chip = el('span', 'rfxdep-chip is-busy', 'Working');
+            if (busy && job.stage === 'paused') chip = el('span', 'rfxdep-chip is-legacy', 'Paused');
+            else if (busy) chip = el('span', 'rfxdep-chip is-busy', job.stage === 'downloading' ? 'Downloading' : job.stage === 'queued' ? 'Waiting' : 'Working');
             else if (r.state === 'managed' && check && check.updateAvailable) chip = el('span', 'rfxdep-chip is-update', 'Update available');
             else if (r.state === 'managed') chip = el('span', 'rfxdep-chip is-ok', 'Installed');
             else if (r.state === 'legacy') chip = el('span', 'rfxdep-chip is-legacy', 'Existing install');
@@ -1011,22 +1208,27 @@
             if (busy) {
                 const bar = el('div', 'rfxdep-progress');
                 const fill = el('div', 'rfxdep-progress-fill');
-                fill.style.width = (job.stage === 'downloading' && job.total ? Math.min(100, job.received / job.total * 100) : (job.stage === 'queued' || job.stage === 'checking' ? 0 : 100)) + '%';
-                if (job.stage !== 'downloading') bar.classList.add('is-indeterminate');
+                const measured = job.stage === 'downloading' || job.stage === 'paused';
+                fill.style.width = (measured ? progressPct(job) : (job.stage === 'queued' || job.stage === 'checking' ? 0 : 100)) + '%';
+                if (!measured) bar.classList.add('is-indeterminate');
+                if (job.stage === 'paused') bar.classList.add('is-paused');
                 bar.appendChild(fill);
                 row.appendChild(bar);
                 const line = el('div', 'rfxdep-progress-text', stageText(job));
                 row.appendChild(line);
-            }
+                refs[def.id] = { stage: job.stage, fill: fill, text: line };
+            } else delete refs[def.id];
 
             const msg = msgs[def.id];
-            if (!busy && job && job.finished && job.error) row.appendChild(el('div', 'rfxdep-msg is-error', job.error));
+            if (!busy && job && job.finished && job.error) row.appendChild(el('div', 'rfxdep-msg ' + (job.stage === 'cancelled' ? '' : 'is-error'), job.error));
             else if (msg) row.appendChild(el('div', 'rfxdep-msg ' + (msg.kind ? 'is-' + msg.kind : ''), msg.text));
 
             const actions = el('div', 'rfxdep-actions');
             const say = (text, kind) => { msgs[def.id] = { text: text, kind: kind }; emit({ tab: tab, id: def.id }); };
             if (busy) {
-                actions.appendChild(button('Cancel', 'is-danger', () => cancel(tab, def.id)));
+                if (job.stage === 'downloading') actions.appendChild(button('Pause', '', () => pause(tab, def.id), 'Stop for now; Resume continues from where it stopped'));
+                if (job.stage === 'paused') actions.appendChild(button('Resume', 'is-primary', () => resume(tab, def.id)));
+                actions.appendChild(button('Cancel', 'is-danger', () => cancel(tab, def.id), 'Stop and delete what was downloaded'));
             } else {
                 if (r.state !== 'managed') {
                     actions.appendChild(button(r.state === 'legacy' ? 'Install managed copy' : 'Install', 'is-primary', () => {
@@ -1069,6 +1271,16 @@
                     }, 'Run it once to check it works'));
                 }
                 if (r.dir) actions.appendChild(button('Show folder', 'is-ghost', () => openFolder(r.dir)));
+                if (r.state === 'managed') {
+                    actions.appendChild(button('Remove', 'is-danger', () => {
+                        const all = versions(tab, def.id).filter(v => v.onDisk);
+                        const bytes = all.reduce((n, v) => n + v.bytes, 0);
+                        const fallback = legacyLookup(def);
+                        if (!root.confirm('Remove ' + def.label + ' (' + formatBytes(bytes) + (all.length > 1 ? ', ' + all.length + ' versions' : '') + ')?\n\n' +
+                            (fallback ? 'The tab will use the existing copy in the extension folder again.' : 'The tab will need it downloaded again before it can use it.'))) return;
+                        try { say('Removed ' + def.label + ', freed ' + formatBytes(uninstall(tab, def.id)) + '.', 'ok'); } catch (e) { say(e.message, 'error'); }
+                    }, 'Delete the downloaded files of this tool from the dependencies folder'));
+                }
             }
             row.appendChild(actions);
             return row;
@@ -1077,7 +1289,7 @@
         /* opts: { showFolder: true } */
         function renderPanel(container, tab, opts) {
             opts = opts || {};
-            const msgs = {};
+            const msgs = {}, refs = {};
             let pending = null;
             const draw = () => {
                 pending = null;
@@ -1086,14 +1298,20 @@
                 if (!t) { container.appendChild(el('div', 'rfxdep-msg is-error', 'No dependencies registered for ' + tab + '.')); return; }
                 if (opts.showFolder !== false) container.appendChild(folderRow(tab));
                 const list = el('div', 'rfxdep-list');
-                t.deps.filter(d => !d.hidden).forEach(d => list.appendChild(renderDep(tab, d, msgs)));
+                t.deps.filter(d => !d.hidden).forEach(d => list.appendChild(renderDep(tab, d, msgs, refs)));
                 container.appendChild(list);
             };
             draw();
             const off = on(evt => {
                 if (!container.isConnected) { off(); return; }
                 if (evt.tab && evt.tab !== tab) return;
-                if (!pending) pending = setTimeout(draw, 150);
+                const ref = evt.progress && evt.job && refs[evt.id];
+                if (ref && ref.stage === evt.job.stage) {   // progress only: update in place
+                    ref.fill.style.width = progressPct(evt.job) + '%';
+                    ref.text.textContent = stageText(evt.job);
+                    return;
+                }
+                if (!pending) pending = setTimeout(draw, 120);
             });
             dailyCheck(tab);
             return { redraw: draw, destroy: off };
@@ -1160,13 +1378,13 @@
         configure: function (opts) { Object.assign(config, opts || {}); },
         register: register, tabs: tabs, depDef: depDef, resolve: resolve,
         tabRoot: tabRoot, setTabRoot: setTabRoot, isDefaultTabRoot: isDefaultTabRoot, defaultRoot: defaultRoot,
-        install: install, cancel: cancel, job: jobFor,
+        install: install, cancel: cancel, pause: pause, resume: resume, uninstall: uninstall, job: jobFor,
         checkForUpdate: checkForUpdate, dailyCheck: dailyCheck, lastCheck: lastCheck,
         rollback: rollback, versions: versions, deleteVersion: deleteVersion, test: test,
         latest: function (tab, id, force) { return latest(depDef(tab, id), force); },
         on: on, sources: sources, formatBytes: formatBytes, openFolder: openFolder,
         extensionRoot: extensionRoot, ui: ui,
-        _internals: { extract: extract, ghRecentReleases: ghRecentReleases, ghFile: ghFile, compareVersions: compareVersions, verifyFile: verifyFile, hashFile: hashFile, readState: readState }
+        _internals: { curlExe: curlExe, extract: extract, ghRecentReleases: ghRecentReleases, ghFile: ghFile, compareVersions: compareVersions, verifyFile: verifyFile, hashFile: hashFile, readState: readState }
     };
     root.RFXDeps = api;
     if (typeof module !== 'undefined' && module.exports) module.exports = api;

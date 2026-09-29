@@ -114,14 +114,23 @@
         return { overlay: overlay, body: body, foot: foot, close: close };
     }
 
+    const statusRefs = {};   // tab -> chip element, for in-place progress updates
+
+    function jobChipText(j) {
+        const pct = (j.stage === 'downloading' || j.stage === 'paused') && j.total ? ' ' + Math.floor(j.received / j.total * 100) + '%' : '';
+        if (j.stage === 'paused') return 'Paused' + pct;
+        if (j.stage === 'queued') return 'Waiting';
+        return (j.stage === 'downloading' ? 'Downloading' : 'Installing') + pct;
+    }
+
     function statusCell(t) {
         const cell = el('td');
         const s = tabStatus(t.tab);
-        let chip;
+        delete statusRefs[t.tab];
         if (s.running) {
             const j = s.running.job;
-            const pct = j.stage === 'downloading' && j.total ? Math.floor(j.received / j.total * 100) + '%' : '';
-            chip = el('span', 'rfxdep-chip is-busy', 'Downloading ' + pct);
+            const chip = el('span', 'rfxdep-chip ' + (j.stage === 'paused' ? 'is-legacy' : 'is-busy'), jobChipText(j));
+            statusRefs[t.tab] = chip;
             cell.appendChild(chip);
             cell.appendChild(el('div', 'rfxdep-small', s.running.dep.label + (j.stage !== 'downloading' ? ' - ' + j.stage : '')));
         } else if (s.total && s.ready === s.total) {
@@ -178,24 +187,16 @@
             table.appendChild(tr);
         });
 
-        // Discord uses Node modules that ship in node_modules (restored with npm install).
-        const nm = nodeModulesMissing();
-        const tr = el('tr');
-        tr.appendChild(el('td', null, 'Discord'));
-        const needs = el('td');
-        needs.appendChild(el('div', null, 'Node modules ' + NODE_MODULES.join(', ')));
-        needs.appendChild(el('div', 'rfxdep-small', 'Included with ' + appName() + ' (node_modules folder)'));
-        tr.appendChild(needs);
-        const st = el('td');
-        if (nm && !nm.length) st.appendChild(el('span', 'rfxdep-chip is-ok', 'Ready'));
-        else if (nm) {
-            st.appendChild(el('span', 'rfxdep-chip is-missing', 'Missing'));
-            st.appendChild(el('div', 'rfxdep-small', 'Missing: ' + nm.join(', ') + '. Run "npm install" in the extension folder (see README).'));
-        } else st.appendChild(el('span', 'rfxdep-chip is-busy', 'Unknown'));
-        tr.appendChild(st);
-        tr.appendChild(el('td'));
-        table.appendChild(tr);
         body.appendChild(table);
+
+        // The Discord tab downloads nothing; its Node modules ship with RFX. Only say
+        // something if they are actually missing (e.g. node_modules was not restored).
+        const nm = nodeModulesMissing();
+        if (nm && nm.length) {
+            const warn = el('div', 'rfxdep-msg is-error', 'The Discord tab cannot work: its bundled Node modules are missing (' + nm.join(', ') + '). Run "npm install" in the extension folder (see README), then reload the panel.');
+            warn.style.marginTop = '10px';
+            body.appendChild(warn);
+        }
 
         // footer
         m.foot.innerHTML = '';
@@ -217,8 +218,14 @@
         render(m);
         if (!D()) return m;
         let timer = null;
-        const off = D().on(() => {
+        const off = D().on(evt => {
             if (!m.overlay.isConnected) { off(); return; }
+            // Progress ticks only change the percentage: update it in place so the dialog's
+            // buttons are not rebuilt while you click them.
+            if (evt.progress && evt.job && statusRefs[evt.tab] && evt.job.stage === 'downloading') {
+                statusRefs[evt.tab].textContent = jobChipText(evt.job);
+                return;
+            }
             if (!timer) timer = setTimeout(() => { timer = null; render(m); }, 200);
         });
         refineSizes(() => { if (m.overlay.isConnected) render(m); }).catch(() => {});
@@ -230,11 +237,11 @@
     function updateButton() {
         const btn = document.getElementById('rfx-deps-btn');
         if (!btn || !D()) return;
-        let received = 0, total = 0, running = 0, missing = 0;
+        let received = 0, total = 0, running = 0, paused = 0, missing = 0;
         TABS.forEach(t => {
             visibleDeps(t.tab).forEach(d => {
                 const j = D().job(t.tab, d.id);
-                if (j && !j.finished) { running++; received += j.received || 0; total += j.total || 0; }
+                if (j && !j.finished) { running++; if (j.stage === 'paused') paused++; received += j.received || 0; total += j.total || 0; }
                 else if (D().resolve(t.tab, d.id).state === 'missing') missing++;
             });
         });
@@ -243,7 +250,9 @@
         btn.classList.toggle('is-missing', !running && missing > 0);
         if (running) {
             badge.textContent = total ? Math.floor(received / total * 100) + '%' : '...';
-            btn.setAttribute('data-tooltip', 'Downloading ' + running + ' item' + (running > 1 ? 's' : '') + ' in the background. Click for details.');
+            btn.setAttribute('data-tooltip', paused === running
+                ? paused + ' download' + (paused > 1 ? 's are' : ' is') + ' paused. Click to resume or cancel.'
+                : 'Downloading ' + (running - paused) + ' item' + (running - paused > 1 ? 's' : '') + ' in the background' + (paused ? ' (' + paused + ' paused)' : '') + '. Click for details.');
         } else {
             badge.textContent = '';
             btn.setAttribute('data-tooltip', missing ? 'Dependencies: ' + missing + ' download' + (missing > 1 ? 's' : '') + ' still needed by some tabs' : 'Dependencies: everything is installed');
