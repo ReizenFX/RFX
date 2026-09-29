@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if(btnExport) btnExport.addEventListener('click', () => {
         if(savedPresets.length === 0) return showToast("No presets to export.");
         if (typeof window !== 'undefined' && window.cep && window.cep.fs) {
-            let result = window.cep.fs.showSaveDialogEx("Export Presets", "", ["json"], "UltimateColors.json", "");
+            let result = window.cep.fs.showSaveDialogEx("Export Presets", "", ["json"], ((window.APP && window.APP.name) || "") + "Colors.json", "");
             if (result.data) { const str = JSON.stringify(savedPresets, null, 2); if (useNodeJS) fs.writeFileSync(result.data, str, 'utf8'); else window.cep.fs.writeFile(result.data, str); showToast("Exported successfully!"); }
         }
     });

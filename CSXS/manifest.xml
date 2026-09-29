@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="11.0" ExtensionBundleId="com.ultfx.extension" ExtensionBundleVersion="1.0.0" ExtensionBundleName="UltFX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<ExtensionManifest Version="11.0" ExtensionBundleId="com.reizenfx.rfx" ExtensionBundleVersion="1.0.0" ExtensionBundleName="RFX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <ExtensionList>
-        <Extension Id="com.ultfx.extension.panel" Version="1.0.0" />
+        <Extension Id="com.reizenfx.rfx.panel" Version="1.0.0" />
     </ExtensionList>
     <ExecutionEnvironment>
         <HostList>
@@ -18,7 +18,7 @@
         </RequiredRuntimeList>
     </ExecutionEnvironment>
     <DispatchInfoList>
-        <Extension Id="com.ultfx.extension.panel">
+        <Extension Id="com.reizenfx.rfx.panel">
             <DispatchInfo>
                 <Resources>
                     <MainPath>./index.html</MainPath>
@@ -36,7 +36,7 @@
                 </Lifecycle>
                 <UI>
                     <Type>Panel</Type>
-                    <Menu>UltFX</Menu>
+                    <Menu>RFX</Menu>
                     <Geometry>
                         <Size>
                             <Height>600</Height>

@@ -515,7 +515,7 @@ function assetsImportAEPJSX(encodedPath){
     };
     var rqBefore = app.project.renderQueue.numItems, newLayers = [];
     app.beginSuppressDialogs();
-    app.beginUndoGroup("Import Ultimate FX Asset");
+    app.beginUndoGroup("Import Asset");
     try {
         var importedItem = app.project.importFile(new ImportOptions(f));
         var holdComp = findComp(importedItem);
