@@ -1162,12 +1162,15 @@
     <div class="tab-content" id="tab-caption">
         <div class="cap-flex-col">
 
-            <div class="tabs-header" id="caption-tabs-header">
-                <button class="tab-btn active" id="btn-cap-format" onclick="switchCaptionTab('cap-format')">Format</button>
-                <button class="tab-btn" id="btn-cap-style" onclick="switchCaptionTab('cap-style')">Style</button>
-                <button class="tab-btn" id="btn-cap-box" onclick="switchCaptionTab('cap-box')">Box</button>
-                <button class="tab-btn" id="btn-cap-editor" onclick="switchCaptionTab('cap-editor')">Editor</button>
-                <button class="tab-btn" id="btn-cap-generate" onclick="switchCaptionTab('cap-generate')">Generate</button>
+            <div class="cap-header-row">
+                <div class="tabs-header" id="caption-tabs-header">
+                    <button class="tab-btn active" id="btn-cap-format" onclick="switchCaptionTab('cap-format')">Format</button>
+                    <button class="tab-btn" id="btn-cap-style" onclick="switchCaptionTab('cap-style')">Style</button>
+                    <button class="tab-btn" id="btn-cap-box" onclick="switchCaptionTab('cap-box')">Box</button>
+                    <button class="tab-btn" id="btn-cap-editor" onclick="switchCaptionTab('cap-editor')">Editor</button>
+                    <button class="tab-btn" id="btn-cap-generate" onclick="switchCaptionTab('cap-generate')">Generate</button>
+                </div>
+                <button class="cap-settings-btn" data-tooltip="Caption settings: presets folder and AI engine downloads" onclick="captionOpenSettings()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
             </div>
 
             <!-- ---------------- FORMAT ---------------- -->

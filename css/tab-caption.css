@@ -660,6 +660,34 @@ input[type=range].cap-cp-slider:focus { outline: none; }
    Rules below use the selectors that really match.
    --------------------------------------------------------------------------- */
 
+/* Sub-tab strip + settings gear. The row carries the bottom border so the strip can
+   keep scrolling horizontally while the gear stays put on the right. */
+#tab-caption .cap-header-row {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-base);
+}
+#tab-caption .cap-header-row #caption-tabs-header { flex: 1; min-width: 0; border-bottom: none; }
+#tab-caption .cap-settings-btn {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    margin: 0 8px 0 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+#tab-caption .cap-settings-btn:hover { background: #2a2a2a; border-color: #555; color: var(--text-primary); }
+
 #caption-tabs-header {
     overflow-x: auto;
     overflow-y: hidden;

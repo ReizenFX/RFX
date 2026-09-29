@@ -147,31 +147,107 @@ function initPaths() {
     extensionRoot = path.normalize(rawPath);
     isMac = (os.platform() === 'darwin');
 
-    // Engine binaries live in their own subfolder inside the suite's bin dir.
+    applyPresetsDir();
+    capRegisterDeps();
+    capRefreshEngine();
+}
+
+/* ---------------------------------------------------------------------------
+   PRESETS FOLDER
+   Default %APPDATA%\RFX\Caption (changeable in Caption settings), one subfolder per
+   preset kind. The old RFX Suite folder is never moved or deleted: the settings can
+   copy its presets in ("Import"), keeping anything already there.
+   --------------------------------------------------------------------------- */
+var CAP_SUBFOLDERS        = { effect: 'Effect Presets', styles: 'Text Styles', formats: 'Format Presets',
+                              boxPresets: 'Box Presets', boxFormats: 'Box Formats', styleFormats: 'Style Formats' };
+var CAP_LEGACY_SUBFOLDERS = { effect: 'Effect Preset', styles: 'Text Properties', formats: 'Formats',
+                              boxPresets: 'BoxPresets', boxFormats: 'BoxFormats', styleFormats: 'StyleFormats' };
+var CAP_PRESETS_DIR_KEY = 'rfxCaptionPresetsDir';     // custom presets folder (absent = default)
+var CAP_IMPORT_KEY      = 'rfxCaptionLegacyImport';   // 'done' | 'dismissed' once the import offer was answered
+
+function capAppDataPath() {
+    return isMac ? path.join(os.homedir(), 'Library', 'Application Support')
+                 : (process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'));
+}
+function capDefaultPresetsDir() { return path.join(capAppDataPath(), 'RFX', 'Caption'); }
+function capLegacyDataDir() { return path.join(capAppDataPath(), 'RFX Suite', 'Caption Tab'); }
+function capPresetsDir() { return localStorage.getItem(CAP_PRESETS_DIR_KEY) || capDefaultPresetsDir(); }
+
+function applyPresetsDir() {
+    extDataDir = capPresetsDir();
+    presetsFolder      = path.join(extDataDir, CAP_SUBFOLDERS.effect);
+    stylesFolder       = path.join(extDataDir, CAP_SUBFOLDERS.styles);
+    formatsFolder      = path.join(extDataDir, CAP_SUBFOLDERS.formats);
+    boxPresetsFolder   = path.join(extDataDir, CAP_SUBFOLDERS.boxPresets);
+    boxFormatsFolder   = path.join(extDataDir, CAP_SUBFOLDERS.boxFormats);
+    styleFormatsFolder = path.join(extDataDir, CAP_SUBFOLDERS.styleFormats);
+}
+
+/* ---------------------------------------------------------------------------
+   ENGINE (Faster-Whisper-XXL, speech model, FFmpeg) via js/deps.js
+   Each file comes from this tab's managed install when there is one, else from the
+   existing copy in bin\<platform>\caption. Re-resolved before every transcription,
+   so installs and updates apply without reloading; a running job keeps the paths
+   it started with.
+   --------------------------------------------------------------------------- */
+function capRegisterDeps() {
+    if (!window.RFXDeps || window.RFXDeps.tabs().some(function(t) { return t.tab === 'caption'; })) return;
+    var S = RFXDeps.sources;
+    RFXDeps.register('caption', { label: 'Caption', deps: [
+        { id: 'whisper', label: 'Faster-Whisper-XXL', sizeHint: '1.4 GB',
+          description: 'The speech-to-text engine (Purfview, official GitHub release). No checksum is published, so the exact size is verified.',
+          main: 'faster-whisper-xxl.exe', latest: S.whisperXXL(), sevenZip: '7zr', extractFactor: 2.6,
+          collect: function(x, out, h) {
+              var exe = h.findFile(x, 'faster-whisper-xxl.exe', 3);
+              if (!exe) return;
+              var src = path.dirname(exe);
+              fs.readdirSync(src).forEach(function(n) { fs.renameSync(path.join(src, n), path.join(out, n)); });
+          },
+          verify: { args: ['--version'], lenient: true, timeout: 120000 },
+          legacy: { main: 'faster-whisper-xxl.exe', require: ['_xxl_data'] } },
+        { id: 'model', label: 'Speech model (large-v3)', sizeHint: '3.1 GB',
+          description: 'Systran/faster-whisper-large-v3 from Hugging Face, pinned to a revision and checked file by file.',
+          main: 'faster-whisper-large-v3/model.bin', filesSubdir: 'faster-whisper-large-v3',
+          latest: S.huggingFace({ repo: 'Systran/faster-whisper-large-v3',
+                                  files: ['config.json', 'model.bin', 'preprocessor_config.json', 'tokenizer.json', 'vocabulary.json'] }),
+          updateWarning: function(c) {
+              return 'Updating the model downloads ' + RFXDeps.formatBytes(c.size) + '. The current revision stays on disk (for roll back) until you delete it, so you need that much extra space for now. Continue?';
+          },
+          legacy: { find: function(dir) {
+              var m = path.join(dir, 'models');
+              return capScanForModel(m, 1) ? { dir: m, path: m } : null;
+          } } },
+        { id: 'ffmpeg', label: 'FFmpeg', sizeHint: '185 MB',
+          description: 'Converts the comp audio for the engine (BtbN stable build, this tab\'s own copy).',
+          main: 'ffmpeg.exe', latest: S.ffmpegStable(), sourceKey: 'ffmpeg-btbn', extractPatterns: ['*/bin/ffmpeg.exe'],
+          collect: function(x, out, h) { var f = h.findFile(x, 'ffmpeg.exe', 4); if (f) h.moveInto(f, path.join(out, 'ffmpeg.exe')); },
+          verify: { args: ['-version'], expect: /ffmpeg version/ },
+          legacy: { main: 'ffmpeg.exe' } },
+        { id: '7zr', label: '7-Zip extractor', hidden: true,
+          description: 'Only used when Windows cannot extract the engine archive itself.',
+          main: '7zr.exe', latest: S.githubLatest({ repo: 'ip7z/7zip', asset: /^7zr\.exe$/ }),
+          verify: { args: [], expect: /7-Zip/ } }
+    ] });
+}
+
+function capRefreshEngine() {
     binDir = path.join(extensionRoot, 'bin', isMac ? 'mac' : 'win', 'caption');
     ffmpegExe = path.join(binDir, isMac ? 'ffmpeg' : 'ffmpeg.exe');
     whisperExe = path.join(binDir, isMac ? 'faster-whisper-xxl' : 'faster-whisper-xxl.exe');
-
-    var appDataPath = isMac
-        ? path.join(os.homedir(), 'Library', 'Application Support')
-        : (process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'));
-
-    extDataDir = path.join(appDataPath, 'RFX Suite', 'Caption Tab');
+    // Only these small folders are checked. Scanning binDir or extensionRoot would walk
+    // the whole _xxl_data runtime (thousands of files) on every run.
+    modelSearchRoots = [path.join(binDir, 'models'), path.join(extensionRoot, 'models')];
     cacheDir = path.join(extDataDir, 'cache');
-
-    presetsFolder     = path.join(extDataDir, 'Effect Preset');
-    stylesFolder      = path.join(extDataDir, 'Text Properties');
-    formatsFolder     = path.join(extDataDir, 'Formats');
-    boxPresetsFolder  = path.join(extDataDir, 'BoxPresets');
-    boxFormatsFolder  = path.join(extDataDir, 'BoxFormats');
-    styleFormatsFolder= path.join(extDataDir, 'StyleFormats');
-
-    // Only these two small folders are checked. Scanning binDir or extensionRoot
-    // would walk the whole _xxl_data runtime (thousands of files) on every run.
-    modelSearchRoots = [
-        path.join(binDir, 'models'),
-        path.join(extensionRoot, 'models')
-    ];
+    if (window.RFXDeps) {
+        var w = RFXDeps.resolve('caption', 'whisper');
+        if (w.path) whisperExe = w.path;
+        var f = RFXDeps.resolve('caption', 'ffmpeg');
+        if (f.path) ffmpegExe = f.path;
+        var m = RFXDeps.resolve('caption', 'model');
+        if (m.state === 'managed') modelSearchRoots.unshift(m.dir);
+        cacheDir = path.join(RFXDeps.tabRoot('caption'), 'cache');   // engine scratch space, not presets
+    }
+    capModelDirCache = undefined;
 }
 
 function ensureFolders() {
@@ -225,15 +301,15 @@ function capScanForModel(dir, depth) {
     return null;
 }
 
-/* The three things the Caption engine actually needs, all inside bin/<plat>/caption.
-   faster-whisper-xxl resolves its own model internally, so no model folder is required. */
+/* The engine programs the Caption tab needs (managed install or bin/<plat>/caption).
+   The model is checked separately by resolveModelDir(). */
 function capMissingEngineFiles() {
     var missing = [];
     try {
-        if (!fs.existsSync(whisperExe)) missing.push(path.basename(whisperExe));
-        if (!fs.existsSync(ffmpegExe)) missing.push(path.basename(ffmpegExe));
-        if (!fs.existsSync(path.join(binDir, '_xxl_data'))) missing.push('_xxl_data');
-    } catch(e) { missing.push('(unreadable: ' + binDir + ')'); }
+        if (!fs.existsSync(whisperExe)) missing.push('Faster-Whisper-XXL');
+        else if (!fs.existsSync(path.join(path.dirname(whisperExe), '_xxl_data'))) missing.push('Faster-Whisper-XXL (its _xxl_data folder is missing)');
+        if (!fs.existsSync(ffmpegExe)) missing.push('FFmpeg');
+    } catch(e) { missing.push('(engine folder unreadable: ' + path.dirname(whisperExe) + ')'); }
     return missing;
 }
 function resolveModelDir() {
@@ -997,18 +1073,18 @@ window.captionStartTranscription = function() {
     var selectedLangEl = document.querySelector('input[name="cap-spoken-language"]:checked');
     var selectedLang = selectedLangEl ? selectedLangEl.value : 'auto';
 
+    // Pick up installs/updates made since the last run; this job keeps these paths.
+    capRefreshEngine();
     var missingFiles = capMissingEngineFiles();
-    if (missingFiles.length > 0) {
-        return capAlert("Caption engine files are missing:\n\n" + missingFiles.join("\n") +
-                        "\n\nExpected in:\n" + binDir);
-    }
 
     // Require a local model, exactly like the original extension - never let the
     // engine fall back to downloading 3 GB from HuggingFace into the cache dir.
     var modelDir = resolveModelDir();
-    if (!modelDir) {
-        return capAlert("AI Model is missing.\n\nExpected a 'faster-whisper-large-v3' folder inside one of:\n\n" +
-                        modelSearchRoots.join("\n"));
+    if (!modelDir) missingFiles.push('Speech model (large-v3)');
+
+    if (missingFiles.length > 0) {
+        return capOpenSettings('Captions need these downloads before they can run: ' + missingFiles.join(', ') +
+                               '. Install them below; they come from the official sources.');
     }
 
     statusBox.style.display = "block";
@@ -2235,6 +2311,195 @@ function bindPresetLoaders() {
 }
 
 /* ---------------------------------------------------------------------------
+   SETTINGS: presets folder, import from RFX Suite, AI engine downloads
+   (dialog look shared with the other tabs via js/deps.js + css/deps.css)
+   --------------------------------------------------------------------------- */
+function capListFiles(dir) {
+    try { return fs.readdirSync(dir).filter(function(n) { try { return fs.statSync(path.join(dir, n)).isFile(); } catch(e) { return false; } }); }
+    catch(e) { return []; }
+}
+
+/* Copies presets between folder layouts. Never overwrites or deletes: identical files
+   are skipped, a different file with the same name is copied as "name (imported)". */
+function capCopyPresets(fromRoot, fromMap, toRoot, toMap) {
+    var result = { copied: 0, renamed: 0, skipped: 0, failed: 0 };
+    Object.keys(toMap).forEach(function(kind) {
+        var src = path.join(fromRoot, fromMap[kind]), dst = path.join(toRoot, toMap[kind]);
+        var files = capListFiles(src);
+        if (!files.length) return;
+        try { fs.mkdirSync(dst, { recursive: true }); } catch(e) {}
+        files.forEach(function(name) {
+            var from = path.join(src, name), to = path.join(dst, name);
+            try {
+                if (fs.existsSync(to)) {
+                    var data = fs.readFileSync(from);
+                    if (fs.readFileSync(to).equals(data)) { result.skipped++; return; }
+                    // Same name, different content: use the first free "name (imported N)",
+                    // unless an earlier import already holds this exact file.
+                    var ext = path.extname(name), base = name.slice(0, name.length - ext.length), n = 1;
+                    for (;;) {
+                        to = path.join(dst, base + ' (imported' + (n > 1 ? ' ' + n : '') + ')' + ext);
+                        if (!fs.existsSync(to)) break;
+                        if (fs.readFileSync(to).equals(data)) { result.skipped++; return; }
+                        n++;
+                    }
+                    result.renamed++;
+                }
+                fs.copyFileSync(from, to);
+                result.copied++;
+            } catch(e) { result.failed++; }
+        });
+    });
+    return result;
+}
+
+function capLegacyPresetCount() {
+    var legacy = capLegacyDataDir();
+    if (path.resolve(legacy) === path.resolve(extDataDir)) return 0;
+    return Object.keys(CAP_LEGACY_SUBFOLDERS).reduce(function(n, k) {
+        return n + capListFiles(path.join(legacy, CAP_LEGACY_SUBFOLDERS[k])).length;
+    }, 0);
+}
+
+function capImportLegacyPresets() {
+    var r = capCopyPresets(capLegacyDataDir(), CAP_LEGACY_SUBFOLDERS, extDataDir, CAP_SUBFOLDERS);
+    localStorage.setItem(CAP_IMPORT_KEY, 'done');
+    window.captionRefreshFolders();
+    capShowImportOffer();
+    var msg = 'Imported ' + r.copied + ' preset' + (r.copied === 1 ? '' : 's') + ' from RFX Suite';
+    if (r.renamed) msg += ' (' + r.renamed + ' renamed to avoid replacing yours)';
+    if (r.skipped) msg += ', ' + r.skipped + ' already here';
+    if (r.failed) msg += '. ' + r.failed + ' could not be copied';
+    if (typeof showToast === 'function') showToast(msg);
+    return r;
+}
+
+function capSetPresetsDir(dir) {
+    if (dir) localStorage.setItem(CAP_PRESETS_DIR_KEY, path.resolve(dir));
+    else localStorage.removeItem(CAP_PRESETS_DIR_KEY);
+    applyPresetsDir();
+    ensureFolders();
+    window.captionRefreshFolders();
+    capShowImportOffer();
+}
+
+function capChangePresetsDir(onDone) {
+    var pick = window.cep && window.cep.fs && window.cep.fs.showOpenDialogEx(false, true, 'Choose the caption presets folder', extDataDir, []);
+    if (!pick || !pick.data || !pick.data.length) return;
+    var dest = path.resolve(pick.data[0]);
+    if (dest === path.resolve(extDataDir)) return;
+    if (!confirm('Save caption presets in this folder from now on?\n\n' + dest +
+                 '\n\nNothing is moved or deleted: presets already in the current folder stay there. You can switch back at any time.')) return;
+    var from = extDataDir;
+    var count = Object.keys(CAP_SUBFOLDERS).reduce(function(n, k) { return n + capListFiles(path.join(from, CAP_SUBFOLDERS[k])).length; }, 0);
+    capSetPresetsDir(dest);
+    if (count && confirm('Copy your ' + count + ' current preset' + (count === 1 ? '' : 's') + ' into the new folder?\n\n(Copies only; files already in the new folder are kept.)')) {
+        var r = capCopyPresets(from, CAP_SUBFOLDERS, dest, CAP_SUBFOLDERS);
+        window.captionRefreshFolders();
+        if (typeof showToast === 'function') showToast('Copied ' + r.copied + ' preset' + (r.copied === 1 ? '' : 's') + ' into the new folder');
+    }
+    if (onDone) onDone();
+}
+
+function capOpenSettings(reason) {
+    if (!nodeReady || !window.RFXDeps) return capAlert('Caption settings need Node.js, which is not available in this panel.');
+    capRegisterDeps();
+    var ui = RFXDeps.ui;
+    var m = ui.modal('cap-settings-modal', 'Caption settings');
+    if (reason) {
+        var note = ui.el('div', 'rfxdep-msg is-error', reason);
+        note.style.margin = '0 0 16px';
+        m.body.appendChild(note);
+    }
+
+    var presets = ui.section('Caption presets folder');
+    presets.appendChild(ui.el('div', 'rfxdep-text', 'Format, style, box and effect presets are saved here, each kind in its own subfolder (Format Presets, Text Styles, Effect Presets, Box Presets, Box Formats, Style Formats).'));
+    var row = ui.el('div', 'rfxdep-folder-row');
+    var p = ui.el('span', 'rfxdep-folder-path', extDataDir);
+    p.title = extDataDir;
+    row.appendChild(p);
+    var reopen = function() { m.close(); capOpenSettings(); };
+    row.appendChild(ui.button('Change', '', function() { capChangePresetsDir(reopen); }));
+    if (localStorage.getItem(CAP_PRESETS_DIR_KEY)) {
+        row.appendChild(ui.button('Reset', 'is-ghost', function() { capSetPresetsDir(null); reopen(); }, 'Go back to ' + capDefaultPresetsDir()));
+    }
+    row.appendChild(ui.button('Open', 'is-ghost', function() { RFXDeps.openFolder(extDataDir); }));
+    presets.appendChild(row);
+
+    var legacyCount = capLegacyPresetCount();
+    if (legacyCount) {
+        var imp = ui.el('div', 'rfxdep-text', '');
+        imp.style.marginTop = '10px';
+        imp.textContent = legacyCount + ' preset' + (legacyCount === 1 ? '' : 's') + ' from RFX Suite are in ' + capLegacyDataDir() + '. Importing copies them here; the old folder is left as it is.';
+        presets.appendChild(imp);
+        presets.appendChild(ui.button('Import ' + legacyCount + ' preset' + (legacyCount === 1 ? '' : 's') + ' from RFX Suite', 'is-primary', function() {
+            capImportLegacyPresets();
+            reopen();
+        }));
+    }
+    m.body.appendChild(presets);
+
+    var engine = ui.section('AI engine and tools');
+    engine.appendChild(ui.el('div', 'rfxdep-text', 'Automatic captions need the Faster-Whisper-XXL engine, the large-v3 speech model and FFmpeg. They download from their official sources into this tab\'s own dependencies folder. A transcription that is already running keeps using the files it started with.'));
+    var host = ui.el('div');
+    engine.appendChild(host);
+    m.body.appendChild(engine);
+    RFXDeps.ui.renderPanel(host, 'caption');
+}
+window.captionOpenSettings = function() { capOpenSettings(); };
+
+/* One-time offer to copy presets from the old RFX Suite folder (until imported or dismissed). */
+function capShowImportOffer() {
+    var old = $id('cap-import-offer');
+    if (old) old.remove();
+    if (!nodeReady || localStorage.getItem(CAP_IMPORT_KEY)) return;
+    var count = capLegacyPresetCount();
+    if (!count) return;
+    var bar = document.createElement('div');
+    bar.id = 'cap-import-offer';
+    bar.className = 'rfxdep-notice';
+    var text = document.createElement('span');
+    text.textContent = 'Found ' + count + ' caption preset' + (count === 1 ? '' : 's') + ' from RFX Suite. Import copies them into the new presets folder (the old folder stays as it is).';
+    bar.appendChild(text);
+    var imp = document.createElement('button');
+    imp.className = 'rfxdep-btn is-primary';
+    imp.textContent = 'Import';
+    imp.onclick = function() { capImportLegacyPresets(); };
+    var later = document.createElement('button');
+    later.className = 'rfxdep-btn is-ghost';
+    later.textContent = 'Not now';
+    later.onclick = function() { localStorage.setItem(CAP_IMPORT_KEY, 'dismissed'); bar.remove(); };
+    bar.appendChild(imp);
+    bar.appendChild(later);
+    var host = $id('tab-caption') && $id('tab-caption').querySelector('.cap-flex-col');
+    if (host) host.insertBefore(bar, host.children[1] || null);
+}
+
+/* Notice at the top of Generate while an engine part is missing. */
+function capUpdateEngineNotice() {
+    var area = $id('cap-engine-setup-area');
+    if (!area || !nodeReady) return;
+    capRefreshEngine();
+    var missing = capMissingEngineFiles();
+    if (!resolveModelDir()) missing.push('Speech model (large-v3)');
+    var bar = $id('cap-engine-notice');
+    if (!missing.length) { if (bar) bar.remove(); return; }
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'cap-engine-notice';
+        bar.className = 'rfxdep-notice';
+        bar.appendChild(document.createElement('span'));
+        var btn = document.createElement('button');
+        btn.className = 'rfxdep-btn is-primary';
+        btn.textContent = 'Set up';
+        btn.onclick = function() { capOpenSettings(); };
+        bar.appendChild(btn);
+        area.insertBefore(bar, area.firstChild);
+    }
+    bar.firstChild.textContent = 'Captions need a few downloads first: ' + missing.join(', ') + '.';
+}
+
+/* ---------------------------------------------------------------------------
    BOOT
    --------------------------------------------------------------------------- */
 document.addEventListener("DOMContentLoaded", function() {
@@ -2255,6 +2520,19 @@ document.addEventListener("DOMContentLoaded", function() {
     loadSettings();
     if (nodeReady) loadCaptionBackend(function(){});
     if (nodeReady) window.captionRefreshFolders();
+    if (nodeReady) {
+        capShowImportOffer();
+        capUpdateEngineNotice();
+        if (window.RFXDeps) {
+            var capNoticeTimer = null;
+            RFXDeps.on(function(evt) {
+                if (evt.tab && evt.tab !== 'caption') return;
+                clearTimeout(capNoticeTimer);
+                capNoticeTimer = setTimeout(capUpdateEngineNotice, 300);
+            });
+            setTimeout(function() { RFXDeps.dailyCheck('caption'); }, 20000);   // quiet, at most once a day
+        }
+    }
     initColorPicker();
 
     if ($id('cap-color-select') && window.buildCustomDropdown) window.buildCustomDropdown('cap-color-select');
