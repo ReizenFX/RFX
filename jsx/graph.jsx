@@ -201,6 +201,61 @@ function applyBezierEaseToSelection(x1, y1, x2, y2, type) {
     app.endUndoGroup();
 }
 
+function readBezierEase() {
+    var comp = app.project.activeItem;
+    if (!comp || !(comp instanceof CompItem)) return "0.33,0.00,0.66,1.00";
+    
+    var props = comp.selectedProperties;
+    if (props.length > 0 && props[0].selectedKeys.length > 0) {
+        try {
+            var prop = props[0];
+            var k = prop.selectedKeys[0];
+            var easeOut = prop.keyOutTemporalEase(k)[0];
+            
+            var easeIn;
+            if (k < prop.numKeys) { easeIn = prop.keyInTemporalEase(k + 1)[0]; } 
+            else { easeIn = prop.keyInTemporalEase(k)[0]; }
+            
+            var x1 = easeOut.influence / 100;
+            var x2 = 1 - (easeIn.influence / 100);
+            
+            var y1 = 0.00;
+            var y2 = 1.00;
+
+            if (k < prop.numKeys) {
+                var t1 = prop.keyTime(k); var t2 = prop.keyTime(k+1);
+                var v1 = prop.keyValue(k); var v2 = prop.keyValue(k+1);
+                
+                var dx = t2 - t1;
+                var isSpatial = (prop.propertyValueType === PropertyValueType.TwoD_SPATIAL || prop.propertyValueType === PropertyValueType.ThreeD_SPATIAL);
+                
+                var dy = 0;
+                if (isSpatial) {
+                    var sum = 0;
+                    for(var i=0; i<v1.length; i++) sum += (v2[i]-v1[i])*(v2[i]-v1[i]);
+                    dy = Math.sqrt(sum);
+                } else {
+                    var val1 = (typeof v1 === 'number') ? v1 : v1[0];
+                    var val2 = (typeof v2 === 'number') ? v2 : v2[0];
+                    dy = val2 - val1;
+                }
+
+                var avgSpeed = (dx === 0) ? 0 : dy / dx;
+                if (avgSpeed !== 0) {
+                    var slopeOut = easeOut.speed / avgSpeed;
+                    y1 = slopeOut * x1;
+
+                    var slopeIn = easeIn.speed / avgSpeed;
+                    y2 = 1 - (slopeIn * (1 - x2));
+                }
+            }
+
+            return x1.toFixed(2) + "," + y1.toFixed(2) + "," + x2.toFixed(2) + "," + y2.toFixed(2);
+        } catch(e) {}
+    }
+    return "0.33,0.00,0.66,1.00";
+}
+
 function readBezierEaseV2() {
     try {
         var comp = app.project.activeItem;

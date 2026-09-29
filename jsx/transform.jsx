@@ -208,4 +208,173 @@ function sequenceLayersChain(direction) {
 }
 
 function setLayerInPoint() {
-    var comp = app.project.activeItem; if (!comp || !(comp instanceof CompItem)) return;
+    app.beginUndoGroup("Set In Point at Playhead");
+    var comp = app.project.activeItem;
+    if (comp && comp instanceof CompItem) {
+        var selectedLayers = comp.selectedLayers;
+        for (var i = 0; i < selectedLayers.length; i++) {
+            selectedLayers[i].inPoint = comp.time;
+        }
+    }
+    app.endUndoGroup();
+}
+
+function setLayerOutPoint() {
+    app.beginUndoGroup("Set Out Point at Playhead");
+    var comp = app.project.activeItem;
+    if (comp && comp instanceof CompItem) {
+        var selectedLayers = comp.selectedLayers;
+        for (var i = 0; i < selectedLayers.length; i++) {
+            selectedLayers[i].outPoint = comp.time;
+        }
+    }
+    app.endUndoGroup();
+}
+
+// ==========================================
+// NEW LAYERS ENGINE
+// ==========================================
+function addCustomLayerAE(type, linkOpt, singleOpt, colorIdx) {
+    app.beginUndoGroup("Add " + type + " Layer(s)");
+    try {
+        var comp = app.project.activeItem;
+        if (!comp || !(comp instanceof CompItem)) {
+            app.endUndoGroup();
+            return;
+        }
+
+        var selLayers = comp.selectedLayers;
+        var newLayers = []; 
+
+        function createLayer() {
+            var l = null;
+            switch(type) {
+                case 'NUL': l = comp.layers.addNull(comp.duration); break;
+                case 'ADJ': 
+                    l = comp.layers.addSolid([1,1,1], "Adjustment Layer", comp.width, comp.height, comp.pixelAspect, comp.duration);
+                    l.adjustmentLayer = true; 
+                    break;
+                case 'SLD': l = comp.layers.addSolid([1,1,1], "White Solid", comp.width, comp.height, comp.pixelAspect, comp.duration); break;
+                case 'SHP': l = comp.layers.addShape(); break;
+                case 'TXT': l = comp.layers.addText(""); break;
+                case 'CAM': l = comp.layers.addCamera("Camera", [comp.width/2, comp.height/2]); break;
+                case 'LIG': l = comp.layers.addLight("Light", [comp.width/2, comp.height/2]); break;
+                default:    l = comp.layers.addNull(comp.duration);
+            }
+            
+            // Apply the saved AE color label index (1-16)
+            if (colorIdx !== undefined && parseInt(colorIdx) >= 0 && l !== null) {
+                l.label = parseInt(colorIdx);
+            }
+            return l;
+        }
+
+        if (selLayers.length === 0) {
+            var singleL = createLayer();
+            singleL.moveToBeginning();
+            newLayers.push(singleL);
+        } else {
+            if (type === 'NUL' && singleOpt === true) {
+                var minIn = comp.duration; var maxOut = 0; var topIndex = comp.numLayers + 1; var topLayer = null;
+
+                for (var i = 0; i < selLayers.length; i++) {
+                    if (selLayers[i].inPoint < minIn) minIn = selLayers[i].inPoint;
+                    if (selLayers[i].outPoint > maxOut) maxOut = selLayers[i].outPoint;
+                    if (selLayers[i].index < topIndex) { topIndex = selLayers[i].index; topLayer = selLayers[i]; }
+                }
+
+                var singleNull = createLayer();
+                singleNull.moveBefore(topLayer); 
+                singleNull.inPoint = minIn; singleNull.outPoint = maxOut;
+
+                if (linkOpt === true) {
+                    for (var j = 0; j < selLayers.length; j++) { selLayers[j].parent = singleNull; }
+                }
+                newLayers.push(singleNull);
+                
+            } else {
+                var targets = [];
+                for (var k = 0; k < selLayers.length; k++) { targets.push(selLayers[k]); }
+
+                for (var m = 0; m < targets.length; m++) {
+                    var targetLayer = targets[m];
+                    var newL = createLayer();
+                    
+                    newL.moveBefore(targetLayer); 
+                    newL.inPoint = targetLayer.inPoint; newL.outPoint = targetLayer.outPoint;
+
+                    if (type === 'NUL' && linkOpt === true) { targetLayer.parent = newL; }
+                    newLayers.push(newL);
+                }
+            }
+        }
+
+        for (var n = 1; n <= comp.numLayers; n++) { comp.layer(n).selected = false; }
+        for (var p = 0; p < newLayers.length; p++) { newLayers[p].selected = true; }
+
+    } catch (e) {}
+    app.endUndoGroup();
+}
+
+// ==========================================
+// TIMELINE SORTER ENGINE
+// ==========================================
+function sortLayersAE(earlyAtBottom) {
+    app.beginUndoGroup("Sort Layers by Time");
+    try {
+        var comp = app.project.activeItem;
+        if (!comp || !(comp instanceof CompItem)) {
+            app.endUndoGroup();
+            return;
+        }
+
+        var layers = comp.layers;
+        if (layers.length === 0) {
+            app.endUndoGroup();
+            return;
+        }
+
+        var layerData = [];
+        
+        // Gather all layers and unlock them safely so they can be moved
+        for (var i = 1; i <= layers.length; i++) {
+            layerData.push({
+                layer: layers[i],
+                inPoint: layers[i].inPoint,
+                originalIndex: layers[i].index,
+                wasLocked: layers[i].locked
+            });
+            
+            if (layers[i].locked) {
+                layers[i].locked = false;
+            }
+        }
+
+        // Sort based on in-points
+        layerData.sort(function(a, b) {
+            if (a.inPoint === b.inPoint) {
+                return b.originalIndex - a.originalIndex; // Maintain relative stack order if times match
+            }
+            if (earlyAtBottom) {
+                return a.inPoint - b.inPoint;
+            } else {
+                return b.inPoint - a.inPoint;
+            }
+        });
+
+        // Reorder layers in the timeline
+        for (var j = 0; j < layerData.length; j++) {
+            layerData[j].layer.moveToBeginning();
+        }
+        
+        // Restore locked states
+        for (var k = 0; k < layerData.length; k++) {
+            if (layerData[k].wasLocked) {
+                layerData[k].layer.locked = true;
+            }
+        }
+    } catch(e) {
+        // Fail silently
+    }
+    app.endUndoGroup();
+}

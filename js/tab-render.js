@@ -489,7 +489,7 @@ window.addEventListener("DOMContentLoaded", () => {
             csInterface.evalScript(`saveRenderPreset("${safeString(name)}")`, (result) => {
                 if (!result || result === "EvalScript error.") {
                     if (presetModal) presetModal.classList.remove('show');
-                    return showCustomAlert("Backend error: Verify the render script is loaded in hostscript.jsx!");
+                    return showCustomAlert("Backend error: Verify the render script is loaded in render.jsx!");
                 }
                 if (result.startsWith("SUCCESS:::&&:::")) {
                     const extractedExt = result.split(":::&&:::")[1];
