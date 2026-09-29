@@ -441,7 +441,7 @@
             const svgCheck = `<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
             const svgFire = `<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>`;
             const svgBolt = `<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
-            const svgCross = `<svg viewBox="0 0 24 24" width="14" height="14" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" style="opacity: 0.3;"><path d="M18 6L6 18M6 6l12 12"></path></svg>`;
+            const svgCross = `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" style="opacity: 0.3;"><path d="M18 6L6 18M6 6l12 12"></path></svg>`;
             const svgDash = `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="3" fill="none"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
             
             const weekDates = getCurrentWeekDates();
@@ -505,7 +505,7 @@
                 chartHTML += `<div class="chart-day-label ${isToday ? 'today' : ''}" style="left: ${leftPerc}%;">${d.dayName}</div>`;
             });
             chartHTML += `</div><div class="chart-svg-wrapper"><svg viewBox="0 0 ${w} ${h}" style="width:100%; height:auto; overflow:visible; display:block;">`;
-            chartHTML += `<defs><linearGradient id="chartGradient" x1="0" y1="10" x2="0" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="var(--accent-blue)" stop-opacity="0.20"/><stop offset="250%" stop-color="var(--accent-blue)" stop-opacity="0"/></linearGradient></defs>`;
+            chartHTML += `<defs><linearGradient id="chartGradient" x1="0" y1="10" x2="0" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" class="chart-grad-stop" stop-opacity="0.20"/><stop offset="250%" class="chart-grad-stop" stop-opacity="0"/></linearGradient></defs>`;
 
             points.forEach(p => { chartHTML += `<line x1="${p.x}" y1="0" x2="${p.x}" y2="${h}" class="chart-grid-line" />`; });
 
@@ -668,7 +668,7 @@
         let svg = `<svg viewBox="0 0 220 220" width="100%" height="100%">`;
         for(let i=0; i<120; i++) {
             let angle = i * 3; let isPrimary = i % 5 === 0; let length = isPrimary ? 8 : 4;
-            let color = i === 0 ? "#5ba4ff" : "#444"; let thickness = i === 0 ? 2 : 1.5;
+            let color = i === 0 ? "var(--rfx-accent)" : "var(--rfx-line-2)"; let thickness = i === 0 ? 2 : 1.5;
             svg += `<line x1="110" y1="4" x2="110" y2="${4 + length}" stroke="${color}" stroke-width="${thickness}" transform="rotate(${angle} 110 110)" stroke-linecap="round" />`;
         }
         svg += `</svg>`;
@@ -816,8 +816,8 @@
                 let isLegacy = (proj.lastUpdated === 0);
                 
                 let tags = '';
-                if (isActive) tags += '<span style="font-size:9px; background:rgba(91,164,255,0.15); color:var(--accent-blue); font-weight:600; padding:3px 6px; border-radius:4px;">ACTIVE</span>';
-                else if (isLegacy) tags += '<span style="font-size:9px; background:rgba(255,255,255,0.05); color:var(--text-secondary); font-weight:600; padding:3px 6px; border-radius:4px;" title="Tracked before dates were saved">LEGACY</span>';
+                if (isActive) tags += '<span style="font-size:9px; background:var(--rfx-fill-active); color:var(--rfx-text-1); font-weight:600; padding:3px 6px; border-radius:4px;">ACTIVE</span>';
+                else if (isLegacy) tags += '<span style="font-size:9px; background:var(--rfx-fill-hover); color:var(--text-secondary); font-weight:600; padding:3px 6px; border-radius:4px;" title="Tracked before dates were saved">LEGACY</span>';
 
                 let isExpanded = window.expandedProjects[rowId] === true;
                 let compsHtml = '';
@@ -835,12 +835,12 @@
                     compsArr.forEach(c => {
                         let isCompActive = (isActive && c.name === window.trackerState.activeComp);
                         compsHtml += `
-                            <div data-comp-name="${c.name.replace(/"/g, '&quot;')}" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-radius: 4px; background: ${isCompActive ? 'rgba(91,164,255,0.05)' : 'transparent'}; margin-top: 4px;">
+                            <div data-comp-name="${c.name.replace(/"/g, '&quot;')}" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-radius: 4px; background: ${isCompActive ? 'var(--rfx-fill-active)' : 'transparent'}; margin-top: 4px;">
                                 <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
-                                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="${isCompActive ? 'var(--accent-blue)' : 'var(--text-secondary)'}" stroke-width="2" fill="none" style="flex-shrink: 0;"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
-                                    <span style="font-size: 11px; color: ${isCompActive ? 'var(--accent-blue)' : 'var(--text-secondary)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${c.name}</span>
+                                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="${isCompActive ? 'var(--rfx-text-1)' : 'var(--text-secondary)'}" stroke-width="2" fill="none" style="flex-shrink: 0;"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+                                    <span style="font-size: 11px; color: ${isCompActive ? 'var(--rfx-text-1)' : 'var(--text-secondary)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${c.name}</span>
                                 </div>
-                                <span class="comp-time-val" style="font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 500; color: ${isCompActive ? 'var(--accent-blue)' : 'var(--text-secondary)'}; flex-shrink: 0;">${formatTime(c.active)}</span>
+                                <span class="comp-time-val" style="font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 500; color: ${isCompActive ? 'var(--rfx-text-1)' : 'var(--text-secondary)'}; flex-shrink: 0;">${formatTime(c.active)}</span>
                             </div>
                         `;
                     });
@@ -858,8 +858,8 @@
                     const tagSpan = existingRow.querySelector('.active-tag-container');
                     
                     if (isActive) {
-                        if(iconSvg && iconSvg.getAttribute('stroke') !== 'var(--accent-blue)') iconSvg.setAttribute('stroke', 'var(--accent-blue)');
-                        if(titleSpan && titleSpan.style.color !== 'var(--accent-blue)') titleSpan.style.color = 'var(--accent-blue)';
+                        if(iconSvg && iconSvg.getAttribute('stroke') !== 'var(--rfx-text-1)') iconSvg.setAttribute('stroke', 'var(--rfx-text-1)');
+                        if(titleSpan && titleSpan.style.color !== 'var(--rfx-text-1)') titleSpan.style.color = 'var(--rfx-text-1)';
                     } else {
                         if(iconSvg && iconSvg.getAttribute('stroke') !== 'currentColor') iconSvg.setAttribute('stroke', 'currentColor');
                         if(titleSpan && titleSpan.style.color !== 'var(--text-primary)') titleSpan.style.color = 'var(--text-primary)';
@@ -897,18 +897,18 @@
                     li.className = 'project-card'; li.id = rowId;
                     li.innerHTML = `
                         <div class="project-header">
-                            <svg class="project-icon" viewBox="0 0 24 24" fill="none" stroke="${isActive ? 'var(--accent-blue)' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                            <span class="project-title" style="${isActive ? 'color:var(--accent-blue);' : ''}">${proj.name}</span>
+                            <svg class="project-icon" viewBox="0 0 24 24" fill="none" stroke="${isActive ? 'var(--rfx-text-1)' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                            <span class="project-title" style="${isActive ? 'color:var(--rfx-text-1);' : ''}">${proj.name}</span>
                             <div class="active-tag-container" style="margin-left:auto; display:flex; gap:4px;">${tags}</div>
                         </div>
                         <div class="project-metrics">
                             <div class="p-metric" style="padding-right: 6px;">
                                 <span class="p-metric-label">Total Time Spent</span>
                                 <div style="display: flex; align-items: center; gap: 12px;">
-                                    <span class="p-metric-val" id="${rowId}-act" style="color:var(--accent-blue); font-size: 13.5px;">${act}</span>
+                                    <span class="p-metric-val" id="${rowId}-act" style="color:var(--rfx-text-1); font-size: 13.5px;">${act}</span>
                                     <div style="width: 1px; height: 16px; background: var(--border-color); border-radius: 1px;"></div>
                                     <button class="btn-icon-square" onclick="event.preventDefault(); event.stopPropagation(); window.toggleProjectExpand('${rowId}');" style="width: 28px !important; height: 28px !important; min-width: 28px !important; min-height: 28px !important; max-width: 28px !important; max-height: 28px !important; padding: 0 !important; margin: 0 !important; box-sizing: border-box !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); transform: ${isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}; cursor: pointer;">
-                                        <svg viewBox="0 0 24 24" style="width: 20px !important; height: 20px !important; stroke-width: 2.5px !important; pointer-events: none;" stroke="var(--accent-blue)" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                        <svg viewBox="0 0 24 24" style="width: 20px !important; height: 20px !important; stroke-width: 2.5px !important; pointer-events: none;" stroke="var(--rfx-text-2)" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                     </button>
                                 </div>
                             </div>
@@ -1296,8 +1296,8 @@ window.openProjectSortMenu = function(btnEl) {
             let isActive = (o.type === 'filter' && window.projectSortState.filter === o.id) || 
                            (o.type === 'sort' && window.projectSortState.sort === o.id);
 
-            item.innerHTML = `<span style="font-size:11px; ${isActive ? 'color:var(--accent-blue);' : ''}">${o.text}</span>` + 
-                             (isActive ? `<svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--accent-blue)" stroke-width="2" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>` : '');
+            item.innerHTML = `<span style="font-size:11px; ${isActive ? 'color:var(--rfx-text-1);' : ''}">${o.text}</span>` + 
+                             (isActive ? `<svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--rfx-text-1)" stroke-width="2" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>` : '');
             
             item.onclick = (e) => {
                 e.stopPropagation();

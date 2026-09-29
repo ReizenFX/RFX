@@ -426,13 +426,13 @@ const discordJsx = window.createJsxLoader('discord.jsx');
 
         function renderUI(state) {
             if(connectionInfo) {
-                if (state.rpcConnection === "connected") { connectionInfo.innerHTML = 'Connected'; if(statusIndicator) statusIndicator.style.background = '#43b581'; }
-                else if (state.rpcConnection === "connecting") { connectionInfo.innerHTML = 'Connecting...'; if(statusIndicator) statusIndicator.style.background = '#faa61a'; }
-                else { connectionInfo.innerHTML = 'Disconnected'; if(statusIndicator) statusIndicator.style.background = '#f04747'; }
+                if (state.rpcConnection === "connected") { connectionInfo.innerHTML = 'Connected'; if(statusIndicator) statusIndicator.className = 'discord-status-dot is-connected'; }
+                else if (state.rpcConnection === "connecting") { connectionInfo.innerHTML = 'Connecting...'; if(statusIndicator) statusIndicator.className = 'discord-status-dot is-connecting'; }
+                else { connectionInfo.innerHTML = 'Disconnected'; if(statusIndicator) statusIndicator.className = 'discord-status-dot is-off'; }
             }
             if(powerSwitchButton) {
                 powerSwitchButton.innerHTML = state.power ? 'Turn Off Discord' : 'Turn On Discord';
-                powerSwitchButton.className = state.power ? 'power-on btn-primary' : 'power-off btn-secondary';
+                powerSwitchButton.className = state.power ? 'power-on btn-secondary' : 'power-off btn-primary';
                 powerSwitchButton.onclick = () => { stateManager.power = !stateManager.power; dispatchUpdate(); };
             }
             if(versionInfo) versionInfo.innerHTML = state.versionInfo;

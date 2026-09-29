@@ -31,10 +31,10 @@
     align-items: center; 
     gap: 6px; 
     margin: 4px 0 8px 0; 
-    background: var(--bg-input); 
+    background: var(--rfx-surface-2); 
     padding: 6px 12px; 
-    border-radius: 6px; 
-    border: 1px solid var(--border-color);
+    border-radius: var(--rfx-r-md); 
+    border: 1px solid transparent;
 }
 
 #tab-discord .discord-status-dot {
@@ -42,8 +42,14 @@
     width: 8px; 
     height: 8px; 
     border-radius: 50%; 
-    background: #777; /* Default gray, JS changes this to green/red */
+    background: var(--rfx-text-4); /* state classes set by js/tab-discord.js */
+    transition: background var(--rfx-dur), box-shadow var(--rfx-dur);
 }
+/* State by shape and brightness: solid = connected, pulsing = connecting, hollow = off */
+#tab-discord .discord-status-dot.is-connected { background: var(--rfx-live); }
+#tab-discord .discord-status-dot.is-connecting { background: var(--rfx-text-2); animation: discordPulse 1s ease-in-out infinite alternate; }
+#tab-discord .discord-status-dot.is-off { background: transparent; box-shadow: inset 0 0 0 1.5px var(--rfx-text-3); }
+@keyframes discordPulse { from { opacity: 1; } to { opacity: .3; } }
 
 #tab-discord .discord-state-text {
     font-size: 12px; 
