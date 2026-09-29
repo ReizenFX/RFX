@@ -35,16 +35,17 @@ window.toggleNulOptionMenu = function(opt) {
     if (checkbox) checkbox.checked = window.nulSettings[opt];
 };
 
+// After Effects label colours (content colours, shown as the layer colour).
 const aeColors = [
-    { name: "None", hex: "transparent", id: 0 }, { name: "Red", hex: "#B53838", id: 1 },
-    { name: "Yellow", hex: "#E4D84C", id: 2 }, { name: "Aqua", hex: "#A9CBC7", id: 3 },
-    { name: "Pink", hex: "#E5BCC9", id: 4 }, { name: "Lavender", hex: "#A9A9CA", id: 5 },
-    { name: "Peach", hex: "#E7C19E", id: 6 }, { name: "Sea Foam", hex: "#B3C7B3", id: 7 },
-    { name: "Blue", hex: "#677DE0", id: 8 }, { name: "Green", hex: "#4AA44C", id: 9 },
-    { name: "Purple", hex: "#8E2C9A", id: 10 }, { name: "Orange", hex: "#E8920D", id: 11 },
-    { name: "Brown", hex: "#7F452A", id: 12 }, { name: "Fuchsia", hex: "#F46DD6", id: 13 },
-    { name: "Cyan", hex: "#3DA2A5", id: 14 }, { name: "Sandstone", hex: "#A89677", id: 15 },
-    { name: "Dark Green", hex: "#1E401E", id: 16 }
+    { name: "None", hex: "transparent", id: 0 }, { name: "Red", hex: "#B53838", id: 1 }, // rfx-content-color
+    { name: "Yellow", hex: "#E4D84C", id: 2 }, { name: "Aqua", hex: "#A9CBC7", id: 3 }, // rfx-content-color
+    { name: "Pink", hex: "#E5BCC9", id: 4 }, { name: "Lavender", hex: "#A9A9CA", id: 5 }, // rfx-content-color
+    { name: "Peach", hex: "#E7C19E", id: 6 }, { name: "Sea Foam", hex: "#B3C7B3", id: 7 }, // rfx-content-color
+    { name: "Blue", hex: "#677DE0", id: 8 }, { name: "Green", hex: "#4AA44C", id: 9 }, // rfx-content-color
+    { name: "Purple", hex: "#8E2C9A", id: 10 }, { name: "Orange", hex: "#E8920D", id: 11 }, // rfx-content-color
+    { name: "Brown", hex: "#7F452A", id: 12 }, { name: "Fuchsia", hex: "#F46DD6", id: 13 }, // rfx-content-color
+    { name: "Cyan", hex: "#3DA2A5", id: 14 }, { name: "Sandstone", hex: "#A89677", id: 15 }, // rfx-content-color
+    { name: "Dark Green", hex: "#1E401E", id: 16 } // rfx-content-color
 ];
 
 window.addCustomLayer = function(type) {
@@ -108,12 +109,7 @@ function openLayerColorMenu(btnEl, type, indicatorEl) {
     // Inject Null Toggles exclusively for the NUL button
     if (type === 'NUL') {
         const toggleSection = document.createElement('div');
-        toggleSection.style.padding = '8px 12px';
-        toggleSection.style.borderBottom = '1px solid #444';
-        toggleSection.style.marginBottom = '4px';
-        toggleSection.style.display = 'flex';
-        toggleSection.style.flexDirection = 'column';
-        toggleSection.style.gap = '10px';
+        toggleSection.className = 'nl-menu-toggles';
         
         toggleSection.innerHTML = `
             <div class="setting-row" style="margin-bottom:0; cursor:pointer;" onclick="event.stopPropagation(); window.toggleNulOptionMenu('link')">
@@ -131,7 +127,7 @@ function openLayerColorMenu(btnEl, type, indicatorEl) {
     aeColors.forEach(c => {
         const item = document.createElement('div');
         item.className = 'ctx-item';
-        item.innerHTML = `<div style="display:flex; align-items:center; gap:8px;"><div style="width:10px; height:10px; border-radius:50%; background:${c.hex}; border:1px solid ${c.id===0 ? '#555' : 'transparent'}"></div><span style="font-size:11px;">${c.name}</span></div>`;
+        item.innerHTML = `<div style="display:flex; align-items:center; gap:8px;"><div class="nl-color-dot${c.id===0 ? ' is-none' : ''}" style="background:${c.id===0 ? 'transparent' : c.hex}"></div><span style="font-size:11px;">${c.name}</span></div>`;
         item.onclick = (e) => {
             e.stopPropagation();
             localStorage.setItem('nl_color_' + type, c.id);

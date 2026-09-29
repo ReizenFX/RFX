@@ -48,7 +48,7 @@
                 <div class="section-block" style="padding-top: 10px; padding-bottom: 14px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                         <label class="section-label" style="margin-bottom:0;">Alignment & Transform</label>
-                        <select id="align-relative-to" style="font-size:10px; padding:3px 6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); border-radius:4px; cursor:pointer;">
+                        <select id="align-relative-to" class="tf-rel-select">
                             <option value="comp">Comp</option>
                             <option value="selection" selected>Selection</option>
                         </select>
@@ -57,41 +57,41 @@
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <label class="section-label" style="margin-bottom: 8px; font-size: 10px;">Anchor</label>
                             <div class="anchor-grid-small">
-                                <button class="anchor-btn" data-tooltip="Top Left" onclick="moveAnchor('tl')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="4" cy="4" r="2.5" fill="#ffffff"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Top Center" onclick="moveAnchor('tc')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="4" r="2.5" fill="#ffffff"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Top Right" onclick="moveAnchor('tr')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="20" cy="4" r="2.5" fill="#ffffff"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Middle Left" onclick="moveAnchor('ml')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="4" cy="12" r="2.5" fill="#ffffff"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Center" onclick="moveAnchor('mc')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="2.5" fill="#ffffff"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Middle Right" onclick="moveAnchor('mr')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="20" cy="12" r="2.5" fill="#ffffff"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Bottom Left" onclick="moveAnchor('bl')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="4" cy="20" r="2.5" fill="#ffffff"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Bottom Center" onclick="moveAnchor('bc')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="20" r="2.5" fill="#ffffff"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Bottom Right" onclick="moveAnchor('br')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="20" cy="20" r="2.5" fill="#ffffff"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Top Left" onclick="moveAnchor('tl')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2.5" stroke-opacity=".55"/><circle cx="4" cy="4" r="2.6" fill="currentColor" stroke="none"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Top Center" onclick="moveAnchor('tc')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2.5" stroke-opacity=".55"/><circle cx="12" cy="4" r="2.6" fill="currentColor" stroke="none"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Top Right" onclick="moveAnchor('tr')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2.5" stroke-opacity=".55"/><circle cx="20" cy="4" r="2.6" fill="currentColor" stroke="none"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Middle Left" onclick="moveAnchor('ml')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2.5" stroke-opacity=".55"/><circle cx="4" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Center" onclick="moveAnchor('mc')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2.5" stroke-opacity=".55"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Middle Right" onclick="moveAnchor('mr')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2.5" stroke-opacity=".55"/><circle cx="20" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Bottom Left" onclick="moveAnchor('bl')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2.5" stroke-opacity=".55"/><circle cx="4" cy="20" r="2.6" fill="currentColor" stroke="none"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Bottom Center" onclick="moveAnchor('bc')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2.5" stroke-opacity=".55"/><circle cx="12" cy="20" r="2.6" fill="currentColor" stroke="none"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Bottom Right" onclick="moveAnchor('br')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2.5" stroke-opacity=".55"/><circle cx="20" cy="20" r="2.6" fill="currentColor" stroke="none"/></svg></button>
                             </div>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <label class="section-label" style="margin-bottom: 8px; font-size: 10px;">Align</label>
                             <div class="anchor-grid-small">
-                                <button class="anchor-btn" data-tooltip="Align Top Left Corner" onclick="runAlign('tl')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><line x1="2" y1="4" x2="22" y2="4"/><rect x="8" y="8" width="8" height="8"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Align Top Edges" onclick="runAlign('top')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="2" y1="4" x2="22" y2="4"/><rect x="6" y="8" width="4" height="10"/><rect x="14" y="8" width="4" height="6"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Align Top Right Corner" onclick="runAlign('tr')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="20" y1="2" x2="20" y2="22"/><line x1="2" y1="4" x2="22" y2="4"/><rect x="8" y="8" width="8" height="8"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Align Left Edges" onclick="runAlign('left')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><rect x="8" y="6" width="10" height="4"/><rect x="8" y="14" width="6" height="4"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Align Centers" onclick="runAlign('center')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="16" height="16"><path d="M 8 50 H 92 M 50 8 V 92 M 33 33 H 67 V 67 H 33 Z" stroke="#ffffff" stroke-width="6" stroke-linejoin="miter" fill="none" /></svg></button>
-                                <button class="anchor-btn" data-tooltip="Align Right Edges" onclick="runAlign('right')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="20" y1="2" x2="20" y2="22"/><rect x="6" y="6" width="10" height="4"/><rect x="10" y="14" width="6" height="4"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Align Bottom Left Corner" onclick="runAlign('bl')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><line x1="2" y1="20" x2="22" y2="20"/><rect x="8" y="8" width="8" height="8"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Align Bottom Edges" onclick="runAlign('bottom')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="2" y1="20" x2="22" y2="20"/><rect x="6" y="6" width="4" height="10"/><rect x="14" y="10" width="4" height="6"/></svg></button>
-                                <button class="anchor-btn" data-tooltip="Align Bottom Right Corner" onclick="runAlign('br')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="20" y1="2" x2="20" y2="22"/><line x1="2" y1="20" x2="22" y2="20"/><rect x="8" y="8" width="8" height="8"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Top Left Corner" onclick="runAlign('tl')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><line x1="2" y1="4" x2="22" y2="4"/><rect x="8" y="8" width="8" height="8"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Top Edges" onclick="runAlign('top')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="2" y1="4" x2="22" y2="4"/><rect x="6" y="8" width="4" height="10"/><rect x="14" y="8" width="4" height="6"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Top Right Corner" onclick="runAlign('tr')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="20" y1="2" x2="20" y2="22"/><line x1="2" y1="4" x2="22" y2="4"/><rect x="8" y="8" width="8" height="8"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Left Edges" onclick="runAlign('left')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><rect x="8" y="6" width="10" height="4"/><rect x="8" y="14" width="6" height="4"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Centers" onclick="runAlign('center')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/><rect x="8" y="8" width="8" height="8"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Right Edges" onclick="runAlign('right')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="20" y1="2" x2="20" y2="22"/><rect x="6" y="6" width="10" height="4"/><rect x="10" y="14" width="6" height="4"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Bottom Left Corner" onclick="runAlign('bl')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><line x1="2" y1="20" x2="22" y2="20"/><rect x="8" y="8" width="8" height="8"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Bottom Edges" onclick="runAlign('bottom')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="2" y1="20" x2="22" y2="20"/><rect x="6" y="6" width="4" height="10"/><rect x="14" y="10" width="4" height="6"/></svg></button>
+                                <button class="anchor-btn" data-tooltip="Align Bottom Right Corner" onclick="runAlign('br')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="20" y1="2" x2="20" y2="22"/><line x1="2" y1="20" x2="22" y2="20"/><rect x="8" y="8" width="8" height="8"/></svg></button>
                             </div>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <label class="section-label" style="margin-bottom: 8px; font-size: 10px;">Align</label>
                             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px;">
-                                <button class="btn-icon-square" data-tooltip="Align Horizontal Center" onclick="runAlign('hcenter')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="12" y1="2" x2="12" y2="22"/><rect x="5" y="6" width="14" height="4"/><rect x="8" y="14" width="8" height="4"/></svg></button>
-                                <button class="btn-icon-square" data-tooltip="Align Vertical Center" onclick="runAlign('vcenter')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="2" y1="12" x2="22" y2="12"/><rect x="6" y="5" width="4" height="14"/><rect x="14" y="8" width="4" height="8"/></svg></button>
+                                <button class="btn-icon-square" data-tooltip="Align Horizontal Center" onclick="runAlign('hcenter')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="12" y1="2" x2="12" y2="22"/><rect x="5" y="6" width="14" height="4"/><rect x="8" y="14" width="8" height="4"/></svg></button>
+                                <button class="btn-icon-square" data-tooltip="Align Vertical Center" onclick="runAlign('vcenter')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="2" y1="12" x2="22" y2="12"/><rect x="6" y="5" width="4" height="14"/><rect x="14" y="8" width="4" height="8"/></svg></button>
                             </div>
                             <label class="section-label" style="margin-top: 10px; margin-bottom: 8px; font-size: 10px;">Dist</label>
                             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px;">
-                                <button class="btn-icon-square" data-tooltip="Distribute Horizontal Spacing" onclick="runAlign('distrib-h')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><line x1="20" y1="2" x2="20" y2="22"/><rect x="10" y="8" width="4" height="8"/></svg></button>
-                                <button class="btn-icon-square" data-tooltip="Distribute Vertical Spacing" onclick="runAlign('distrib-v')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="2" y1="4" x2="22" y2="4"/><line x1="2" y1="20" x2="22" y2="20"/><rect x="8" y="10" width="8" height="4"/></svg></button>
+                                <button class="btn-icon-square" data-tooltip="Distribute Horizontal Spacing" onclick="runAlign('distrib-h')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><line x1="20" y1="2" x2="20" y2="22"/><rect x="10" y="8" width="4" height="8"/></svg></button>
+                                <button class="btn-icon-square" data-tooltip="Distribute Vertical Spacing" onclick="runAlign('distrib-v')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="2" y1="4" x2="22" y2="4"/><line x1="2" y1="20" x2="22" y2="20"/><rect x="8" y="10" width="8" height="4"/></svg></button>
                             </div>
                         </div>
                     </div>
@@ -113,23 +113,23 @@
                 <div class="section-block">
                     <label class="section-label" style="margin-bottom: 12px;">Layer Order &amp; Timing</label>
                     <div style="display:flex; gap:6px; flex-wrap: wrap;">
-                        <button class="btn-icon-square" data-tooltip="Reverse Stack Order" onclick="runFlipLayers()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L13 16M17 20L21 16"/></svg></button>
-                        <button class="btn-icon-square" data-tooltip="Match Earliest Start Time" onclick="runMatchStartTime()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><rect x="8" y="6" width="12" height="4"/><rect x="8" y="14" width="8" height="4"/></svg></button>
-                        <button class="btn-icon-square" data-tooltip="Set In Point at Playhead" onclick="runSetInPoint()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="6" y1="2" x2="6" y2="22"/><path d="M12 8L6 12L12 16"/><rect x="14" y="8" width="6" height="8"/></svg></button>
-                        <button class="btn-icon-square" data-tooltip="Set Out Point at Playhead" onclick="runSetOutPoint()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="18" y1="2" x2="18" y2="22"/><path d="M12 8L18 12L12 16"/><rect x="4" y="8" width="6" height="8"/></svg></button>
-                        <button class="btn-icon-square" data-tooltip="Move Group Start to Playhead" onclick="runMoveGroupStart()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><rect x="8" y="4" width="6" height="4"/><rect x="12" y="10" width="6" height="4"/><rect x="16" y="16" width="6" height="4"/></svg></button>
-                        <button class="btn-icon-square" data-tooltip="Move Group End to Playhead" onclick="runMoveGroupEnd()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><line x1="20" y1="2" x2="20" y2="22"/><rect x="10" y="4" width="6" height="4"/><rect x="6" y="10" width="6" height="4"/><rect x="2" y="16" width="6" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Reverse Stack Order" onclick="runFlipLayers()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L13 16M17 20L21 16"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Match Earliest Start Time" onclick="runMatchStartTime()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><rect x="8" y="6" width="12" height="4"/><rect x="8" y="14" width="8" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Set In Point at Playhead" onclick="runSetInPoint()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="6" y1="2" x2="6" y2="22"/><path d="M12 8L6 12L12 16"/><rect x="14" y="8" width="6" height="8"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Set Out Point at Playhead" onclick="runSetOutPoint()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="18" y1="2" x2="18" y2="22"/><path d="M12 8L18 12L12 16"/><rect x="4" y="8" width="6" height="8"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Move Group Start to Playhead" onclick="runMoveGroupStart()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="4" y1="2" x2="4" y2="22"/><rect x="8" y="4" width="6" height="4"/><rect x="12" y="10" width="6" height="4"/><rect x="16" y="16" width="6" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Move Group End to Playhead" onclick="runMoveGroupEnd()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="20" y1="2" x2="20" y2="22"/><rect x="10" y="4" width="6" height="4"/><rect x="6" y="10" width="6" height="4"/><rect x="2" y="16" width="6" height="4"/></svg></button>
                         
-                        <button class="btn-icon-square" data-tooltip="Sort: Early to Bottom" onclick="runSortLayers(true)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="16" height="16"><g fill="#ffffff"><rect x="56" y="16" width="30" height="16" /><rect x="35" y="42" width="30" height="16" /><rect x="14" y="68" width="30" height="16" /></g></svg></button>
-                        <button class="btn-icon-square" data-tooltip="Sort: Early to Top" onclick="runSortLayers(false)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="16" height="16"><g fill="#ffffff"><rect x="14" y="16" width="30" height="16" /><rect x="35" y="42" width="30" height="16" /><rect x="56" y="68" width="30" height="16" /></g></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Sort: Early to Bottom" onclick="runSortLayers(true)"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="14" y="4" width="7" height="4"/><rect x="8.5" y="10" width="7" height="4"/><rect x="3" y="16" width="7" height="4"/><line x1="2" y1="22" x2="22" y2="22"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Sort: Early to Top" onclick="runSortLayers(false)"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="3" y="4" width="7" height="4"/><rect x="8.5" y="10" width="7" height="4"/><rect x="14" y="16" width="7" height="4"/><line x1="2" y1="2" x2="22" y2="2"/></svg></button>
                     </div>
                 </div>
                 <div class="section-block">
                     <label class="section-label" style="margin-bottom: 12px;">Chain Layers End-to-End</label>
                     <div style="display:flex; gap:6px; flex-wrap: wrap;">
-                        <button class="btn-icon-square" data-tooltip="Chain Bottom-to-Top" onclick="runSequenceChain('bottom-to-top')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><rect x="4" y="16" width="6" height="4"/><rect x="10" y="10" width="6" height="4"/><rect x="16" y="4" width="6" height="4"/></svg></button>
-                        <button class="btn-icon-square" data-tooltip="Chain Top-to-Bottom" onclick="runSequenceChain('top-to-bottom')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><rect x="4" y="4" width="6" height="4"/><rect x="10" y="10" width="6" height="4"/><rect x="16" y="16" width="6" height="4"/></svg></button>
-                        <button class="btn-icon-square" data-tooltip="Chain Random Order" onclick="runSequenceChain('random')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><rect x="4" y="16" width="6" height="4"/><rect x="10" y="4" width="6" height="4"/><rect x="16" y="10" width="6" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Chain Bottom-to-Top" onclick="runSequenceChain('bottom-to-top')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="4" y="16" width="6" height="4"/><rect x="10" y="10" width="6" height="4"/><rect x="16" y="4" width="6" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Chain Top-to-Bottom" onclick="runSequenceChain('top-to-bottom')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="4" y="4" width="6" height="4"/><rect x="10" y="10" width="6" height="4"/><rect x="16" y="16" width="6" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Chain Random Order" onclick="runSequenceChain('random')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="4" y="16" width="6" height="4"/><rect x="10" y="4" width="6" height="4"/><rect x="16" y="10" width="6" height="4"/></svg></button>
                     </div>
                 </div>
                 <div class="section-block">
@@ -142,10 +142,10 @@
                     </div>
                     <input type="range" id="setting-seq-frames" class="main-slider" style="display:none;" min="0" max="60" value="1" oninput="syncSliderToInput('setting-seq-frames','seq-val-input')">
                     <div style="display:flex; gap:6px; margin-top:10px; flex-wrap: wrap;">
-                        <button class="btn-icon-square" data-tooltip="Stagger Backward" onclick="sequenceLayers('backward')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><rect x="2" y="4" width="10" height="4"/><rect x="6" y="10" width="10" height="4"/><rect x="10" y="16" width="10" height="4"/></svg></button>
-                        <button class="btn-icon-square" data-tooltip="Stagger Forward" onclick="sequenceLayers('forward')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><rect x="10" y="4" width="10" height="4"/><rect x="6" y="10" width="10" height="4"/><rect x="2" y="16" width="10" height="4"/></svg></button>
-                        <button class="btn-icon-square" data-tooltip="Scatter Randomly in Offset Range" onclick="sequenceLayers('random')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><rect x="8" y="4" width="8" height="4"/><rect x="2" y="10" width="8" height="4"/><rect x="14" y="16" width="8" height="4"/></svg></button>
-                        <button class="btn-icon-square" data-tooltip="Reverse Timing Sequence" onclick="runReverseSequence()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="1.5" fill="none"><path d="M20 12H4M4 12L8 8M4 12L8 16"/><rect x="10" y="4" width="10" height="4"/><rect x="10" y="16" width="10" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Stagger Backward" onclick="sequenceLayers('backward')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="2" y="4" width="10" height="4"/><rect x="6" y="10" width="10" height="4"/><rect x="10" y="16" width="10" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Stagger Forward" onclick="sequenceLayers('forward')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="10" y="4" width="10" height="4"/><rect x="6" y="10" width="10" height="4"/><rect x="2" y="16" width="10" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Scatter Randomly in Offset Range" onclick="sequenceLayers('random')"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="8" y="4" width="8" height="4"/><rect x="2" y="10" width="8" height="4"/><rect x="14" y="16" width="8" height="4"/></svg></button>
+                        <button class="btn-icon-square" data-tooltip="Reverse Timing Sequence" onclick="runReverseSequence()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M20 12H4M4 12L8 8M4 12L8 16"/><rect x="10" y="4" width="10" height="4"/><rect x="10" y="16" width="10" height="4"/></svg></button>
                     </div>
                 </div>
             </div>
@@ -211,7 +211,7 @@
                 <div class="data-panel">
                     <div class="data-top">
                         <div class="swatch-name-group">
-                            <div class="preview-swatch" id="preview" style="background: #FF0000;"></div>
+                            <div class="preview-swatch" id="preview" data-rfx="rfx-content-color" style="background: #FF0000;"></div>
                             <div class="name-col">
                                 <span class="label">Color Name</span>
                                 <div class="name-text" id="color-name">Red</div>
@@ -221,7 +221,7 @@
                             <span class="label">Hex Code</span>
                             <div class="hex-group">
                                 <button class="btn-copy-hex" onclick="copyHexCode()" title="Copy Hex Code">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                                 </button>
                                 <input type="text" class="hex-input" id="hex-input" value="FF0000" maxlength="6">
                             </div>
@@ -230,15 +230,15 @@
                     <div class="data-bottom">
                         <div class="metrics-row" style="display: flex; gap: 12px; align-items: center; justify-content: space-between; width: 100%;">
                             <div style="display: flex; align-items: center; gap: 6px;">
-                                <span style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 14px; color: var(--text-secondary); font-weight: 500;">H:</span>
+                                <span class="hsb-label">H</span>
                                 <div class="slider-val-wrapper hsb-wrap" id="h-wrap" onclick="openNumpad('val-h', 'dummy-slider', 'h-wrap')"><input type="text" id="val-h" class="slider-val-input" value="0" readonly><span class="slider-val-unit">°</span></div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 6px;">
-                                <span style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 14px; color: var(--text-secondary); font-weight: 500;">S:</span>
+                                <span class="hsb-label">S</span>
                                 <div class="slider-val-wrapper hsb-wrap" id="s-wrap" onclick="openNumpad('val-s', 'dummy-slider', 's-wrap')"><input type="text" id="val-s" class="slider-val-input" value="100" readonly><span class="slider-val-unit">%</span></div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 6px;">
-                                <span style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 14px; color: var(--text-secondary); font-weight: 500;">B:</span>
+                                <span class="hsb-label">B</span>
                                 <div class="slider-val-wrapper hsb-wrap" id="b-wrap" onclick="openNumpad('val-b', 'dummy-slider', 'b-wrap')"><input type="text" id="val-b" class="slider-val-input" value="100" readonly><span class="slider-val-unit">%</span></div>
                             </div>
                             <input type="range" id="dummy-slider" style="display:none" min="0" max="360" value="0">
@@ -260,10 +260,10 @@
             </div>
             <div class="fixed-bottom" style="display: flex; gap: 12px; justify-content: center; padding: 10px 34px 8px 34px; background: var(--bg-base);">
                 <button class="btn-icon-square" data-tooltip="Apply Fill Color" onclick="applyColorToFill()">
-                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 11l-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z"></path><path d="M5 2l5 5"></path><path d="M2 13h15"></path><path d="M22 20a2 2 0 1 1-4 0c0-1.6 2-4 2-4s2 2.4 2 4Z"></path></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 11l-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z"></path><path d="M5 2l5 5"></path><path d="M2 13h15"></path><path d="M22 20a2 2 0 1 1-4 0c0-1.6 2-4 2-4s2 2.4 2 4Z"></path></svg>
                 </button>
                 <button class="btn-icon-square" data-tooltip="Apply Stroke Color" onclick="applyColorToStroke()">
-                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle></svg>
                 </button>
             </div>
         </div>
@@ -272,8 +272,8 @@
     <div id="tab-graph" class="tab-content">
         <div class="flex-column-container">
             <div id="graph-top-wrapper" style="display:flex; flex-direction:column; align-items:center; width:100%; position:relative;">
-                <div id="graph-editor-area" style="position:relative; width:100%; height:240px; background-color:#1a1a1a; border:1px solid var(--border-color); border-radius:6px; overflow:hidden; flex-shrink:0; transition:opacity 0.1s;"></div>
-                <div id="graph-resizer" style="width:100%; padding:8px 0; cursor:ns-resize; display:flex; justify-content:center; align-items:center; z-index:10;"><div style="width:40px; height:6px; background:#555; border-radius:3px; pointer-events:none;"></div></div>
+                <div id="graph-editor-area" style="position:relative; width:100%; height:240px; background-color:var(--rfx-bg); border:1px solid transparent; border-radius:6px; overflow:hidden; flex-shrink:0; transition:opacity 0.1s;"></div>
+                <div id="graph-resizer" style="width:100%; padding:8px 0; cursor:ns-resize; display:flex; justify-content:center; align-items:center; z-index:10;"><div style="width:40px; height:6px; background:var(--rfx-scrollbar); border-radius:3px; pointer-events:none;"></div></div>
             </div>
             <div id="graph-presets-area" style="display:flex; flex-direction:column; flex:1; min-height:0; padding-bottom:0;">
                 <div class="panel-box" style="display:flex; flex-direction:column; flex:1; min-height:0; margin-top:0; padding:0; background:transparent; border:none; box-shadow:none;">
@@ -293,13 +293,13 @@
             <div class="fixed-bottom" style="display:flex; flex-direction:column; gap:8px; padding:8px 34px 6px 34px; background:var(--bg-base);">
                 <div style="display:flex; align-items:center; gap:6px;">
                     <button class="btn-icon-square" style="width:26px; height:26px;" data-tooltip="Copy graph from keyframes" onclick="readGraphValues()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
-                    <div id="graph-value-display" style="flex:1; font-size:12px; font-family:monospace; color:var(--text-primary); cursor:pointer; padding:5px 0; background:var(--bg-input); border:1px solid var(--border-color); border-radius:4px; text-align:center; transition:border 0.2s;" onclick="openGraphInputModal()">0.33, 0.00, 0.66, 1.00</div>
+                    <div id="graph-value-display" style="flex:1; font-size:12px; font-family:monospace; color:var(--text-primary); cursor:pointer; padding:5px 0; background:var(--rfx-input); border:1px solid transparent; border-radius:var(--rfx-r-md); text-align:center; transition:border 0.2s;" onclick="openGraphInputModal()">0.33, 0.00, 0.66, 1.00</div>
                     <button class="btn-icon-square" style="width:26px; height:26px;" data-tooltip="Save as preset" onclick="openGraphSaveModal()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></button>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px;">
-                    <div style="display:flex; background:var(--bg-input); border:1px solid var(--border-color); border-radius:4px; overflow:hidden;">
-                        <button id="btn-ease-in" class="btn-icon ease-btn" data-tooltip="Ease Out" onclick="setEaseType('in')" style="border-radius:0; padding:5px 6px; border-right:1px solid var(--border-color);"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
-                        <button id="btn-ease-all" class="btn-icon ease-btn active" data-tooltip="Easy Ease" onclick="setEaseType('all')" style="border-radius:0; padding:5px 6px; border-right:1px solid var(--border-color);"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 22 19 22 12 12 19 2 5 2 12 12 5 22"></polygon></svg></button>
+                    <div style="display:flex; background:var(--rfx-surface-2); border:1px solid transparent; border-radius:var(--rfx-r-md); overflow:hidden;">
+                        <button id="btn-ease-in" class="btn-icon ease-btn" data-tooltip="Ease Out" onclick="setEaseType('in')" style="border-radius:0; padding:5px 6px; border-right:1px solid var(--rfx-bg);"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                        <button id="btn-ease-all" class="btn-icon ease-btn active" data-tooltip="Easy Ease" onclick="setEaseType('all')" style="border-radius:0; padding:5px 6px; border-right:1px solid var(--rfx-bg);"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 22 19 22 12 12 19 2 5 2 12 12 5 22"></polygon></svg></button>
                         <button id="btn-ease-out" class="btn-icon ease-btn" data-tooltip="Ease In" onclick="setEaseType('out')" style="border-radius:0; padding:5px 6px;"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
                     </div>
                     <button id="graphApplyBtn" class="btn-primary" style="margin:0; flex:1; padding:6px 0; font-weight:500;" onclick="applyGraphToKeyframesWithCheck(window._activeEaseType)">Apply</button>
@@ -357,23 +357,23 @@
             <div class="assets-save-menu-wrap">
                 <div class="assets-save-menu" id="assets-save-menu">
                     <div class="item" onclick="assetsSaveComp()">
-                        <span class="ic"><svg viewBox="0 0 24 24" width="15" height="15" stroke="#5ba4ff" stroke-width="2" fill="none"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></span>
+                        <span class="ic" style="color:var(--rfx-type-image)"><svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></span>
                         <span>Save comp<span class="desc">Active or selected composition</span></span>
                     </div>
                     <div class="item" onclick="assetsSaveLayers()">
-                        <span class="ic"><svg viewBox="0 0 24 24" width="15" height="15" stroke="#5ba4ff" stroke-width="2" fill="none"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg></span>
+                        <span class="ic" style="color:var(--rfx-type-image)"><svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg></span>
                         <span>Save layer(s)<span class="desc">One or more selected layers</span></span>
                     </div>
                     <div class="item" onclick="assetsSaveExpression()">
-                        <span class="ic"><svg viewBox="0 0 24 24" width="15" height="15" stroke="#b98cff" stroke-width="2" fill="none"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg></span>
+                        <span class="ic" style="color:var(--rfx-type-expr)"><svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg></span>
                         <span>Save expression<span class="desc">Selected property's expression</span></span>
                     </div>
                     <div class="item" onclick="assetsSaveVideo()">
-                        <span class="ic"><svg viewBox="0 0 24 24" width="15" height="15" stroke="#58c98a" stroke-width="2" fill="none"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2"></rect></svg></span>
+                        <span class="ic" style="color:var(--rfx-type-video)"><svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2"></rect></svg></span>
                         <span>Save video<span class="desc">Selected AV layer or a file</span></span>
                     </div>
                     <div class="item" onclick="assetsSaveAudio()">
-                        <span class="ic"><svg viewBox="0 0 24 24" width="15" height="15" stroke="#f0a742" stroke-width="2" fill="none"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></span>
+                        <span class="ic" style="color:var(--rfx-type-audio)"><svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></span>
                         <span>Save audio<span class="desc">Selected AV layer or a file</span></span>
                     </div>
                 </div>
@@ -594,7 +594,7 @@
                     <div class="setting-divider"></div>
                     
                     <div class="button-grid">
-                        <button id="renderBtn" class="btn-primary" style="grid-column: 1 / -1; background: rgba(46, 160, 67, 1);">Start Render</button>
+                        <button id="renderBtn" class="btn-primary" style="grid-column: 1 / -1;">Start Render</button>
                     </div>
                 </div>
             </div>
@@ -633,11 +633,11 @@
         <div id="alertModal" class="modal-overlay" style="z-index: 400;">
             <div class="modal-content section-block" style="text-align: center; max-width: 300px;">
                 <div class="section-header" style="justify-content: center;">
-                    <h3 class="section-label" style="color: #ff5555; font-size: 11px;">Notice</h3>
+                    <h3 class="section-label" style="color: var(--rfx-text-1); font-size: 11px;">Notice</h3>
                 </div>
                 <p id="alertMessage" style="font-size: 12px; color: var(--text-primary); margin: 12px 0 20px 0; word-wrap: break-word;"></p>
                 <div class="button-grid">
-                    <button id="closeAlertBtn" class="btn-primary" style="grid-column: 1 / -1; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color);">OK</button>
+                    <button id="closeAlertBtn" class="btn-primary" style="grid-column: 1 / -1;">OK</button>
                 </div>
             </div>
         </div>
@@ -645,7 +645,7 @@
         <div id="renderProgressModal" class="modal-overlay" style="z-index: 300;">
             <div class="modal-content section-block" style="text-align: center; max-width: 320px; padding: 24px;">
                 <div class="section-header" style="justify-content: center; margin-bottom: 12px;">
-                    <h3 id="renderModalTitle" class="section-label" style="color: var(--accent-blue); font-size: 12px;">Rendering in Progress</h3>
+                    <h3 id="renderModalTitle" class="section-label" style="color: var(--rfx-text-1); font-size: 12px;">Rendering in Progress</h3>
                 </div>
                 <p id="renderModalDesc" style="font-size: 11px; color: var(--text-secondary); margin: 0;">After Effects will be unresponsive until complete.</p>
                 
@@ -742,13 +742,13 @@
             <div class="tracker-tab-content" id="tab-timer" style="display: none; flex-direction: column; flex: 1; overflow: hidden; padding: 8px;">
                 <div class="flex-column-container" style="position: relative;">
                     
-                    <button id="btn-presets-toggle" style="position: absolute; top: 10px; left: 10px; background: transparent; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; transition: background 0.2s; z-index: 10;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'" onclick="openPresetModal()" title="Timer Presets">
+                    <button id="btn-presets-toggle" style="position: absolute; top: 10px; left: 10px; background: transparent; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; transition: background 0.2s; z-index: 10;" onmouseover="this.style.background='var(--rfx-fill-active)'" onmouseout="this.style.background='transparent'" onclick="openPresetModal()" title="Timer Presets">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                         </svg>
                     </button>
 
-                    <button id="btn-sound-toggle" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; transition: background 0.2s; z-index: 10;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'" onclick="toggleSound()" title="Toggle Alarm Sound">
+                    <button id="btn-sound-toggle" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; transition: background 0.2s; z-index: 10;" onmouseover="this.style.background='var(--rfx-fill-active)'" onmouseout="this.style.background='transparent'" onclick="toggleSound()" title="Toggle Alarm Sound">
                         <svg id="icon-sound-on" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -773,8 +773,8 @@
                             <div id="view-timer" class="time-view active">
                                 <div class="sw-dial-container" id="timer-ring-container">
                                     <svg viewBox="0 0 220 220" width="100%" height="100%" style="position:absolute; inset:0; z-index:1;">
-                                        <circle cx="110" cy="110" r="106" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="4" />
-                                        <circle id="timer-progress-svg" cx="110" cy="110" r="106" fill="none" stroke="var(--accent-blue)" stroke-width="4" stroke-linecap="round" stroke-dasharray="666.02" stroke-dashoffset="0" transform="rotate(-90 110 110)" />
+                                        <circle cx="110" cy="110" r="106" fill="none" style="stroke:var(--rfx-fill-track)" stroke-width="4" />
+                                        <circle id="timer-progress-svg" cx="110" cy="110" r="106" fill="none" style="stroke:var(--rfx-accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="666.02" stroke-dashoffset="0" transform="rotate(-90 110 110)" />
                                     </svg>
                                     <div class="sw-inner-content" style="z-index:5;">
                                         <span id="timer-display" class="time-display">00:25:00</span>
@@ -866,7 +866,7 @@
                     <button class="btn-secondary" onclick="handleAlarm('plus10')">+10 min</button>
                     <button class="btn-secondary" onclick="handleAlarm('break5')">5m Break</button>
                     <button class="btn-secondary" onclick="handleAlarm('break15')">15m Break</button>
-                    <button class="btn-secondary" style="color:#ff6b6b; border-color:rgba(255, 74, 74, 0.3); background:rgba(255, 74, 74, 0.05);" onclick="handleAlarm('dismiss')">Dismiss</button>
+                    <button class="btn-secondary" onclick="handleAlarm('dismiss')">Dismiss</button>
                 </div>
             </div>
 
@@ -1082,7 +1082,7 @@
                             <label class="switch"><input type="checkbox" id="dlImportProjCheck" checked><span class="slider"></span></label>
                         </div>
                         
-                        <div style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: rgba(0,0,0,0.15);">
+                        <div style="padding: 12px; border: 1px solid transparent; border-radius: var(--rfx-r-lg); background: var(--rfx-bg);">
                             <div class="section-header" style="margin-bottom: 12px;">
                                 <h3 class="section-label" style="font-size: 10px; color: var(--text-secondary);">TIMELINE MANIPULATION</h3>
                             </div>
@@ -1109,7 +1109,7 @@
     </div>
 
     <div class="modal-overlay" id="dlTrimModal">
-        <div class="modal-content section-block" style="padding: 16px; background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 8px; max-height: 90vh; overflow-y: auto; box-sizing: border-box;">
+        <div class="modal-content section-block" style="padding: 16px; background: var(--rfx-dialog); border: 1px solid var(--rfx-line); border-radius: var(--rfx-r-xl); max-height: 90vh; overflow-y: auto; box-sizing: border-box;">
             <div class="section-header">
                 <h3 class="section-label" style="font-size: 12px; color: var(--text-primary);">Download Media</h3>
             </div>
@@ -1143,20 +1143,20 @@
 
             <button class="btn-secondary" id="dlAddPartBtn" style="margin-bottom: 16px; width: 100%; border-style: dashed;">+ Add Segment</button>
 
-            <div class="setting-row" style="background: var(--bg-panel); padding: 8px 12px; border-radius: 6px; margin-bottom: 16px;">
+            <div class="setting-row" style="background: var(--rfx-surface-1); padding: 8px 12px; border-radius: var(--rfx-r-lg); margin-bottom: 16px;">
                 <span>Audio Only (MP3)</span>
                 <label class="switch"><input type="checkbox" id="dlAudioOnlyCheck"><span class="slider"></span></label>
             </div>
 
-            <div id="dlProgressWrapper" style="display:none; flex-direction:column; gap:6px; margin-bottom:16px; background:var(--bg-panel); padding:10px; border-radius:6px; border:1px solid var(--border-color);">
+            <div id="dlProgressWrapper" style="display:none; flex-direction:column; gap:6px; margin-bottom:16px; background:var(--rfx-surface-1); padding:10px; border-radius:var(--rfx-r-lg); border:1px solid transparent;">
                 <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-secondary); font-weight:bold; font-family: monospace;">
                     <span id="dlProgressStatus">Fetching media streams...</span>
                     <span id="dlProgressEta">ETA: Calc...</span>
                 </div>
-                <div style="height:6px; background:var(--bg-input); border-radius:3px; overflow:hidden;">
-                    <div id="dlProgressBar" style="height:100%; width:0%; background:var(--accent-blue); transition:width 0.1s linear, background 0.3s ease;"></div>
+                <div style="height:4px; background:var(--rfx-fill-track); border-radius:2px; overflow:hidden;">
+                    <div id="dlProgressBar" style="height:100%; width:0%; background:var(--rfx-accent); transition:width 0.1s linear, background 0.3s ease;"></div>
                 </div>
-                <div id="dlDebugConsole" style="width:100%; height:120px; background:#0b0b0b; color:#00ff00; font-family:monospace; font-size:10px; padding:6px; overflow-y:auto; border-radius:4px; border:1px solid #333; user-select:text; -webkit-user-select:text; white-space:pre-wrap; word-wrap:break-word; margin-top:8px;"></div>
+                <div id="dlDebugConsole" style="width:100%; height:120px; background:var(--rfx-input); color:var(--rfx-text-2); font-family:monospace; font-size:10px; padding:6px; overflow-y:auto; border-radius:4px; border:1px solid transparent; user-select:text; -webkit-user-select:text; white-space:pre-wrap; word-wrap:break-word; margin-top:8px;"></div>
             </div>
 
             <div class="button-grid" style="display: flex; gap: 8px;">
@@ -1442,8 +1442,8 @@
                             <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
                                 <div style="display: flex; align-items: center; gap: 12px; flex: 1 1 auto; min-width: 120px;">
                                     <label style="margin: 0;">Color</label>
-                                    <div id="cap-visual-color-box" class="cap-color-cube" style="background-color: #FF1493;" onclick="captionOpenColorPicker()"></div>
-                                    <input type="hidden" id="cap-set-bg-color" value="#FF1493">
+                                    <div id="cap-visual-color-box" class="cap-color-cube" data-rfx="rfx-content-color" style="background-color: #FF1493;" onclick="captionOpenColorPicker()"></div>
+                                    <input type="hidden" id="cap-set-bg-color" value="#FF1493" data-rfx="rfx-content-color">
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 120px;">
                                     <label style="margin: 0;">ADJ Layer</label>
@@ -1611,7 +1611,7 @@
             <div id="cap-status-container" style="display:none; flex: 0 0 auto; background: var(--bg-base); border-top: 1px solid var(--border-color); padding: 12px 16px;">
                 <div class="cap-status-box">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <p id="cap-status-text" style="margin: 0; font-weight: 500; color: #ffffff; font-size: 12px;">Processing...</p>
+                        <p id="cap-status-text" style="margin: 0; font-weight: 500; color: var(--rfx-text-1); font-size: 12px;">Processing...</p>
                         <button class="cap-btn-danger" id="cap-cancel-btn" style="padding: 4px 12px; font-size: 11px; margin: 0; font-weight: 600; flex: 0 0 auto; display: none;" onclick="captionCancelTranscription()">Cancel</button>
                     </div>
                     <div class="cap-progress-track">
@@ -1643,12 +1643,12 @@
 
     <div id="cap-wav-overlay" class="cap-alert-overlay" style="display: none;">
         <div class="cap-popup active" style="width: 320px; padding: 20px; text-align: left;">
-            <p style="color: white; margin: 0 0 12px 0; font-weight: 500; font-size: 14px; text-align: center;">Setup Required</p>
+            <p style="color: var(--rfx-text-1); margin: 0 0 12px 0; font-weight: 500; font-size: 14px; text-align: center;">Setup Required</p>
             <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 16px; line-height: 1.5;">To extract audio natively, After Effects needs a custom output template. Follow these easy steps once:</p>
             <ol style="color: var(--text-primary); font-size: 12px; margin: 0 0 16px 0; padding-left: 24px; line-height: 1.6;">
-                <li>In After Effects, go to the top menu:<br><b style="color: var(--accent-blue);">Edit &gt; Templates &gt; Output Module...</b></li>
+                <li>In After Effects, go to the top menu:<br><b style="color: var(--rfx-text-1); font-weight: 600;">Edit &gt; Templates &gt; Output Module...</b></li>
                 <li>Click <b>New</b> to create a new template.</li>
-                <li>Name the template exactly: <b style="color: var(--accent-blue);">WAV</b></li>
+                <li>Name the template exactly: <b style="color: var(--rfx-text-1); font-weight: 600;">WAV</b></li>
                 <li>Click <b>Edit...</b></li>
                 <li>Change Format to <b>Waveform Audio</b>.</li>
                 <li>Click <b>OK</b> on both windows.</li>
@@ -1780,11 +1780,11 @@
 
     <div id="cap-multi-delete-overlay" class="cap-alert-overlay" style="display: none;">
         <div class="cap-popup active" style="width: 280px; max-height: 80vh; display: flex; flex-direction: column;">
-            <p style="margin: 0 0 10px 0; color: #fff; font-weight: 500; text-align: center;">Select Texts to Delete</p>
+            <p style="margin: 0 0 10px 0; color: var(--rfx-text-1); font-weight: 500; text-align: center;">Select Texts to Delete</p>
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding: 0;">
                 <label class="cap-checkbox-wrapper" style="background: transparent; border: none; padding: 4px 8px; margin-bottom: 0; width: fit-content;">
                     <input type="checkbox" id="cap-md-select-all" onclick="captionToggleAllMultiDelete(this)">
-                    <span style="font-size: 13px; font-weight: 500; color: #fff;">Select All</span>
+                    <span style="font-size: 13px; font-weight: 500; color: var(--rfx-text-1);">Select All</span>
                 </label>
             </div>
             <div id="cap-multi-delete-list" style="overflow-y: auto; flex: 1 1 auto; margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px;"></div>
@@ -1797,9 +1797,9 @@
 
     <div id="cap-extra-modal-overlay" class="cap-alert-overlay" style="display: none;">
         <div class="cap-popup active" style="width: 260px; padding: 16px;">
-            <p style="text-align: center; color: white; margin: 0 0 16px 0; font-weight: 500; font-size: 14px;">Extra Features</p>
+            <p style="text-align: center; color: var(--rfx-text-1); margin: 0 0 16px 0; font-weight: 500; font-size: 14px;">Extra Features</p>
 
-            <div style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+            <div style="background: var(--rfx-surface-1); border: 1px solid transparent; border-radius: var(--rfx-r-lg); padding: 12px; margin-bottom: 12px;">
                 <label style="color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; font-weight: 500 !important;">Remove Punctuations</label>
 
                 <div class="cap-punc-grid" style="margin-bottom: 12px;">
@@ -1976,9 +1976,9 @@
             </div>
         </div>
     </div>
-    <div id="linked-pos-modal" class="modal-overlay" style="display:none; justify-content:center; align-items:center; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:999999; backdrop-filter:blur(2px);" onclick="if(event.target===this)window.linkedPosSkip()">
-        <div class="panel-box" style="width:300px; padding:16px; display:flex; flex-direction:column; gap:12px; border:1px solid var(--border-color); background:var(--bg-panel); box-shadow:0 10px 30px rgba(0,0,0,0.8); border-radius:8px;">
-            <div style="font-size:14px; font-weight:600; color:#fff; text-align:left; line-height:1.4;">Cannot apply overshoot on linked position axis</div>
+    <div id="linked-pos-modal" class="modal-overlay" style="display:none; justify-content:center; align-items:center; position:fixed; top:0; left:0; right:0; bottom:0; background:var(--rfx-overlay); z-index:999999;" onclick="if(event.target===this)window.linkedPosSkip()">
+        <div class="panel-box" style="width:300px; padding:16px; display:flex; flex-direction:column; gap:12px; border:1px solid var(--border-color); background:var(--rfx-dialog); box-shadow:var(--rfx-shadow-lg); border-radius:var(--rfx-r-xl);">
+            <div style="font-size:14px; font-weight:600; color:var(--rfx-text-1); text-align:left; line-height:1.4;">Cannot apply overshoot on linked position axis</div>
             <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
                 <button class="btn-secondary" style="width:100%; margin:0; padding:0; height:34px; box-sizing:border-box; display:flex; align-items:center; justify-content:center;" onclick="window.linkedPosSkip()">Skip</button>
                 <button class="btn-secondary" style="width:100%; margin:0; padding:0; height:34px; box-sizing:border-box; display:flex; align-items:center; justify-content:center;" onclick="window.linkedPosApplyWithoutOvershoot()">Apply without overshoot</button>
@@ -1987,9 +1987,9 @@
         </div>
     </div>
     
-    <div id="graph-rename-preset-modal" class="modal-overlay" style="display:none; justify-content:center; align-items:center; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:999999; backdrop-filter:blur(2px);" onclick="if(event.target===this)document.getElementById('graph-rename-preset-modal').style.display='none'">
-        <div class="panel-box" style="width:260px; padding:16px; display:flex; flex-direction:column; gap:12px; border:1px solid var(--border-color); background:var(--bg-panel); box-shadow:0 10px 30px rgba(0,0,0,0.8); border-radius:8px;">
-            <div style="font-size:14px; font-weight:600; color:#fff; text-align:left; margin-bottom:4px;">Rename preset</div>
+    <div id="graph-rename-preset-modal" class="modal-overlay" style="display:none; justify-content:center; align-items:center; position:fixed; top:0; left:0; right:0; bottom:0; background:var(--rfx-overlay); z-index:999999;" onclick="if(event.target===this)document.getElementById('graph-rename-preset-modal').style.display='none'">
+        <div class="panel-box" style="width:260px; padding:16px; display:flex; flex-direction:column; gap:12px; border:1px solid var(--border-color); background:var(--rfx-dialog); box-shadow:var(--rfx-shadow-lg); border-radius:var(--rfx-r-xl);">
+            <div style="font-size:14px; font-weight:600; color:var(--rfx-text-1); text-align:left; margin-bottom:4px;">Rename preset</div>
             <input type="text" id="graph-rename-preset-input" class="modal-input" placeholder="New name..." style="width:100%; box-sizing:border-box; margin:0;" />
             <div style="display:flex; gap:8px; margin-top:4px;">
                 <button class="btn-secondary" style="flex:1; margin:0; padding:0; height:34px; box-sizing:border-box; display:flex; align-items:center; justify-content:center;" onclick="document.getElementById('graph-rename-preset-modal').style.display='none'">Cancel</button>
@@ -2029,7 +2029,7 @@
             
             <div style="display:flex; gap:8px; margin-top:12px;">
                 <button class="btn-secondary" style="flex:1; margin:0;" onclick="document.getElementById('clear-lib-modal').style.display='none'">Cancel</button>
-                <button class="btn-primary" style="flex:1; margin:0; background:#d32f2f; border-color:#b71c1c; color:#fff;" onclick="window.executeGraphClear()">Clear</button>
+                <button class="btn-secondary" style="flex:1; margin:0;" onclick="window.executeGraphClear()">Clear</button>
             </div>
         </div>
     </div>
@@ -2041,7 +2041,7 @@
             
             <div style="display:flex; gap:8px; margin-top:12px;">
                 <button class="btn-secondary" style="flex:1; margin:0;" onclick="document.getElementById('delete-lib-modal').style.display='none'">Cancel</button>
-                <button class="btn-primary" style="flex:1; margin:0; background:#d32f2f; border-color:#b71c1c; color:#fff;" onclick="window.executeGraphDeleteLib()">Delete</button>
+                <button class="btn-secondary" style="flex:1; margin:0;" onclick="window.executeGraphDeleteLib()">Delete</button>
             </div>
         </div>
     </div>

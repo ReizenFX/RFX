@@ -199,7 +199,7 @@ const graphJsx = window.createJsxLoader('graph.jsx');
 
     function initGraph() {
         if (!graphRoot) return;
-        graphRoot.innerHTML = `<svg id="bezier-svg" style="width:100%; height:100%; display:block; overflow:visible; user-select:none;"><defs><radialGradient id="grid-fade" gradientUnits="userSpaceOnUse"><stop offset="35%" stop-color="white" stop-opacity="1" /><stop offset="100%" stop-color="white" stop-opacity="0" /></radialGradient><mask id="grid-mask"><rect x="-500" y="-500" width="2000" height="2000" fill="url(#grid-fade)" /></mask></defs><g id="bezier-grid-lines" mask="url(#grid-mask)"></g><rect id="bezier-bounds-rect" fill="none" stroke="#5ba4ff" stroke-width="1.5"></rect><path id="bezier-path-ref-old" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round" style="opacity: 0; transition: opacity 0.4s ease;"/><path id="bezier-path-ref" fill="none" stroke="#555" stroke-width="3" stroke-linecap="round"/><line id="bezier-line1" stroke="#5ba4ff" stroke-width="4" stroke-linecap="round"/><line id="bezier-line2" stroke="#5ba4ff" stroke-width="4" stroke-linecap="round"/><path id="bezier-path" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle id="bezier-handle1" r="6" fill="#fff" stroke="#5ba4ff" stroke-width="2.5" style="cursor:pointer;"/><circle id="bezier-handle2" r="6" fill="#fff" stroke="#5ba4ff" stroke-width="2.5" style="cursor:pointer;"/></svg>`;
+        graphRoot.innerHTML = `<svg id="bezier-svg" style="width:100%; height:100%; display:block; overflow:visible; user-select:none;"><defs><radialGradient id="grid-fade" gradientUnits="userSpaceOnUse"><stop offset="35%" class="gx-mask-stop" stop-opacity="1" /><stop offset="100%" class="gx-mask-stop" stop-opacity="0" /></radialGradient><mask id="grid-mask"><rect x="-500" y="-500" width="2000" height="2000" fill="url(#grid-fade)" /></mask></defs><g id="bezier-grid-lines" mask="url(#grid-mask)"></g><rect id="bezier-bounds-rect" class="gx-bounds" fill="none" stroke-width="1.5"></rect><path id="bezier-path-ref-old" class="gx-ref-old" fill="none" stroke-width="3" stroke-linecap="round" style="opacity: 0; transition: opacity 0.4s ease;"/><path id="bezier-path-ref" class="gx-ref" fill="none" stroke-width="3" stroke-linecap="round"/><line id="bezier-line1" class="gx-accent gx-arm" stroke-width="4" stroke-linecap="round"/><line id="bezier-line2" class="gx-accent gx-arm" stroke-width="4" stroke-linecap="round"/><path id="bezier-path" class="gx-curve" fill="none" stroke-width="3" stroke-linecap="round"/><circle id="bezier-handle1" class="gx-handle" r="6" stroke-width="2.5" style="cursor:pointer;"/><circle id="bezier-handle2" class="gx-handle" r="6" stroke-width="2.5" style="cursor:pointer;"/></svg>`;
 
         var svg = document.getElementById('bezier-svg'), h1 = document.getElementById('bezier-handle1'), h2 = document.getElementById('bezier-handle2');
         var draggingHandle = null, dragStartPos = {x: 0, y: 0}, dragStartVal = {x: 0, y: 0}, dragStartScale = 100, STICKY = 0.035;
@@ -489,10 +489,10 @@ const graphJsx = window.createJsxLoader('graph.jsx');
             var step = m.drawW / 4; if (step < 5) step = 5; 
             var gridHtml = '', minK_X = Math.floor(-m.offsetX / step), maxK_X = Math.ceil((m.rawW - m.offsetX) / step);
             if (maxK_X - minK_X > 150) { minK_X = 0; maxK_X = 150; }
-            for (var k = minK_X; k <= maxK_X; k++) { var lx = m.offsetX + k * step; gridHtml += `<line x1="${lx}" y1="0" x2="${lx}" y2="${m.rawH}" stroke="rgba(255,255,255,0.05)" stroke-width="1" />`; }
+            for (var k = minK_X; k <= maxK_X; k++) { var lx = m.offsetX + k * step; gridHtml += `<line class="gx-grid" x1="${lx}" y1="0" x2="${lx}" y2="${m.rawH}" stroke-width="1" />`; }
             var zeroY = valToPx(m, 0, 0).y, minK_Y = Math.floor((zeroY - m.rawH) / step), maxK_Y = Math.ceil(zeroY / step); 
             if (maxK_Y - minK_Y > 150) { minK_Y = 0; maxK_Y = 150; }
-            for (var j = minK_Y; j <= maxK_Y; j++) { var ly = zeroY - j * step; gridHtml += `<line x1="0" y1="${ly}" x2="${m.rawW}" y2="${ly}" stroke="rgba(255,255,255,0.05)" stroke-width="1" />`; }
+            for (var j = minK_Y; j <= maxK_Y; j++) { var ly = zeroY - j * step; gridHtml += `<line class="gx-grid" x1="0" y1="${ly}" x2="${m.rawW}" y2="${ly}" stroke-width="1" />`; }
             gridLines.innerHTML = gridHtml;
         }
 
@@ -620,11 +620,11 @@ const graphJsx = window.createJsxLoader('graph.jsx');
         
         // Added specific classes to paths and circles so our JS engine can grab them instantly
         return `<svg viewBox="0 ${boxTop} 45 ${boxHeight}" width="100%" height="100%" style="overflow:visible; display:block;">
-            <line class="mg-l1" x1="${p0x}" y1="${p0y}" x2="${p1x}" y2="${p1y}" stroke="#5ba4ff" stroke-width="2" stroke-linecap="round"/>
-            <line class="mg-l2" x1="${p3x}" y1="${p3y}" x2="${p2x}" y2="${p2y}" stroke="#5ba4ff" stroke-width="2" stroke-linecap="round"/>
-            <path class="mg-p" d="M ${p0x},${p0y} C ${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-            <circle class="mg-c1" cx="${p1x}" cy="${p1y}" r="2.5" fill="#fff" stroke="#5ba4ff" stroke-width="1.5" />
-            <circle class="mg-c2" cx="${p2x}" cy="${p2y}" r="2.5" fill="#fff" stroke="#5ba4ff" stroke-width="1.5" />
+            <line class="mg-l1 gx-thumb-arm" x1="${p0x}" y1="${p0y}" x2="${p1x}" y2="${p1y}" stroke-width="2" stroke-linecap="round"/>
+            <line class="mg-l2 gx-thumb-arm" x1="${p3x}" y1="${p3y}" x2="${p2x}" y2="${p2y}" stroke-width="2" stroke-linecap="round"/>
+            <path class="mg-p gx-curve" d="M ${p0x},${p0y} C ${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}" fill="none" stroke-width="2" stroke-linecap="round"/>
+            <circle class="mg-c1 gx-thumb-dot" cx="${p1x}" cy="${p1y}" r="2.5" stroke-width="1.5" />
+            <circle class="mg-c2 gx-thumb-dot" cx="${p2x}" cy="${p2y}" r="2.5" stroke-width="1.5" />
         </svg>`;
     }
 
@@ -798,8 +798,8 @@ const graphJsx = window.createJsxLoader('graph.jsx');
             } else if (it.slider) {
                 var d = document.createElement('div'); 
                 d.style.padding = '6px 18px 6px 12px'; d.style.margin = '1px 0'; d.style.borderRadius = '6px';
-                d.style.display = 'flex'; d.style.flexDirection = 'column'; d.style.alignItems = 'flex-start'; 
-                d.style.color = '#eee'; d.style.cursor = 'default';
+                d.style.display = 'flex'; d.style.flexDirection = 'column'; d.style.alignItems = 'flex-start';
+                d.style.color = 'var(--rfx-text-1)'; d.style.cursor = 'default';
                 d.style.minWidth = '160px'; // NEW: Forces the menu to stay wide enough to look good
                 
                 var label = document.createElement('span'); label.textContent = it.label; label.style.marginBottom = '6px'; label.style.fontSize = '11px'; label.style.color = 'var(--text-secondary)';
@@ -813,7 +813,7 @@ const graphJsx = window.createJsxLoader('graph.jsx');
                 var d = document.createElement('div'); 
                 d.style.padding = '6px 18px 6px 12px'; d.style.margin = '1px 0'; d.style.borderRadius = '6px';
                 d.style.display = 'flex'; d.style.justifyContent = 'space-between'; d.style.alignItems = 'center';
-                d.style.color = '#eee'; d.style.cursor = 'default';
+                d.style.color = 'var(--rfx-text-1)'; d.style.cursor = 'default';
                 d.style.minWidth = '160px'; // NEW: Forces the menu to stay wide enough to look good
                 
                 var label = document.createElement('span'); label.textContent = it.label;

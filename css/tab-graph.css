@@ -23,7 +23,7 @@
     width: 100% !important; 
     flex-shrink: 0 !important;
     height: var(--graph-panel-height, 240px) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-bottom: 1px solid var(--rfx-line) !important;
     margin-bottom: 6px !important; /* THE FIX: Reduced from 10px */
     z-index: 30 !important; 
     display: block !important; 
@@ -69,8 +69,8 @@
     width: 52px !important; 
     height: 4px !important; 
     border-radius: 2px !important; 
-    background: #555; 
-    pointer-events: none; 
+    background: var(--rfx-scrollbar);
+    pointer-events: none;
 }
 
 /* ===========================================================
@@ -178,10 +178,10 @@
 .graph-preset-svg-wrap { 
     width: 100%; 
     aspect-ratio: 1 / 1; 
-    background: var(--bg-input); 
-    border: 1px solid transparent; 
-    border-radius: 4px; 
-    padding: 6px; 
+    background: var(--rfx-surface-1);
+    border: 1px solid transparent;
+    border-radius: var(--rfx-r-md);
+    padding: 6px;
     pointer-events: none; 
     display: flex; 
     align-items: center; 
@@ -197,8 +197,7 @@
 }
 
 .graph-preset-card:hover .graph-preset-svg-wrap { 
-    background: rgba(255,255,255,0.05); 
-    border-color: var(--border-color); 
+    background: var(--rfx-surface-2);
     transform: scale(1.05) translateZ(0); /* 5% zoom, completely unified */
 }
 
@@ -255,10 +254,10 @@
     min-width: 24px !important; 
 }
 
-.ease-btn { color: var(--text-secondary); }
-.ease-btn.active { color: #5ba4ff !important; background: rgba(20,115,230,0.2); }
-#html-auto-btn { border: 1px solid var(--border-color) !important; }
-#html-auto-btn.active { background: rgba(91, 164, 255, 0.15) !important; color: #5ba4ff !important; border: 1px solid transparent !important; outline: none !important; }
+.ease-btn { color: var(--rfx-text-2); }
+.ease-btn.active { color: var(--rfx-text-1) !important; background: var(--rfx-fill-selected); }
+#html-auto-btn { border: 1px solid transparent !important; }
+#html-auto-btn.active { background: var(--rfx-fill-selected) !important; color: var(--rfx-text-1) !important; border: 1px solid transparent !important; outline: none !important; }
 
 #graph-value-display { 
     height: auto !important; 
@@ -271,6 +270,19 @@
 }
 
 .btn-icon-square svg { width: 13px !important; height: 13px !important; }
+
+/* Graph drawing (classes set in js/tab-graph.js; SVG attributes can't take var()) */
+.gx-grid { stroke: var(--rfx-grid); }
+.gx-mask-stop { stop-color: var(--rfx-on-media); }
+.gx-accent { stroke: var(--rfx-accent); }
+.gx-bounds { stroke: var(--rfx-grid-strong); }
+.gx-arm { stroke-opacity: .8; }
+.gx-ref-old { stroke: var(--rfx-line-2); }
+.gx-ref { stroke: var(--rfx-text-4); }
+.gx-curve { stroke: var(--rfx-text-1); }
+.gx-handle { fill: var(--rfx-knob); stroke: var(--rfx-accent); }
+.gx-thumb-arm { stroke: var(--rfx-text-3); }
+.gx-thumb-dot { fill: var(--rfx-knob); stroke: var(--rfx-text-3); }
 #bezier-handle1, #bezier-handle2 { transition: r 0.1s ease; }
 #bezier-handle1:hover, #bezier-handle2:hover { r: 9; }
 input[type="range"].main-slider { border-radius: 20px !important; }
@@ -278,22 +290,24 @@ input[type="range"].main-slider { border-radius: 20px !important; }
 /* ===========================================================
    6. CONTEXT MENU & ISOLATED MODALS
    =========================================================== */
-#dynamic-ctx-menu, #dynamic-ctx-menu .ctx-sub { 
-    padding: 6px !important; 
-    border-radius: 8px !important; 
-    background: #1c1c1c !important; 
-    border: 1px solid #333 !important; 
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important; 
+/* The option menu is the reference look for every menu; its colours are the
+   shared .ctx-menu ones from global.css. */
+#dynamic-ctx-menu, #dynamic-ctx-menu .ctx-sub {
+    padding: 5px !important;
+    border-radius: var(--rfx-r-lg) !important;
+    background: var(--rfx-menu) !important;
+    border: 1px solid var(--rfx-line) !important;
+    box-shadow: var(--rfx-shadow) !important;
 }
 
-#dynamic-ctx-menu .ctx-item:hover { 
-    background: rgba(255, 255, 255, 0.1) !important; 
-    color: #ffffff !important; 
+#dynamic-ctx-menu .ctx-item:hover {
+    background: var(--rfx-fill-active) !important;
+    color: var(--rfx-text-1) !important;
 }
 
-#dynamic-ctx-menu .ctx-sep { 
-    margin: 6px -6px !important; 
-    background: #333 !important; 
+#dynamic-ctx-menu .ctx-sep {
+    margin: 5px -5px !important;
+    background: var(--rfx-line) !important;
 }
 
 /* THE FIX: Invisible hover forcefield around submenus */
@@ -311,17 +325,17 @@ input[type="range"].main-slider { border-radius: 20px !important; }
 
 .graph-modal-overlay { 
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-    background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 999999; 
+    background: var(--rfx-overlay); display: flex; align-items: center; justify-content: center; z-index: 999999;
 }
 
-.graph-modal-box { 
-    background: var(--bg-panel); border: 1px solid var(--border-color); 
-    border-radius: 8px; padding: 16px; width: 90%; max-width: 260px; 
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; 
+.graph-modal-box {
+    background: var(--rfx-dialog); border: 1px solid var(--rfx-line);
+    border-radius: var(--rfx-r-xl); padding: 16px; width: 90%; max-width: 260px;
+    box-shadow: var(--rfx-shadow-lg); display: flex; flex-direction: column;
 }
 
-.graph-modal-title { 
-    font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 12px; text-align: left; 
+.graph-modal-title {
+    font-size: 14px; font-weight: var(--rfx-fw-strong); color: var(--rfx-text-1); margin-bottom: 12px; text-align: left;
 }
 
 /* ===========================================================
@@ -338,7 +352,7 @@ input[type="range"].main-slider { border-radius: 20px !important; }
         grid-column: 1 / 2 !important; 
         grid-row: 1 / 3 !important; 
         height: 100% !important; 
-        border-right: 1px solid rgba(255, 255, 255, 0.08) !important; 
+        border-right: 1px solid var(--rfx-line) !important;
         border-bottom: none !important; 
         margin-bottom: 0 !important; 
     }

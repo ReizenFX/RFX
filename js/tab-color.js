@@ -45,17 +45,17 @@ function getGranularColorName(h, s, b) {
 function drawHueBg() {
     if(!ctxHBg) return;
     const hBg = document.getElementById('h-bg'), grad = ctxHBg.createLinearGradient(0, 0, 0, hBg.height);
-    grad.addColorStop(0, '#f00'); grad.addColorStop(1/6, '#ff0'); grad.addColorStop(2/6, '#0f0'); grad.addColorStop(3/6, '#0ff'); grad.addColorStop(4/6, '#00f'); grad.addColorStop(5/6, '#f0f'); grad.addColorStop(1, '#f00');
+    grad.addColorStop(0, '#f00'); grad.addColorStop(1/6, '#ff0'); grad.addColorStop(2/6, '#0f0'); grad.addColorStop(3/6, '#0ff'); grad.addColorStop(4/6, '#00f'); grad.addColorStop(5/6, '#f0f'); grad.addColorStop(1, '#f00'); // rfx-content-color (hue strip)
     ctxHBg.fillStyle = grad; ctxHBg.fillRect(0, 0, hBg.width, hBg.height);
 }
 
 function drawSvBg() {
     if(!ctxSvBg) return;
     const svBg = document.getElementById('sv-bg');
-    ctxSvBg.fillStyle = `hsl(${currentHue}, 100%, 50%)`; ctxSvBg.fillRect(0, 0, svBg.width, svBg.height);
-    const gradWhite = ctxSvBg.createLinearGradient(0, 0, svBg.width, 0); gradWhite.addColorStop(0, 'rgba(255,255,255,1)'); gradWhite.addColorStop(1, 'rgba(255,255,255,0)');
+    ctxSvBg.fillStyle = `hsl(${currentHue}, 100%, 50%)`; ctxSvBg.fillRect(0, 0, svBg.width, svBg.height); // rfx-content-color
+    const gradWhite = ctxSvBg.createLinearGradient(0, 0, svBg.width, 0); gradWhite.addColorStop(0, 'rgba(255,255,255,1)'); gradWhite.addColorStop(1, 'rgba(255,255,255,0)'); // rfx-content-color
     ctxSvBg.fillStyle = gradWhite; ctxSvBg.fillRect(0, 0, svBg.width, svBg.height);
-    const gradBlack = ctxSvBg.createLinearGradient(0, 0, 0, svBg.height); gradBlack.addColorStop(0, 'rgba(0,0,0,0)'); gradBlack.addColorStop(1, 'rgba(0,0,0,1)');
+    const gradBlack = ctxSvBg.createLinearGradient(0, 0, 0, svBg.height); gradBlack.addColorStop(0, 'rgba(0,0,0,0)'); gradBlack.addColorStop(1, 'rgba(0,0,0,1)'); // rfx-content-color
     ctxSvBg.fillStyle = gradBlack; ctxSvBg.fillRect(0, 0, svBg.width, svBg.height);
 }
 

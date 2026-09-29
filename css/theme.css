@@ -47,6 +47,7 @@
     --rfx-fill-selected: rgba(255, 255, 255, 0.14);
     --rfx-fill-track: rgba(255, 255, 255, 0.10);   /* slider / progress track */
     --rfx-fill-dim: rgba(255, 255, 255, 0.03);
+    --rfx-shade: rgba(0, 0, 0, 0.16);              /* darkening on top of the accent (badges) */
     --rfx-selection: rgba(255, 255, 255, 0.20);    /* text selection (Caption Editor reference) */
     --rfx-knob: #f2f2f2;                           /* slider and toggle knobs */
     --rfx-scrollbar: #3a3a3a;
