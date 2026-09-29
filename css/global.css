@@ -119,6 +119,81 @@ button:focus-visible, [role="button"]:focus-visible { filter: brightness(1.2); }
 
 .preset-item, .panel-box { background-color: var(--rfx-surface-1); border: 1px solid transparent; }
 
+/* ------------------------------------------------------ navigation layout
+   One navigation with four positions. js/theme.js sets on <html>:
+     data-rfx-nav      top | bottom | left | right
+     data-rfx-navicons present when the main tabs are icon-only (always on a side)
+     data-rfx-subpos   top | bottom   where the sub-tab bars sit
+   Only orientation and position change here; order, states, hover and
+   transitions are the tab bar rules above. js/nav.js adds the hover labels and
+   sub-tab flyouts for icon-only tabs. */
+:root { --rfx-nav-w: 48px; }
+.rfx-app-header .tab-btn .tab-ic { display: none; width: var(--rfx-icon-md); height: var(--rfx-icon-md); flex-shrink: 0; pointer-events: none; }
+.rfx-app-header .tab-btn .tab-lbl { pointer-events: none; }
+
+/* icon-only main tabs (top/bottom when chosen, sides always) */
+:root[data-rfx-navicons] .rfx-app-header .tab-btn {
+    width: 32px; height: 32px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+}
+:root[data-rfx-navicons] .rfx-app-header .tab-btn .tab-ic { display: block; }
+:root[data-rfx-navicons] .rfx-app-header .tab-btn .tab-lbl { display: none; }
+
+/* bottom: the same bar below the content */
+:root[data-rfx-nav="bottom"] .rfx-app-header { order: 99; border-bottom: none; border-top: 1px solid var(--rfx-line); }
+:root[data-rfx-nav="bottom"] .rfx-app-header > .tabs-header { padding-top: 8px; padding-bottom: 10px; }
+
+/* left / right: the same bar turned vertical */
+:root[data-rfx-nav="left"] body, :root[data-rfx-nav="right"] body { flex-direction: row; }
+:root[data-rfx-nav="left"] .tab-content.active, :root[data-rfx-nav="right"] .tab-content.active { min-width: 0; }
+:root[data-rfx-nav="left"] .rfx-app-header, :root[data-rfx-nav="right"] .rfx-app-header {
+    flex-direction: column; width: var(--rfx-nav-w); height: 100%; border-bottom: none;
+}
+:root[data-rfx-nav="left"] .rfx-app-header { order: -1; border-right: 1px solid var(--rfx-line); }
+:root[data-rfx-nav="right"] .rfx-app-header { order: 99; border-left: 1px solid var(--rfx-line); }
+:root[data-rfx-nav="left"] .rfx-app-header > .tabs-header, :root[data-rfx-nav="right"] .rfx-app-header > .tabs-header {
+    flex-direction: column; align-items: center; width: 100%; min-height: 0;
+    overflow-x: hidden; overflow-y: auto; touch-action: pan-y;
+    padding: 10px 0 0 !important;
+}
+:root[data-rfx-nav="left"] .rfx-app-header > .tabs-header::after, :root[data-rfx-nav="right"] .rfx-app-header > .tabs-header::after { width: 2px !important; }
+:root[data-rfx-nav="left"] #rfx-deps-btn, :root[data-rfx-nav="right"] #rfx-deps-btn { margin: 6px auto 10px; }
+
+/* sub-tab bars (Caption, Tracker) at the bottom of their tab: directly above a bottom nav */
+:root[data-rfx-subpos="bottom"] #tab-caption .cap-header-row { order: 99; border-bottom: none; border-top: 1px solid var(--rfx-line); }
+:root[data-rfx-subpos="bottom"] #caption-tabs-header { padding-top: 8px; padding-bottom: 10px; }
+:root[data-rfx-subpos="bottom"] #tracker-tabs-header { order: 99; border-bottom: none !important; border-top: 1px solid var(--rfx-line); }
+
+/* prev / next arrows keep their corner opposite the bar */
+:root[data-rfx-nav="bottom"] .global-nav-btn { bottom: auto !important; top: 2px !important; }
+:root[data-rfx-nav="left"] #global-nav-left { left: calc(var(--rfx-nav-w) + 2px) !important; }
+:root[data-rfx-nav="right"] #global-nav-right { right: calc(var(--rfx-nav-w) + 2px) !important; }
+
+/* hover label + sub-tab flyout for icon-only tabs (js/nav.js). Floats above the
+   content, never takes layout space; slides in from the bar's side. */
+#rfx-nav-flyout {
+    position: fixed; z-index: 99990; left: 0; top: 0;
+    background: var(--rfx-menu); border: 1px solid var(--rfx-line); border-radius: var(--rfx-r-lg);
+    box-shadow: var(--rfx-shadow); padding: 4px; min-width: 0;
+    font-size: var(--rfx-fs-md); color: var(--rfx-text-1); white-space: nowrap;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity var(--rfx-dur) ease-out, transform var(--rfx-dur) cubic-bezier(0.16, 1, 0.3, 1), visibility var(--rfx-dur);
+}
+#rfx-nav-flyout[data-dir="right"] { transform: translateX(-6px); }
+#rfx-nav-flyout[data-dir="left"]  { transform: translateX(6px); }
+#rfx-nav-flyout[data-dir="down"]  { transform: translateY(-6px); }
+#rfx-nav-flyout[data-dir="up"]    { transform: translateY(6px); }
+#rfx-nav-flyout.open { opacity: 1; visibility: visible; transform: none; }
+#rfx-nav-flyout.open.has-subs { pointer-events: auto; }
+#rfx-nav-flyout .rfx-fly-title { padding: 5px 10px; font-weight: var(--rfx-fw-strong); }
+#rfx-nav-flyout.has-subs .rfx-fly-title { padding-bottom: 6px; margin-bottom: 3px; border-bottom: 1px solid var(--rfx-line); color: var(--rfx-text-2); font-size: var(--rfx-fs-sm); }
+#rfx-nav-flyout .rfx-fly-item {
+    padding: 6px 10px; border-radius: var(--rfx-r-md); color: var(--rfx-text-2); cursor: pointer;
+    transition: background var(--rfx-dur), color var(--rfx-dur);
+}
+#rfx-nav-flyout .rfx-fly-item:hover { background: var(--rfx-fill-hover); color: var(--rfx-text-1); }
+#rfx-nav-flyout .rfx-fly-item.active { background: var(--rfx-fill-active); color: var(--rfx-text-1); }
+
 /* ---------------------------------------------------------------- buttons */
 .btn-primary {
     background: var(--rfx-accent);

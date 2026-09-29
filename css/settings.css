@@ -210,3 +210,12 @@
 .rfx-btn.is-primary:hover:not(:disabled) { background: var(--rfx-accent-hover); }
 .rfx-btn.is-ghost { background: transparent; color: var(--rfx-text-2); }
 .rfx-btn.is-ghost:hover:not(:disabled) { background: var(--rfx-fill-hover); color: var(--rfx-text-1); }
+
+/* slider rows, text colour, disabled rows (Appearance / Navigation) */
+.rfx-row-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.rfx-row-val { flex-shrink: 0; font-size: var(--rfx-fs-sm); color: var(--rfx-text-2); font-variant-numeric: tabular-nums; padding-top: 1px; }
+.rfx-range { width: 100%; margin: 2px 0 0; }
+.rfx-row.is-disabled { opacity: .45; pointer-events: none; }
+.rfx-swatch.is-text { box-shadow: inset 0 0 0 1px var(--rfx-line-2); flex-shrink: 0; }
+.rfx-row-end .rfx-hex { width: 84px; }
+.rfx-row-end .rfx-btn { height: 26px; padding: 0 8px; }

@@ -86,23 +86,35 @@ window.repositionMenu = function(menuEl, x, y) {
 
 document.addEventListener('contextmenu', e => e.preventDefault());
 
+/* The main tab bar. The nav can sit on any side (data-rfx-nav on <html>, set by
+   js/theme.js); it is the same bar, so everything below works along one axis:
+   x for top/bottom, y for left/right. */
+function mainTabsHeader() { return document.querySelector('.rfx-app-header .tabs-header'); }
+function mainTabButtons() { const c = mainTabsHeader(); return c ? Array.from(c.querySelectorAll('.tab-btn')) : []; }
+window.isSideNav = function() {
+    const p = document.documentElement.getAttribute('data-rfx-nav');
+    return p === 'left' || p === 'right';
+};
+
 window.switchTab = function(tabId) {
-    if (window.isDraggingTab) return; 
+    if (window.isDraggingTab) return;
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     const targetTab = document.getElementById(tabId);
     const targetBtn = document.getElementById('btn-' + tabId);
     if (targetTab && targetBtn) {
-        targetTab.classList.add('active'); 
+        targetTab.classList.add('active');
         targetBtn.classList.add('active');
-        targetBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        const side = window.isSideNav();
+        targetBtn.scrollIntoView({ behavior: 'smooth', block: side ? 'center' : 'nearest', inline: side ? 'nearest' : 'center' });
         // Dispatch custom event for tabs that need refresh logic
         window.dispatchEvent(new CustomEvent('tabSwitched', { detail: tabId }));
     }
 };
 
 window.switchTabOffset = function(offset) {
-    const tabs = Array.from(document.querySelectorAll('.tab-btn'));
+    const tabs = mainTabButtons().filter(t => t.style.display !== 'none');
+    if (!tabs.length) return;
     let activeIdx = tabs.findIndex(t => t.classList.contains('active'));
     if (activeIdx === -1) activeIdx = 0;
     let newIdx = (activeIdx + offset + tabs.length) % tabs.length;
@@ -110,7 +122,8 @@ window.switchTabOffset = function(offset) {
 };
 
 function initDraggableTabs() {
-    const container = document.querySelector('.tabs-header');
+    const container = mainTabsHeader();
+    if (!container) return;
     let draggedItem = null, startX = 0, currentX = 0, siblings = [], startIndex = 0, currentIndex = 0, shiftAmount = 0;
     let startScrollLeft = 0, lastPointerX = 0, dragHomeLeft = 0;
     let edgeScrollRAF = null, edgeScrollDir = 0, edgeScrollSpeed = 0;
@@ -119,67 +132,83 @@ function initDraggableTabs() {
     const EDGE_MAX_SPEED = 6;  // px/frame ceiling; deeper into the zone = closer to this
     const EDGE_MIN_SPEED = 0.6;// px/frame at the very inner edge of the zone
 
+    /* Axis helpers. Names below keep the horizontal wording (left/width/scrollLeft);
+       on a side nav they read top/height/scrollTop instead. */
+    let V = false;   // vertical (side nav), fixed for the length of one drag
+    const P = {
+        pos: e => V ? e.clientY : e.clientX,
+        start: r => V ? r.top : r.left,
+        end: r => V ? r.bottom : r.right,
+        size: r => V ? r.height : r.width,
+        off: el => V ? el.offsetHeight : el.offsetWidth,
+        scroll: () => V ? container.scrollTop : container.scrollLeft,
+        setScroll: v => { if (V) container.scrollTop = v; else container.scrollLeft = v; },
+        scrollMax: () => V ? container.scrollHeight - container.clientHeight : container.scrollWidth - container.clientWidth,
+        pad: cs => parseFloat(V ? cs.paddingTop : cs.paddingLeft) || 0,
+        tr: v => V ? `translate3d(0, ${v}px, 0)` : `translate3d(${v}px, 0, 0)`
+    };
+
     // Clamp the dragged tab so it can't be pulled past the container's visible bounds.
     // Returns the clamped X for the VISUAL transform (walled to the padded content box).
     function clampX(rawX) {
         const cRect = container.getBoundingClientRect();
         const cs = getComputedStyle(container);
-        const padL = parseFloat(cs.paddingLeft) || 0;
-        // Right padding is faked via an ::after spacer, so computed paddingRight reads 0.
-        // Mirror the left gap for a symmetric wall matching the resting position.
+        const padL = P.pad(cs);
+        // The end padding is faked via an ::after spacer, so computed padding reads 0.
+        // Mirror the start gap for a symmetric wall matching the resting position.
         const padR = padL;
-        const homeNow = dragHomeLeft - (container.scrollLeft - startScrollLeft);
-        const minX = (cRect.left + padL) - homeNow;
-        const maxX = (cRect.right - padR) - draggedItem.offsetWidth - homeNow;
+        const homeNow = dragHomeLeft - (P.scroll() - startScrollLeft);
+        const minX = (P.start(cRect) + padL) - homeNow;
+        const maxX = (P.end(cRect) - padR) - P.off(draggedItem) - homeNow;
         return Math.max(minX, Math.min(maxX, rawX));
     }
 
     function applyDragTransform() {
         // rawX = true pointer-anchored position (may exceed the wall).
-        const rawX = (lastPointerX - startX) + (container.scrollLeft - startScrollLeft);
+        const rawX = (lastPointerX - startX) + (P.scroll() - startScrollLeft);
         currentX = clampX(rawX);
-        draggedItem.style.transform = `translate3d(${currentX}px, 0, 0)`;
+        draggedItem.style.transform = P.tr(currentX);
         // Reflow decides on the UNCLAMPED center, so a wall-pinned tab can still push
         // past the edge sibling and swap with it.
         reflowSiblings(rawX);
     }
 
     function reflowSiblings(rawX) {
-        const homeNow = dragHomeLeft - (container.scrollLeft - startScrollLeft);
-        const draggedCenter = homeNow + rawX + (draggedItem.offsetWidth / 2);
+        const homeNow = dragHomeLeft - (P.scroll() - startScrollLeft);
+        const draggedCenter = homeNow + rawX + (P.off(draggedItem) / 2);
         let newIndex = startIndex;
         siblings.forEach(sib => {
             if (sib.index === startIndex) return;
-            const sibCenter = (sib.rect.left + sib.rect.width / 2) - (container.scrollLeft - startScrollLeft);
+            const sibCenter = (P.start(sib.rect) + P.size(sib.rect) / 2) - (P.scroll() - startScrollLeft);
             let shift = 0;
             if (startIndex < sib.index && draggedCenter > sibCenter) { shift = -shiftAmount; newIndex = Math.max(newIndex, sib.index); }
             else if (startIndex > sib.index && draggedCenter < sibCenter) { shift = shiftAmount; newIndex = Math.min(newIndex, sib.index); }
-            if (sib.shift !== shift) { sib.shift = shift; sib.el.style.transform = `translate3d(${shift}px, 0, 0)`; sib.el.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)'; }
+            if (sib.shift !== shift) { sib.shift = shift; sib.el.style.transform = P.tr(shift); sib.el.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)'; }
         });
         currentIndex = newIndex;
     }
 
     function edgeScrollStep() {
         if (!draggedItem || edgeScrollDir === 0) { edgeScrollRAF = null; return; }
-        const before = container.scrollLeft;
-        container.scrollLeft += edgeScrollDir * edgeScrollSpeed;
-        if (container.scrollLeft !== before) applyDragTransform();
+        const before = P.scroll();
+        P.setScroll(before + edgeScrollDir * edgeScrollSpeed);
+        if (P.scroll() !== before) applyDragTransform();
         else { edgeScrollRAF = null; return; }  // hit a scroll wall - stop the loop
         edgeScrollRAF = requestAnimationFrame(edgeScrollStep);
     }
 
     function updateEdgeScroll(clientX) {
         const rect = container.getBoundingClientRect();
-        const canLeft = container.scrollLeft > 0;
-        const canRight = container.scrollLeft < (container.scrollWidth - container.clientWidth);
+        const canLeft = P.scroll() > 0;
+        const canRight = P.scroll() < P.scrollMax();
 
         let depth = 0; // 0..1, how far into the edge zone the pointer is
-        if (clientX < rect.left + EDGE_ZONE && canLeft) {
+        if (clientX < P.start(rect) + EDGE_ZONE && canLeft) {
             edgeScrollDir = -1;
-            depth = (rect.left + EDGE_ZONE - clientX) / EDGE_ZONE;
-        } else if (clientX > rect.right - EDGE_ZONE && canRight) {
+            depth = (P.start(rect) + EDGE_ZONE - clientX) / EDGE_ZONE;
+        } else if (clientX > P.end(rect) - EDGE_ZONE && canRight) {
             edgeScrollDir = 1;
-            depth = (clientX - (rect.right - EDGE_ZONE)) / EDGE_ZONE;
+            depth = (clientX - (P.end(rect) - EDGE_ZONE)) / EDGE_ZONE;
         } else {
             edgeScrollDir = 0;
         }
@@ -200,33 +229,34 @@ function initDraggableTabs() {
     container.addEventListener('pointerdown', (e) => {
         const tab = e.target.closest('.tab-btn');
         if (!tab) return;
-        draggedItem = tab; startX = e.clientX; lastPointerX = e.clientX; currentX = 0;
-        startScrollLeft = container.scrollLeft;
-        // The tab's resting on-screen left, with no transform - captured once, stays stable.
-        dragHomeLeft = draggedItem.getBoundingClientRect().left;
+        V = window.isSideNav();
+        draggedItem = tab; startX = P.pos(e); lastPointerX = startX; currentX = 0;
+        startScrollLeft = P.scroll();
+        // The tab's resting on-screen start, with no transform - captured once, stays stable.
+        dragHomeLeft = P.start(draggedItem.getBoundingClientRect());
         draggedItem.setPointerCapture(e.pointerId);
         const allTabs = Array.from(container.querySelectorAll('.tab-btn'));
         startIndex = allTabs.indexOf(draggedItem); currentIndex = startIndex;
-        // The gap the dragged tab leaves behind = its own width + the real inter-tab gap.
-        // Measure the gap from two adjacent tabs' rects (right edge of one to left of next).
+        // The gap the dragged tab leaves behind = its own size + the real inter-tab gap.
+        // Measure the gap from two adjacent tabs' rects (end of one to start of the next).
         let realGap = 8;
         if (allTabs.length > 1) {
             const a = allTabs[0].getBoundingClientRect(), b = allTabs[1].getBoundingClientRect();
-            realGap = Math.max(0, b.left - a.right);
+            realGap = Math.max(0, P.start(b) - P.end(a));
         }
-        shiftAmount = draggedItem.getBoundingClientRect().width + realGap;
+        shiftAmount = P.size(draggedItem.getBoundingClientRect()) + realGap;
         siblings = allTabs.map((t, index) => ({ el: t, index: index, rect: t.getBoundingClientRect(), shift: 0 }));
     });
 
     container.addEventListener('pointermove', (e) => {
         if (!draggedItem) return;
-        const deltaX = e.clientX - startX;
+        const deltaX = P.pos(e) - startX;
         if (Math.abs(deltaX) > 4 || window.isDraggingTab) {
             window.isDraggingTab = true;
             if (!draggedItem.classList.contains('dragging')) draggedItem.classList.add('dragging');
             draggedItem.style.transition = 'none';
-            lastPointerX = e.clientX;
-            updateEdgeScroll(e.clientX);
+            lastPointerX = P.pos(e);
+            updateEdgeScroll(lastPointerX);
             applyDragTransform();
         }
     });
@@ -267,21 +297,23 @@ function initDraggableTabs() {
 }
 
 function initTabScroll() {
-    const container = document.querySelector('.tabs-header');
-    if (container) container.addEventListener('wheel', (e) => { if (container.scrollWidth > container.clientWidth) { e.preventDefault(); container.scrollLeft += (e.deltaY * 0.8); }});
+    const container = mainTabsHeader();
+    // Horizontal bar: the wheel scrolls sideways. A side nav scrolls vertically by itself.
+    if (container) container.addEventListener('wheel', (e) => { if (!window.isSideNav() && container.scrollWidth > container.clientWidth) { e.preventDefault(); container.scrollLeft += (e.deltaY * 0.8); }});
 }
 
-function saveTabOrder() { 
-    localStorage.setItem('ultimateFXTabOrder', JSON.stringify(Array.from(document.querySelectorAll('.tab-btn')).map(t => t.id))); 
+function saveTabOrder() {
+    localStorage.setItem('ultimateFXTabOrder', JSON.stringify(mainTabButtons().map(t => t.id)));
 }
 
 function loadTabOrder() {
     const orderStr = localStorage.getItem('ultimateFXTabOrder');
     if (!orderStr) return;
-    try { 
-        const order = JSON.parse(orderStr); 
-        const container = document.querySelector('.tabs-header'); 
-        order.forEach(id => { const tab = document.getElementById(id); if (tab) container.appendChild(tab); }); 
+    try {
+        const order = JSON.parse(orderStr);
+        const container = mainTabsHeader();
+        // only main tabs belong here (older saves could also list Caption sub-tabs)
+        order.forEach(id => { const tab = document.getElementById(id); const content = document.getElementById(String(id).replace(/^btn-/, '')); if (tab && content && content.classList.contains('tab-content')) container.appendChild(tab); });
     } catch(e){}
 }
 
@@ -405,7 +437,7 @@ function initSliders() {
         const updateFill = () => {
             const min = parseFloat(slider.min) || 0, max = parseFloat(slider.max) || 100, val = parseFloat(slider.value) || 0;
             const percent = ((val - min) / (max - min)) * 100;
-            slider.style.backgroundImage = 'linear-gradient(var(--rfx-accent), var(--rfx-accent))'; slider.style.backgroundRepeat = 'no-repeat'; slider.style.backgroundSize = Math.max(0, Math.min(100, percent)) + '% 100%';
+            slider.style.backgroundImage = 'linear-gradient(var(--rfx-accent), var(--rfx-accent))'; slider.style.backgroundRepeat = 'no-repeat'; slider.style.backgroundPosition = 'left center'; slider.style.backgroundSize = Math.max(0, Math.min(100, percent)) + '% 3px';
         };
         updateFill(); slider.addEventListener('input', updateFill);
     });

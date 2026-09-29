@@ -9,7 +9,7 @@ After Effects CEP panel. This folder is the extension root (`CSXS/manifest.xml`,
 - A jsx file must never call anything defined in another jsx file, and a tab's JS must only call its own jsx (the other file may not be loaded). If two tabs need the same helper, give each a tab-prefixed copy (e.g. `pasteGetAepPath` / `downloadGetAepPath`).
 - All panels in After Effects share one ExtendScript global scope. Never define the same function in two jsx files; use tab-prefixed names for new globals.
 - External programs (ffmpeg, yt-dlp, deno, faster-whisper-xxl, the Whisper model) are managed by `js/deps.js` (shared installer code, not a tab; UI styles in `css/deps.css`). Each tab registers its own dependencies and gets its own installs under `%APPDATA%\RFX\Dependencies\<tab>` (changeable per tab); two tabs never share a binary. Tabs get paths with `RFXDeps.resolve(tab, id)` (managed version, else the legacy `bin/win/<tab>` copy, else missing). Never write into `bin/`.
-- `js/welcome.js` (not a tab) shows the first-run welcome and the Dependencies overview (button at the right of the tab bar). New tabs that need downloads must register with `RFXDeps` and be added to its `TABS` list.
+- `js/welcome.js` (not a tab) shows the first-run welcome and the full-panel Settings page (gear at the end of the tab bar: Appearance, Navigation, Dependencies, About). `js/nav.js` (not a tab) adds the hover names / sub-tab menus of icon-only tabs. New tabs that need downloads must register with `RFXDeps` and be added to its `TABS` list.
 - jsx is ES3: no `let`/`const`, arrow functions, template strings, or reliance on native `JSON` (bring a local, tab-prefixed JSON helper if needed).
 
 ## Design system (hard rules, apply to every UI change)
@@ -21,7 +21,12 @@ The panel is dark, minimal and premium: ~95% black, white and greys, one look ac
 - **The accent marks only**: the one primary action of a view, controls that are on (toggle, checkbox, radio), slider fill, progress, Graph handles. Text on the accent uses `--rfx-on-accent` (picked by contrast). Active tabs, selected rows and menu items use grey fills, not the accent.
 - **Menus and dropdowns** all use the Graph option-menu look: `.ctx-menu` / `.ctx-item` / `.custom-select-*` (rounded panel, inset rounded items, grey fill on hover). Don't hand-style new menus.
 - **Sizes from tokens**: control heights `--rfx-h-sm/md/lg`, spacing `--rfx-sp-*`, radii `--rfx-r-*`, font sizes `--rfx-fs-*`, weights `--rfx-fw-*`, icons `--rfx-icon-sm/md` with stroke `--rfx-icon-stroke` (outline icons, `currentColor`, round caps). Buttons, inputs and selects inherit the panel font.
-- Appearance settings are stored under `rfxTheme`, `rfxAccent`, `rfxDensity`, `rfxRadius`, `rfxReduceMotion`.
+- Appearance settings are stored under `rfxTheme`, `rfxAccent`, `rfxDensity`, `rfxRadius`, `rfxReduceMotion`, `rfxUiBrightness`, `rfxSurfaceContrast`, `rfxTextColor`, `rfxTextContrast`, `rfxBlackButtonText`. The surface and text ramps (`--rfx-bg`, `--rfx-surface-*`, `--rfx-input`, `--rfx-menu`, `--rfx-line*`, `--rfx-text-1..4`, `--rfx-fill-*`, accent helpers) are generated in `js/theme.js` `palette()` and written on `<html>`; tweak the ramp there, not per tab.
+
+## Navigation (one system, four positions)
+- The main tab bar in `index.html` (`.rfx-app-header .tabs-header`) is the only navigation. `js/theme.js` sets `data-rfx-nav` (top | bottom | left | right), `data-rfx-navicons` (icon-only tabs; always on a side) and `data-rfx-subpos` (where Caption/Tracker sub-tab bars sit) on `<html>` from `rfxNavPos`, `rfxNavIcons`, `rfxSubTabPos`. `css/global.css` ("navigation layout") only reorients and moves the same bar; order, states, hover, transitions and the Settings gear stay the same.
+- Each main tab button is `<svg class="tab-ic">` + `<span class="tab-lbl">`. New main tabs need both. Drag-to-reorder (`initDraggableTabs` in `js/globals.js`) works on the bar's axis; `saveTabOrder`/`loadTabOrder`/`switchTabOffset` only touch main tabs.
+- `js/nav.js` shows the floating name / sub-tab menu for icon-only tabs (position: fixed, never moves layout). A tab with sub-tabs must be listed in its `SUBS` map (sub-tab buttons must keep the `btn-<contentId>` id pattern).
 
 ## Live development
 - The panel runs straight from this folder through a junction: `%APPDATA%\Adobe\CEP\extensions\RFX` -> here (created by `scripts\dev-link.bat`). Edits are live; there is no build step.

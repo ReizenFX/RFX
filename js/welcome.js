@@ -332,6 +332,95 @@
         secAccent.appendChild(customRow);
         inner.appendChild(secAccent);
 
+        // brightness, surface contrast, text
+        const sliderRow = (group, title, sub, key, fmt) => {
+            const row = el('div', 'rfx-row is-stack');
+            const head = el('div', 'rfx-row-head');
+            const txt = el('div', 'rfx-row-text');
+            txt.appendChild(el('div', 'rfx-row-title', title));
+            if (sub) txt.appendChild(el('div', 'rfx-row-sub', sub));
+            head.appendChild(txt);
+            const val = el('span', 'rfx-row-val');
+            head.appendChild(val);
+            row.appendChild(head);
+            const input = el('input', 'main-slider rfx-range');
+            input.type = 'range';
+            input.min = theme.RANGES[key][0];
+            input.max = theme.RANGES[key][1];
+            input.step = 1;
+            input.setAttribute('data-tooltip', 'Double-click to reset');
+            const paint = () => {
+                const v = +input.value, min = +input.min, max = +input.max;
+                val.textContent = fmt(v);
+                input.style.backgroundImage = 'linear-gradient(var(--rfx-accent), var(--rfx-accent))';
+                input.style.backgroundRepeat = 'no-repeat';
+                input.style.backgroundPosition = 'left center';
+                input.style.backgroundSize = ((v - min) / (max - min) * 100) + '% 3px';
+            };
+            input.addEventListener('input', () => { const o = {}; o[key] = +input.value; theme.set(o); paint(); });
+            input.addEventListener('dblclick', () => { input.value = theme.DEFAULTS[key]; const o = {}; o[key] = theme.DEFAULTS[key]; theme.set(o); paint(); });
+            row.appendChild(input);
+            group.appendChild(row);
+            return { set: v => { if (document.activeElement !== input) input.value = v; paint(); } };
+        };
+        const signed = v => (v > 0 ? '+' : '') + v;
+        const pct = v => v + '%';
+
+        const secTone = el('div', 'rfxset-section');
+        secTone.appendChild(label('Brightness and contrast'));
+        const toneGroup = el('div', 'rfx-group');
+        const brightRow = sliderRow(toneGroup, 'UI brightness', 'Lightness of the whole interface; text follows', 'brightness', signed);
+        const surfRow = sliderRow(toneGroup, 'Surface contrast', 'Separation of page, cards, inputs and buttons', 'surfaceContrast', pct);
+        secTone.appendChild(toneGroup);
+        inner.appendChild(secTone);
+
+        const secText = el('div', 'rfxset-section');
+        secText.appendChild(label('Text'));
+        const textGroup = el('div', 'rfx-group');
+        const colorRow = el('div', 'rfx-row');
+        const ct = el('div', 'rfx-row-text');
+        ct.appendChild(el('div', 'rfx-row-title', 'Text colour'));
+        ct.appendChild(el('div', 'rfx-row-sub', 'Base colour of all UI text'));
+        colorRow.appendChild(ct);
+        const colorEnd = el('div', 'rfx-row-end');
+        const textSw = el('button', 'rfx-swatch is-text');
+        textSw.setAttribute('data-tooltip', 'Pick a colour');
+        const textInput = el('input', 'rfx-colorinput');
+        textInput.type = 'color';
+        textSw.onclick = () => textInput.click();
+        const textHex = el('input', 'rfx-hex');
+        textHex.type = 'text';
+        textHex.spellcheck = false;
+        textHex.maxLength = 7;
+        const applyTextHex = () => { const v = theme.normalizeHex(textHex.value); if (v) theme.set({ textColor: v }); sync(); };
+        textHex.addEventListener('change', applyTextHex);
+        textHex.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); applyTextHex(); textHex.blur(); } });
+        textInput.addEventListener('input', () => { theme.set({ textColor: textInput.value }); sync(true); });
+        textInput.addEventListener('change', () => { theme.set({ textColor: textInput.value }); sync(); });
+        const textDefault = btn('Default', 'is-ghost', () => { theme.set({ textColor: '' }); sync(); }, 'Use the theme\'s text colour');
+        colorEnd.appendChild(textSw);
+        colorEnd.appendChild(textInput);
+        colorEnd.appendChild(textHex);
+        colorEnd.appendChild(textDefault);
+        colorRow.appendChild(colorEnd);
+        textGroup.appendChild(colorRow);
+        const textConRow = sliderRow(textGroup, 'Text contrast', 'Separation of primary, secondary and muted text', 'textContrast', pct);
+        const blackRow = el('div', 'rfx-row');
+        const bt = el('div', 'rfx-row-text');
+        bt.appendChild(el('div', 'rfx-row-title', 'Black button text'));
+        bt.appendChild(el('div', 'rfx-row-sub', 'Light accent buttons (like Apply) use pure black text'));
+        blackRow.appendChild(bt);
+        const bsw = el('label', 'switch');
+        const blackToggle = el('input');
+        blackToggle.type = 'checkbox';
+        blackToggle.onchange = () => { theme.set({ blackButtonText: blackToggle.checked }); sync(); };
+        bsw.appendChild(blackToggle);
+        bsw.appendChild(el('span', 'slider'));
+        blackRow.appendChild(bsw);
+        textGroup.appendChild(blackRow);
+        secText.appendChild(textGroup);
+        inner.appendChild(secText);
+
         // layout
         const secLayout = el('div', 'rfxset-section');
         secLayout.appendChild(label('Layout'));
@@ -423,6 +512,83 @@
             Object.keys(densityEls).forEach(k => densityEls[k].classList.toggle('on', k === s.density));
             Object.keys(radiusEls).forEach(k => radiusEls[k].classList.toggle('on', k === s.radius));
             motion.checked = s.reduceMotion;
+            brightRow.set(s.brightness);
+            surfRow.set(s.surfaceContrast);
+            textConRow.set(s.textContrast);
+            const textShown = s.textColor || (thDef && thDef.textDefault) || '';
+            textSw.style.setProperty('--sw', textShown);
+            if (document.activeElement !== textHex) textHex.value = textShown;
+            if (!fromPicker && textShown) textInput.value = textShown;
+            textDefault.style.visibility = s.textColor ? '' : 'hidden';
+            blackToggle.checked = s.blackButtonText;
+        }
+        sync();
+    }
+
+    // ------------------------------------------------------------------ settings: navigation
+    /* One navigation with four positions; changing it only moves and reorients
+       the same tab bar (see js/theme.js applyLayout, css/global.css, js/nav.js). */
+    function navigationSection(inner) {
+        const theme = T();
+        if (!theme) { inner.appendChild(el('div', 'rfx-note', 'Navigation settings are not available (js/theme.js did not load).')); return; }
+        const sec = el('div', 'rfxset-section');
+        sec.appendChild(label('Main tabs'));
+        const group = el('div', 'rfx-group');
+        const segRow = (title, sub, list, key) => {
+            const row = el('div', 'rfx-row is-stack');
+            const txt = el('div', 'rfx-row-text');
+            txt.appendChild(el('div', 'rfx-row-title', title));
+            const subEl = el('div', 'rfx-row-sub', sub || '');
+            txt.appendChild(subEl);
+            row.appendChild(txt);
+            const seg = el('div', 'rfxset-seg');
+            const opts = {};
+            list.forEach(o => {
+                const b = el('button', 'rfxset-opt');
+                b.appendChild(el('span', 't', o.label));
+                b.style.padding = '6px 9px';
+                b.onclick = () => { const v = {}; v[key] = o.id; theme.set(v); sync(); };
+                seg.appendChild(b);
+                opts[o.id] = b;
+            });
+            row.appendChild(seg);
+            group.appendChild(row);
+            return { row: row, opts: opts, sub: subEl };
+        };
+        const pos = segRow('Position', 'Where the main tabs sit. Order and behaviour stay the same.', theme.NAV_POSITIONS, 'navPos');
+
+        const iconRow = el('div', 'rfx-row');
+        const it = el('div', 'rfx-row-text');
+        it.appendChild(el('div', 'rfx-row-title', 'Icon-only tabs'));
+        const iconSub = el('div', 'rfx-row-sub', '');
+        it.appendChild(iconSub);
+        iconRow.appendChild(it);
+        const isw = el('label', 'switch');
+        const icons = el('input');
+        icons.type = 'checkbox';
+        icons.onchange = () => { theme.set({ navIcons: icons.checked }); sync(); };
+        isw.appendChild(icons);
+        isw.appendChild(el('span', 'slider'));
+        iconRow.appendChild(isw);
+        group.appendChild(iconRow);
+
+        const sub = segRow('Sub tabs', '', theme.SUB_POSITIONS, 'subTabPos');
+        sec.appendChild(group);
+        inner.appendChild(sec);
+        inner.appendChild(el('div', 'rfx-note', 'With icon-only tabs, hovering a tab shows its name, and for Caption and Tracker its sub tabs, in a small menu that floats over the content.'));
+        const reset = btn('Reset navigation', '', () => { theme.resetLayout(); sync(); }, 'Tabs at the top with names');
+        reset.style.marginTop = '14px';
+        inner.appendChild(reset);
+
+        function sync() {
+            const s = theme.get(), side = s.navPos === 'left' || s.navPos === 'right';
+            Object.keys(pos.opts).forEach(k => pos.opts[k].classList.toggle('on', k === s.navPos));
+            icons.checked = side || s.navIcons;
+            iconRow.classList.toggle('is-disabled', side);
+            iconSub.textContent = side ? 'Always on when the tabs are on a side' : 'Show the main tabs as icons at the top or bottom';
+            Object.keys(sub.opts).forEach(k => sub.opts[k].classList.toggle('on', k === (s.navPos === 'bottom' ? 'bottom' : side ? s.subTabPos : 'top')));
+            sub.row.classList.toggle('is-disabled', !side);
+            sub.sub.textContent = side ? 'Where Caption and Tracker show their sub tabs' : 'Follows the main tabs (' + (s.navPos === 'bottom' ? 'directly above them' : 'below them') + ')';
         }
         sync();
     }
@@ -472,6 +638,7 @@
     // ------------------------------------------------------------------ settings page
     const SECTIONS = [
         { id: 'appearance', label: 'Appearance', render: appearanceSection },
+        { id: 'nav', label: 'Navigation', render: navigationSection },
         { id: 'deps', label: 'Dependencies', render: dependenciesSection },
         { id: 'about', label: 'About', render: aboutSection }
     ];
