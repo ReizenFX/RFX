@@ -16,8 +16,8 @@
      Cyclic         (Alight Motion model) bottom handle = Frequency, right edge = End (baseline),
                     top handle = Tilt, the knob above it = Smoothness
      Steps          top of the last riser = Steps, foot of the first riser = Smoothness
-     Elastic Steps  the Steps graph; top of the last riser = Steps, a sideways slider on the first
-                    step = Elastic (further right = more elastic, rounder swings)
+     Elastic Steps  (Alight Motion model) bottom handle, left / right = Frequency (step length);
+                    right-edge handle, up / down = smooth steps (bottom) to sharp, ringing ones (top)
      Random         top of the band = Amount, dot on the middle line = Density,
                     end of the middle line = Trajectory (right-click: New pattern)
 
@@ -370,53 +370,75 @@
     }
 
     // ------------------------------------------------------------------ Elastic Steps
-    /* The Steps graph (same staircase, same step-count handle) with the smoothness handle replaced
-       by an elastic handle that only moves sideways, along the first step:
-         far left    no elastic: hard steps, exactly the Steps graph
-         further right  more elastic, and each jump's overshoot gets rounder and its wobble slower
-         far right   (95% of the step) one big, round swing per step, like the Elastic graph
-       Each jump rises into a rounded overshoot and wobbles, fading so it has settled by the next
-       jump; the last step settles at 85% of its length and holds, so the jump onto the second key
-       has no key crowding it. Right-click: Strength scales how far the steps overshoot.
-       Reverse mirrors it: the wobble comes before each jump (at the end of each step). */
+    /* Same model as Alight Motion's elastic steps: the move is cut into steps of equal length P,
+       each one also P high, so the staircase follows the straight line from the first key to the
+       second (a jump at P, 2P, 3P ...; the last level holds and the second key makes the last jump).
+         bottom handle  on the zero line at the first jump, left / right only: Frequency (1 / P)
+         right handle   on the right edge, up / down only: all the way down = smooth steps (each
+                        jump an S curve over half a step); going up, the jumps get quicker and
+                        overshoot their level, then wobble back (a round, slow swing at first); at
+                        the top each jump is sharp and rings quickly, like the Elastic graph.
+       A jump whose wobble would run past the second key is squeezed to settle before it.
+       Right-click: Strength scales how far the steps overshoot. Reverse mirrors it. */
+    function esCore(p) {
+        const P = 1 / p.freq, h = clamp(p.el / 100, 0, 1), kL = Math.min(1, 1.1 * Math.sqrt(h));
+        return {
+            P: P, h: h, kL: kL,
+            A: 0.45 * Math.pow(h, 0.8) * p.str / 100,               // first overshoot, as a share of the step height
+            Tr: Math.max(P * (0.5 - 0.465 * Math.pow(h, 0.6)), 0.0025), // the jump's length (to its first peak)
+            Sp: P * (0.4 + 0.3 * h)                                   // the wobble has faded by here (from the jump)
+        };
+    }
     function buildElasticSteps(p, rev) {
-        const n = p.steps, S = 1 / n, D = 1 / n, L = j => j / n, I = infE(50);
-        const e = clamp(p.el / 100, 0, 1) * 0.95;           // where the handle is, as a share of the step
-        const A = Math.min(1, 1.4 * e) * p.str / 100;       // overshoot, as a share of the step height
-        // half swing: short = sharp, long = round; never shorter than 0.25% of the move (faster is below a frame)
-        const T = Math.max(S * (0.03 + 0.42 * e), 0.0025);
-        let k;
-        if (A < 0.005) {
-            k = buildSteps({ steps: n, smooth: 0 }, rev).knots;
-        } else {
-            k = [K(0, 0, 0, 0, 0, QUAD)];
-            for (let j = 1; j < n; j++) {
-                const t0 = j * S, last = j === n - 1, span = last ? 0.85 * S : S;
-                const E = tau => A * D * Math.max(0, 1 - tau / span);
-                const pk = L(j) + E(T);
-                // the jump: from the flat step up into the first, rounded overshoot
-                k.push(K(t0, L(j - 1), 0, (pk - L(j - 1)) / T, QUAD, QUAD));
-                k.push(K(t0 + T, pk, 0, 0, 0.42, I));
+        const c = esCore(p), P = c.P, I = infE(50);
+        const ioJ = 0.6 - (0.6 - QUAD) * c.kL, iiP = 0.6 - (0.6 - 0.42) * c.kL;   // S curve -> sharp launch
+        const k = [K(0, 0, 0, 0, 0, QUAD)];
+        let level = 0, corner2 = null;
+        for (let j = 1; ; j++) {
+            const t0 = j * P, r = 1 - t0;
+            if (r < 0.02) break;                                      // this jump is the second key's
+            const lo = (j - 1) * P, hi = j * P, D = hi - lo;
+            const Tr = c.Tr, Sp = Math.max(c.Sp, Tr + 2.2 * Tr);
+            const E = tau => c.A * D * Math.pow(Math.max(0, (Sp - tau) / (Sp - Tr)), 1.6);
+            // the jump's events at its natural timing: [time from the jump, value, is it the peak]
+            const ev = [[Tr, hi + c.A * D]];
+            if (c.A >= 0.002) {
+                const lim = 0.98 * P;
                 for (let m = 2; ; m++) {
-                    const tau = m * T;
-                    if (tau > span - 0.3 * T) break;
-                    const v = E(tau);
-                    if (v < 0.0015 * D) break;
-                    k.push(K(t0 + tau, L(j) + (m % 2 ? 1 : -1) * v, 0, 0, I, I));
+                    const tau = Tr * m;
+                    if (tau >= Sp || tau + Tr > lim) break;
+                    const e = E(tau);
+                    if (e < 0.0015 * D) break;
+                    ev.push([tau, hi + (m % 2 ? 1 : -1) * e]);
                 }
-                if (last) {
-                    // settled: holds the last level until the jump onto the second key
-                    const st = K(t0 + span, L(j), 0, 0, I, 0, 1);
-                    if (rev) { st.u = 1 - 0.004; st.frame = 6; }  // reversed, the first jump must happen right away
-                    k.push(st);
-                }
+                ev.push([Math.min(ev[ev.length - 1][0] + Tr, lim), hi]);   // settled
             }
-            k.push(K(1, 1, 0, 0, 0, 0));
+            // squeezed to settle before the second key (85% of what is left)
+            const end = ev[ev.length - 1][0], sc = Math.min(1, 0.85 * r / end), sT = Tr * sc;
+            const pk = ev[0][1];
+            k.push(K(t0, lo, 0, c.kL * (pk - lo) / sT, QUAD, ioJ));
+            ev.forEach((q, i) => {
+                const first = i === 0, lastE = i === ev.length - 1;
+                k.push(K(t0 + q[0] * sc, q[1], 0, 0, first ? iiP : I, lastE ? 0 : I));
+            });
+            level = hi;
+            if (j === 2) corner2 = [t0, lo];
         }
+        const tail = k[k.length - 1];
+        tail.io = 0; tail.seg = 1;                                    // the last level holds; the second key jumps
+        if (rev && tail.u < 1 - 0.008) {
+            // reversed, the first jump has to happen right away: one frame after the first key
+            tail.seg = 0; tail.io = QUAD;
+            const st = K(1 - 0.004, level, 0, 0, QUAD, 0, 1); st.frame = 6;
+            k.push(st);
+        }
+        k.push(K(1, 1, 0, 0, 0, 0));
+        const arm = corner2 || [P, 0];
         return { knots: k, handles: [
-            { id: 'count', x: (n - 1) / n, y: (n - 1) / n, label: 'Steps ' + n, drag: x => { p.steps = clamp(R(1 / Math.max(0.02, 1 - x)), 2, 24); } },
-            { id: 'elastic', x: S + e * S, y: L(1), label: 'Elastic ' + p.el.toFixed(1),
-              drag: x => { p.el = clamp(R((x - S) / S / 0.95 * 1000) / 10, 0, 100); } }
+            { id: 'freq', x: P, y: 0, label: 'Frequency ' + p.freq.toFixed(2),
+              drag: x => { p.freq = clamp(R(100 / clamp(x, 1 / 24, 1 / 1.05)) / 100, 1.05, 24); } },
+            { id: 'elastic', x: 1, y: c.h, lines: [[arm[0], arm[1], 1, c.h]], label: c.h > 0 ? 'Elastic ' + p.el.toFixed(1) : 'Smooth steps',
+              drag: (x, y) => { p.el = clamp(R(clamp(y, 0, 1) * 1000) / 10, 0, 100); } }
         ] };
     }
 
@@ -460,9 +482,9 @@
             params: [P('freq', 'Frequency', 1, 50, 3.2, false, 0.01), P('tilt', 'Tilt', 0, 100, 50, false, 0.1), P('soft', 'Smoothness', 0, 100, 0, false, 0.1), P('end', 'End', 0, 100, 0, false, 0.1), P('smooth', 'Smooth end', 0, 1, 1, true)] },
         steps: { name: 'Steps', build: buildSteps, params: [P('steps', 'Steps', 2, 24, 4), P('smooth', 'Smoothness', 0, 100, 0)] },
         elasticsteps: { name: 'Elastic Steps', build: buildElasticSteps,
-            // the view fits the tallest overshoot the step height allows (it only changes with the step count)
-            view: p => { const D = 1 / p.steps, o = D * p.str / 100; return [Math.min(-0.3, D - o - 0.12), Math.max(1.3, 1 - D + o + 0.12)]; },
-            params: [P('steps', 'Steps', 2, 24, 4), P('el', 'Elastic', 0, 100, 40, false, 0.1), P('str', 'Strength', 0, 200, 100, false, 1)] },
+            // fits the highest overshoot the step height allows (it only changes with Frequency and Strength)
+            view: p => { const P = 1 / p.freq, top = Math.floor((1 - 0.02) / P - 1e-9) * P; return [-0.12, Math.max(1.12, top + 0.45 * P * p.str / 100 + 0.1)]; },
+            params: [P('freq', 'Frequency', 1.05, 24, 4, false, 0.01), P('el', 'Elastic', 0, 100, 100, false, 0.1), P('str', 'Strength', 0, 200, 100, false, 1)] },
         random: { name: 'Random', build: buildRandom, params: [P('amount', 'Amount', 0, 100, 35), P('density', 'Density', 0, 100, 40), P('traj', 'Trajectory', -50, 150, 100), P('seed', 'Seed', 0, 999999, 0, true)] }
     };
     const defParams = m => { const o = {}; MODELS[m].params.forEach(q => { o[q.k] = q.def; }); return o; };
@@ -472,7 +494,7 @@
     }
 
     // ------------------------------------------------------------------ state
-    const VERSION = 3, MODEL_VERSION = { elastic: 2, bounce: 3, cyclic: 2, elasticsteps: 4 };
+    const VERSION = 3, MODEL_VERSION = { elastic: 2, bounce: 3, cyclic: 2, elasticsteps: 5 };
     function defaults() { const s = { v: VERSION, vm: Object.assign({}, MODEL_VERSION), mode: 'bezier', rev: false }; Object.keys(MODELS).forEach(m => { s[m] = defParams(m); }); return s; }
     let st = load();
     function load() {
