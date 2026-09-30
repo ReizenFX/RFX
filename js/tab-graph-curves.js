@@ -104,7 +104,7 @@
                 imp = K(s, 1, 4 * D / d, 0, QUAD, QUAD);
                 k.push(imp);
             } else {
-                if (s + d / 2 <= 1.03) {                              // near or past its top: cut at the end
+                if (s + d / 2 <= 1.03 && s < 1 - 0.012 - 0.006) {   // (a landing in the last moments just rests)                              // near or past its top: cut at the end
                     const e = 0.012, w = (1 - e - s) / d;   // ~ one frame; in AE the key sits exactly one frame before
                     imp.so = -4 * D / d;
                     if (s + d / 2 < 1 - e - 0.005) k.push(K(s + d / 2, 1 - D, 0, 0, B, QUAD));
@@ -334,15 +334,9 @@
     }
 
     // ------------------------------------------------------------------ drawing
-    // a jump onto a key (a cut bounce snapping to the second key's value) is not part of the curve
+    // a jump onto a key (a cut bounce snapping to the second key's value) is not drawn: the curve ends mid-air as in Alight Motion
     const snapEnd = k => k.length > 2 && k[k.length - 2].seg === 1 && k[k.length - 2].frame === 2;
     const snapStart = k => k.length > 2 && k[0].seg === 2 && k[1].frame === 1;
-    function snapD(k, toPx) {
-        let d = '';
-        if (snapEnd(k)) { const a = toPx(1, k[k.length - 2].v), b = toPx(1, 1); d += 'M ' + a.x + ',' + a.y + ' L ' + b.x + ',' + b.y; }
-        if (snapStart(k)) { const a = toPx(0, 0), b = toPx(0, k[1].v); d += ' M ' + a.x + ',' + a.y + ' L ' + b.x + ',' + b.y; }
-        return d;
-    }
     function pathD(k, toPx) {
         let d = '';
         const skipLast = snapEnd(k), skipFirst = snapStart(k);
@@ -369,7 +363,7 @@
         const NS = 'http://www.w3.org/2000/svg';
         g = document.createElementNS(NS, 'g'); g.id = 'gx-shape';
         g.innerHTML = '<path class="gx-band"/><path class="gx-baseline" fill="none" stroke-width="1.5" stroke-dasharray="4 4"/>' +
-            '<path class="gx-snap" fill="none" stroke-width="1.5" stroke-dasharray="3 4"/><path class="gx-curve gx-shape-curve" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '<path class="gx-curve gx-shape-curve" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
             '<g class="gx-shape-knots"></g><g class="gx-shape-handles"></g><g class="gx-tip"><rect rx="6" ry="6"/><text/></g>' +
             '<text class="gx-hint"></text>';
         svg.appendChild(g);
@@ -408,7 +402,6 @@
         lastM = m;
         const g = ensureLayer(m.svg), toPx = toPxFn(m), sh = shape(), p = st[st.mode];
         g.querySelector('.gx-shape-curve').setAttribute('d', pathD(sh.knots, toPx));
-        g.querySelector('.gx-snap').setAttribute('d', snapD(sh.knots, toPx));
         // Random: the band the noise stays in, and its middle line
         const band = g.querySelector('.gx-band'), base = g.querySelector('.gx-baseline');
         if (sh.band) {
