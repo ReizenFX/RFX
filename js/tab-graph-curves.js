@@ -97,7 +97,8 @@
         let s = t1, D = c.d1, d = 2 * t1 * c.d1, cut = false;
         // no limit on the number of rebounds: they only settle once they have shrunk to nothing
         for (let n = 0; n < 5000 && s < 1 - 1e-6; n++) {
-            if (D < 0.002 || d < 1e-4) break;                        // settled (gradually)
+            // settled: too shallow to see, or narrower than a frame (0.6% of the move) - AE could not key it
+            if (D < 0.002 || d < 0.006) break;
             if (s + d <= 1 + 1e-9) {                                 // a whole rebound
                 imp.so = -4 * D / d;
                 k.push(K(s + d / 2, 1 - D, 0, 0, B, B));
@@ -116,7 +117,13 @@
                     cutK.frame = 2;                                  // one frame before the second key
                     k.push(cutK);
                     cut = true;
-                } else imp.u = 1;
+                } else {
+                    // lands on the second key: the last half arc (from its top) is now a little wider,
+                    // so its landing speed follows (the old, steeper speed made the curve overshoot)
+                    const top = k[k.length - 2];
+                    imp.u = 1;
+                    if (top && top.v < 1) imp.si = 2 * (1 - top.v) / (1 - top.u);
+                }
                 break;
             }
             D *= c.ry; d *= c.rx;
@@ -452,9 +459,21 @@
         text.setAttribute('x', x + 8); text.setAttribute('y', y + 15);
     }
 
+    // pointer moves arrive faster than the screen refreshes: keep the latest and draw once per frame
+    let movePending = null, moveRaf = 0;
     function moveDrag(e) {
         if (!drag || e.pointerId !== drag.pid) return;
-        const m = lastM, pos = local(e), h = lastPx.find(q => q.id === drag.id);
+        movePending = local(e);
+        if (!moveRaf) moveRaf = requestAnimationFrame(flushMove);
+    }
+    function flushMove() {
+        moveRaf = 0;
+        if (!drag || !movePending) return;
+        const pos = movePending; movePending = null;
+        applyDrag(pos);
+    }
+    function applyDrag(pos) {
+        const m = lastM, h = lastPx.find(q => q.id === drag.id);
         if (!h) return;
         const p = st[st.mode];
         if (h.arm) {
@@ -472,6 +491,8 @@
     }
     function endDrag() {
         if (!drag) return;
+        if (moveRaf) { cancelAnimationFrame(moveRaf); moveRaf = 0; }
+        if (movePending) { const pos = movePending; movePending = null; applyDrag(pos); }   // the last position counts
         try { lastM.svg.releasePointerCapture(drag.pid); } catch (err) {}
         drag = null; save();
         try { localStorage.setItem(HINT_KEY, '1'); } catch (e) {}
@@ -480,7 +501,9 @@
         autoApply();
     }
     function easeRangeTo(target) {
-        if (camAnim) cancelAnimationFrame(camAnim);
+        if (camAnim) { cancelAnimationFrame(camAnim); camAnim = null; }
+        const M = model();
+        if (!M || M.view) { frozen = null; redraw(); return; }   // a fixed view has nothing to ease
         const from = (frozen || target).slice(), t0 = performance.now();
         const step = now => {
             const p = Math.min(1, (now - t0) / 300), e = 1 - Math.pow(1 - p, 3);
@@ -575,6 +598,8 @@
         closeMenu();
         st.mode = m; save();
         hover = null;
+        if (camAnim) { cancelAnimationFrame(camAnim); camAnim = null; }
+        drag = null; movePending = null;
         const tg = document.getElementById('tab-graph');
         if (tg) tg.classList.toggle('graph-shape-mode', m !== 'bezier');
         document.querySelectorAll('#graph-type-header .graph-type-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-type') === m));
