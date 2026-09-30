@@ -130,8 +130,10 @@
     function page(title, opts) {
         opts = opts || {};
         if (current) current.close(true);
-        const root = el('div', 'rfx-page');
+        const root = el('div', 'rfx-page is-entering');
         root.id = 'rfx-page';
+        root.addEventListener('animationend', e => { if (e.target === root) root.classList.remove('is-entering'); });
+        setTimeout(() => root.classList.remove('is-entering'), 600);   // no animation (reduce motion)
         const head = el('div', 'rfx-page-head');
         if (opts.onBack) {
             const b = el('button', 'rfx-page-iconbtn');
@@ -371,7 +373,7 @@
                 input.style.backgroundSize = ((v - min) / (max - min) * 100) + '% 3px';
             };
             input.addEventListener('input', () => { const o = {}; o[key] = +input.value; theme.set(o); paint(); });
-            input.addEventListener('dblclick', () => { input.value = theme.DEFAULTS[key]; const o = {}; o[key] = theme.DEFAULTS[key]; theme.set(o); paint(); });
+            input.addEventListener('dblclick', () => { const o = {}; o[key] = theme.DEFAULTS[key]; theme.set(o); sync(); });
             row.appendChild(input);
             group.appendChild(row);
             return { set: v => { if (document.activeElement !== input) input.value = v; paint(); } };
@@ -382,8 +384,9 @@
         const secTone = el('div', 'rfxset-section');
         secTone.appendChild(label('Brightness and contrast'));
         const toneGroup = el('div', 'rfx-group');
-        const brightRow = sliderRow(toneGroup, 'UI brightness', 'Lightness of the whole interface; text follows', 'brightness', signed);
+        const brightRow = sliderRow(toneGroup, 'UI brightness', 'Lightness of the interface surfaces (text stays as set below)', 'brightness', signed);
         const surfRow = sliderRow(toneGroup, 'Surface contrast', 'Separation of page, cards, inputs and buttons', 'surfaceContrast', pct);
+        const satRow = sliderRow(toneGroup, 'UI saturation', 'Colour in the surfaces, taken from the accent', 'uiSaturation', pct);
         secTone.appendChild(toneGroup);
         inner.appendChild(secTone);
 
@@ -543,6 +546,7 @@
             motion.checked = s.reduceMotion;
             brightRow.set(s.brightness);
             surfRow.set(s.surfaceContrast);
+            satRow.set(theme.saturation());
             textConRow.set(s.textContrast);
             const textShown = s.textColor || (thDef && thDef.textDefault) || '';
             textSw.style.setProperty('--sw', textShown);

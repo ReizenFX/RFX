@@ -280,7 +280,7 @@ button:focus-visible, [role="button"]:focus-visible { filter: brightness(1.2); }
     transition: background var(--rfx-dur);
 }
 .modal-input:hover { background: var(--rfx-surface-1); }
-.modal-input:focus { background: var(--rfx-surface-2); border-color: transparent; outline: none; }
+.modal-input:focus { background: var(--rfx-surface-1); border-color: transparent; outline: none; }
 
 .slider-val-wrapper {
     position: relative;
@@ -294,7 +294,7 @@ button:focus-visible, [role="button"]:focus-visible { filter: brightness(1.2); }
     transition: background var(--rfx-dur);
 }
 .slider-val-wrapper:hover { background: var(--rfx-surface-1); }
-.slider-val-wrapper.active { background: var(--rfx-surface-2); border-color: transparent; }
+.slider-val-wrapper.active { background: var(--rfx-surface-1); border-color: transparent; }
 .slider-val-input { width: 32px; background: transparent; color: var(--rfx-text-1); border: none; text-align: right; padding: 4px 0 4px 6px; font-size: var(--rfx-fs-sm); }
 .slider-val-unit { color: var(--rfx-text-2); font-size: var(--rfx-fs-xs); padding: 4px 6px 4px 2px; pointer-events: none; }
 

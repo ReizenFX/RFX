@@ -210,7 +210,7 @@
     padding: 0; flex-shrink: 0;
 }
 #tab-caption .cap-refresh-btn:hover { background: var(--rfx-surface-3); }
-#tab-caption .cap-refresh-btn:active { background: var(--rfx-fill-selected); transform: scale(0.95); }
+#tab-caption .cap-refresh-btn:active { transform: scale(0.95); }
 .cap-refresh-spin { transform-origin: 50px 50px; }
 
 /* ---------------------------------------------------------------------------
@@ -433,7 +433,8 @@
     box-shadow: none; transition: background var(--rfx-dur); cursor: text;
 }
 #tab-caption .cap-val-wrapper:focus-within,
-#tab-caption .cap-val-wrapper.active { background: var(--rfx-surface-2); border-color: transparent; box-shadow: none; }
+#tab-caption .cap-val-wrapper:hover,
+#tab-caption .cap-val-wrapper.active { background: var(--rfx-surface-1); border-color: transparent; box-shadow: none; }
 #tab-caption .cap-val-input {
     width: 32px; background: transparent; color: var(--text-primary);
     border: none; text-align: center; padding: 4px 0;
@@ -480,7 +481,7 @@
     transition: background 0.1s, transform 0.1s; user-select: none;
 }
 .cap-numpad-btn:hover { background: var(--rfx-surface-3); }
-.cap-numpad-btn:active { background: var(--rfx-fill-selected); transform: scale(0.96); }
+.cap-numpad-btn:active { transform: scale(0.96); }
 .cap-numpad-btn.cap-numpad-action { background: var(--rfx-accent); color: var(--rfx-on-accent); border: none; }
 .cap-numpad-btn.cap-numpad-action:hover { background: var(--rfx-accent-hover); }
 .cap-numpad-btn.cap-numpad-clear {
@@ -518,7 +519,7 @@
     outline: none; box-sizing: border-box;
     font-family: inherit; font-size: 13px;
 }
-.cap-prompt-input:focus { background: var(--rfx-surface-2); }
+.cap-prompt-input:hover, .cap-prompt-input:focus { background: var(--rfx-surface-1); }
 
 /* Shared popup shell (colour picker, punctuation, extra, multi-delete, WAV) */
 @keyframes capSmoothPop {
@@ -601,8 +602,8 @@ input[type=range].cap-cp-slider:focus { outline: none; }
     text-align: center;
     box-sizing: border-box;
 }
-.cap-cp-hex-input:focus {
-    background: var(--rfx-surface-2);
+.cap-cp-hex-input:hover, .cap-cp-hex-input:focus {
+    background: var(--rfx-surface-1);
 }
 
 /* ---------------------------------------------------------------------------

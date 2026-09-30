@@ -71,10 +71,12 @@
     position: fixed; inset: 0; z-index: 2147482000;   /* below tab settings dialogs */
     display: flex; flex-direction: column;
     background: var(--rfx-bg); color: var(--rfx-text-1);
-    animation: rfx-page-in var(--rfx-dur-slow) cubic-bezier(.2, .8, .2, 1);
 }
 @keyframes rfx-page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-:root[data-rfx-motion="reduce"] .rfx-page { animation: none; }
+/* only while opening: a permanent animation property would replay when reduce motion
+   is switched off again (the page flickered) */
+.rfx-page.is-entering { animation: rfx-page-in var(--rfx-dur-slow) cubic-bezier(.2, .8, .2, 1); }
+:root[data-rfx-motion="reduce"] .rfx-page.is-entering { animation: none; }
 
 .rfx-page-head {
     display: flex; align-items: center; gap: 6px; flex-shrink: 0;
@@ -159,7 +161,7 @@
     text-transform: lowercase; transition: background var(--rfx-dur);
 }
 .rfx-hex:hover { background: var(--rfx-surface-1); }
-.rfx-hex:focus { background: var(--rfx-surface-2); }
+.rfx-hex:focus { background: var(--rfx-surface-1); }
 .rfx-colorinput { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }
 
 /* live preview strip: real components, so it follows every token */

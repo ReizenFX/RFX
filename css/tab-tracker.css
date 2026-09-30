@@ -70,8 +70,6 @@
 
 /* --- TIMER & STOPWATCH DUAL ENGINE UI --- */
 .timer-mode-switcher { display: flex; gap: 2px; background: var(--rfx-surface-1); border: 1px solid transparent; border-radius: var(--rfx-r-pill); padding: 5px; margin-top: 8px; margin-bottom: 24px; }
-/* sub tabs at the bottom: the Timer / Stopwatch switch sits below the play controls */
-:root[data-rfx-subpos="bottom"] .timer-mode-switcher { order: 99; margin-top: 22px; margin-bottom: 4px; }
 .mode-btn { background: transparent; border: none; color: var(--rfx-text-2); padding: 5px 16px; border-radius: var(--rfx-r-pill); cursor: pointer; transition: background var(--rfx-dur), color var(--rfx-dur); font-size: var(--rfx-fs-sm); }
 .mode-btn:hover { color: var(--rfx-text-1); }
 .mode-btn.active { background: var(--rfx-fill-selected); color: var(--rfx-text-1); box-shadow: none; }
@@ -101,8 +99,21 @@
     cursor: pointer; user-select: none; transition: background var(--rfx-dur);
 }
 .t-input:hover { background: var(--rfx-surface-1); }
-.t-input:focus { background: var(--rfx-surface-2); border-color: transparent; outline: none; }
+.t-input:focus { background: var(--rfx-surface-1); border-color: transparent; outline: none; }
 .t-colon { color: var(--rfx-text-3); font-size: 16px; }
+
+/* HH : MM : SS in the timer circle: each part is a clickable field with a visible box */
+.timer-fields { display: inline-flex; align-items: center; gap: 2px; }
+.timer-fields .t-colon { font-size: 26px; color: var(--rfx-text-3); margin: 0 4px; line-height: 1; }
+.t-seg {
+    width: 48px; height: 46px; padding: 0; border: none; border-radius: var(--rfx-r-md);
+    background: var(--rfx-fill-hover); color: var(--rfx-text-1);
+    font: inherit; font-size: 30px; font-variant-numeric: tabular-nums; text-align: center; letter-spacing: 0.5px;
+    cursor: pointer; transition: background var(--rfx-dur);
+}
+.t-seg:hover, .t-seg:focus { background: var(--rfx-fill-selected); outline: none; }
+/* running: plain numbers, no boxes */
+#view-timer.is-running .t-seg { background: transparent; cursor: default; }
 
 /* Dynamic Time Typography */
 .time-display { font-size: 38px !important; font-variant-numeric: tabular-nums; }
@@ -188,7 +199,7 @@
 .preset-time { font-size: var(--rfx-fs-md); color: var(--rfx-text-2); font-variant-numeric: tabular-nums; flex-shrink: 0; }
 .preset-time-edit { display: inline-flex; align-items: center; gap: 2px; color: var(--rfx-text-3); flex-shrink: 0; }
 .preset-time-input { width: 30px; height: 24px; padding: 0; border: none; border-radius: var(--rfx-r-sm); background: var(--rfx-input); color: var(--rfx-text-1); text-align: center; font-size: var(--rfx-fs-md); font-variant-numeric: tabular-nums; cursor: pointer; }
-.preset-time-input:focus { background: var(--rfx-fill-selected); outline: none; }
+.preset-time-input:hover, .preset-time-input:focus { background: var(--rfx-fill-selected); outline: none; }
 .preset-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; margin-left: 8px; }
 
 .preset-edit, .preset-delete { color: var(--rfx-text-2); cursor: pointer; padding: 4px; line-height: 0; border-radius: var(--rfx-r-sm); opacity: 0; pointer-events: none; transition: color var(--rfx-dur), background var(--rfx-dur), opacity var(--rfx-dur); }

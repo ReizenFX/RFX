@@ -24,7 +24,6 @@
     background-color: var(--rfx-surface-3);
 }
 .anchor-btn:active {
-    background-color: var(--rfx-fill-selected);
     transform: scale(0.95);
 }
 
@@ -91,7 +90,7 @@ input[type="checkbox"].big-checkbox:checked::after {
     transition: background var(--rfx-dur) ease-in-out, transform 0.1s;
 }
 .nl-btn:hover { background-color: var(--rfx-surface-3); }
-.nl-btn:active { background-color: var(--rfx-fill-selected); transform: scale(0.95); }
+.nl-btn:active { transform: scale(0.95); }
 
 .nl-btn-group {
     display: flex; align-items: center; background: var(--rfx-surface-2);
@@ -144,7 +143,6 @@ input[type="checkbox"].big-checkbox:checked::after {
     background-color: var(--rfx-surface-3) !important;
 }
 #tab-transform .btn-icon-square:active {
-    background-color: var(--rfx-fill-selected) !important;
     transform: scale(0.95) !important;
 }
 

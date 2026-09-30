@@ -282,7 +282,9 @@
 
                 </div>
             </div>
-            <div class="fixed-bottom" style="display:flex; flex-direction:column; gap:8px; padding:8px 34px 6px 34px; background:var(--bg-base);">
+            <div class="fixed-bottom graph-bottom-bar">
+                <div id="graph-bottom-handle" class="graph-bottom-handle" data-tooltip="Drag down or click to hide the controls, up to show them"><div></div></div>
+                <div class="graph-bottom-controls">
                 <div style="display:flex; align-items:center; gap:6px;">
                     <button class="btn-icon-square" style="width:26px; height:26px;" data-tooltip="Copy graph from keyframes" onclick="readGraphValues()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
                     <div id="graph-value-display" style="flex:1; font-size:12px; font-family:monospace; color:var(--text-primary); cursor:pointer; padding:5px 0; background:var(--rfx-input); border:1px solid transparent; border-radius:var(--rfx-r-md); text-align:center; transition:border 0.2s;" onclick="openGraphInputModal()">0.33, 0.00, 0.66, 1.00</div>
@@ -296,6 +298,7 @@
                     </div>
                     <button id="graphApplyBtn" class="btn-primary" style="margin:0; flex:1; padding:6px 0; font-weight:500;" onclick="applyGraphToKeyframesWithCheck(window._activeEaseType)">Apply</button>
                     <button id="html-auto-btn" class="btn-icon ease-btn" data-tooltip="Auto-apply graph" onclick="toggleAutoGraph()" style="width:auto; padding:0 12px; font-size:11px; font-weight:600; border-radius:4px; height:26px;">AUTO</button>
+                </div>
                 </div>
             </div>
         </div> 
@@ -769,18 +772,11 @@
                                         <circle id="timer-progress-svg" cx="110" cy="110" r="106" fill="none" style="stroke:var(--rfx-accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="666.02" stroke-dashoffset="0" transform="rotate(-90 110 110)" />
                                     </svg>
                                     <div class="sw-inner-content" style="z-index:5;">
-                                        <span id="timer-display" class="time-display">00:25:00</span>
+                                        <!-- the time itself is the editor: click HH, MM or SS to type it (not while running) -->
+                                        <span id="timer-display" class="time-display timer-fields"><input type="text" id="input-h" class="t-seg" value="00" readonly data-tooltip="Hours" onclick="openNumpad('input-h', 'dummy-slider', null)"><span class="t-colon">:</span><input type="text" id="input-m" class="t-seg" value="25" readonly data-tooltip="Minutes" onclick="openNumpad('input-m', 'dummy-slider', null)"><span class="t-colon">:</span><input type="text" id="input-s" class="t-seg" value="00" readonly data-tooltip="Seconds" onclick="openNumpad('input-s', 'dummy-slider', null)"></span>
                                     </div>
                                 </div>
                                 
-                                <div class="time-inputs" id="timer-setup">
-                                    <input type="text" id="input-h" class="t-input" placeholder="00" value="00" readonly onclick="openNumpad('input-h', 'dummy-slider', null)">
-                                    <span class="t-colon">:</span>
-                                    <input type="text" id="input-m" class="t-input" placeholder="25" value="25" readonly onclick="openNumpad('input-m', 'dummy-slider', null)">
-                                    <span class="t-colon">:</span>
-                                    <input type="text" id="input-s" class="t-input" placeholder="00" value="00" readonly onclick="openNumpad('input-s', 'dummy-slider', null)">
-                                </div>
-
                                 <div class="playback-controls">
                                     <button class="round-btn secondary" onclick="resetTimer()" data-tooltip="Reset timer">
                                         <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.95 7.95 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>

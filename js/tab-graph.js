@@ -58,11 +58,39 @@ const graphJsx = window.createJsxLoader('graph.jsx');
 
     function saveGraphState() { localStorage.setItem('ultSavedGraphState', JSON.stringify([cp1.x, cp1.y, cp2.x, cp2.y])); }
 
-    var isResizingGraph = false, startResizeY = 0, startResizeX = 0, startGraphH = 240, startRightW = 260;
+    var isResizingGraph = false, startResizeY = 0, startResizeX = 0, startGraphH = 240, startRightW = 260, collapsedInDrag = false;
+
+    /* Bottom controls (copy, value, save, ease, Apply, AUTO) can be collapsed with the thin
+       handle above them; the choice is remembered. */
+    var GRAPH_BAR_KEY = 'rfxGraphBarCollapsed';
+    window.graphBarCollapsed = function() { var tg = document.getElementById('tab-graph'); return !!(tg && tg.classList.contains('graph-bar-collapsed')); };
+    window.setGraphBarCollapsed = function(v) {
+        var tg = document.getElementById('tab-graph'); if (!tg) return;
+        tg.classList.toggle('graph-bar-collapsed', !!v);
+        try { if (v) localStorage.setItem(GRAPH_BAR_KEY, '1'); else localStorage.removeItem(GRAPH_BAR_KEY); } catch (err) {}
+    };
+    try { if (localStorage.getItem(GRAPH_BAR_KEY) === '1') window.setGraphBarCollapsed(true); } catch (err) {}
+    var barHandle = document.getElementById('graph-bottom-handle');
+    if (barHandle) {
+        var hStartY = 0, hMoved = false, hDown = false;
+        barHandle.addEventListener('pointerdown', function(e) { hDown = true; hMoved = false; hStartY = e.clientY; try { barHandle.setPointerCapture(e.pointerId); } catch (err) {} e.preventDefault(); });
+        barHandle.addEventListener('pointermove', function(e) {
+            if (!hDown) return;
+            var dy = e.clientY - hStartY;
+            if (dy > 16 && !window.graphBarCollapsed()) { window.setGraphBarCollapsed(true); hMoved = true; hStartY = e.clientY; }
+            else if (dy < -16 && window.graphBarCollapsed()) { window.setGraphBarCollapsed(false); hMoved = true; hStartY = e.clientY; }
+            else if (Math.abs(dy) > 4) hMoved = true;
+        });
+        barHandle.addEventListener('pointerup', function(e) {
+            if (!hDown) return; hDown = false;
+            try { barHandle.releasePointerCapture(e.pointerId); } catch (err) {}
+            if (!hMoved) window.setGraphBarCollapsed(!window.graphBarCollapsed());
+        });
+    }
     
     if (resizer) {
         resizer.addEventListener('pointerdown', function(e) {
-            isResizingGraph = true; 
+            isResizingGraph = true; collapsedInDrag = false;
             startResizeY = e.clientY; 
             startResizeX = e.clientX; 
             
@@ -107,10 +135,18 @@ const graphJsx = window.createJsxLoader('graph.jsx');
                 var resizerEl = document.getElementById('graph-resizer');
                 var totalH = flexContainer ? flexContainer.clientHeight : 500;
                 var resizerH = resizerEl ? resizerEl.offsetHeight : 0;
+                var barEl = document.querySelector('#tab-graph .fixed-bottom');
+                var ctrlEl = document.querySelector('#tab-graph .graph-bottom-controls');
+                var raw = startGraphH + diff;
+                // Dragging past the bottom bar collapses it in the same move; dragging back up
+                // in the same drag brings it back.
+                var maxWithBar = totalH - resizerH - (barEl ? barEl.offsetHeight : 0);
+                if (!window.graphBarCollapsed() && raw > maxWithBar + 24) { window.setGraphBarCollapsed(true); collapsedInDrag = true; }
+                else if (window.graphBarCollapsed() && collapsedInDrag && ctrlEl && raw < maxWithBar - ctrlEl.scrollHeight - 12) { window.setGraphBarCollapsed(false); collapsedInDrag = false; }
                 
-                // 🎯 THE FIX: Allow height to range from 0 (Presets Fullscreen) to maxH (Graph Fullscreen)
-                var maxH = totalH - resizerH; 
-                var newH = Math.max(0, Math.min(startGraphH + diff, maxH)); 
+                // Allow height to range from 0 (Presets Fullscreen) to maxH (Graph Fullscreen)
+                var maxH = totalH - resizerH - (barEl ? (window.graphBarCollapsed() ? (barEl.offsetHeight - (ctrlEl ? ctrlEl.offsetHeight : 0)) : barEl.offsetHeight) : 0); 
+                var newH = Math.max(0, Math.min(raw, maxH)); 
                 
                 rootGrid.style.setProperty('--graph-panel-height', newH + 'px');
             }

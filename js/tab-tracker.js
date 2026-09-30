@@ -644,7 +644,11 @@
         const h = Math.floor(window.timerData.remaining / 3600); const m = Math.floor((window.timerData.remaining % 3600) / 60); const s = window.timerData.remaining % 60;
         let timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         if (window.timerData.lastTextStr !== timeStr) {
-            document.getElementById('timer-display').innerText = timeStr;
+            // the HH / MM / SS fields in the circle are the display; a field being typed into is left alone
+            [['input-h', h], ['input-m', m], ['input-s', s]].forEach(([id, v]) => {
+                const el = document.getElementById(id);
+                if (el && window.activeNumpadInput !== el) el.value = v.toString().padStart(2, '0');
+            });
             window.timerData.lastTextStr = timeStr;
         }
         const circle = document.getElementById('timer-progress-svg');
@@ -655,6 +659,7 @@
         }
         const viewTimer = document.getElementById('view-timer');
         if (viewTimer) {
+            viewTimer.classList.toggle('is-running', !!window.timerData.isRunning);   // fields are not editable while running
             if (!window.timerData.isRunning && window.timerData.remaining < window.timerData.totalSet && window.timerData.remaining > 0) { viewTimer.classList.add('timer-paused'); } 
             else { viewTimer.classList.remove('timer-paused'); }
         }
@@ -985,6 +990,7 @@
     };
 
     window.validateTimerInputs = function() {
+        window.timerData.lastTextStr = null;
         let hEl = document.getElementById('input-h'); let mEl = document.getElementById('input-m'); let sEl = document.getElementById('input-s');
         if (!hEl || !mEl || !sEl) return;
         let h = parseInt(hEl.value); if (isNaN(h)) h = 0;

@@ -121,7 +121,7 @@
     transition: background var(--rfx-dur);
 }
 #tab-fx #fxt-search:hover { background: var(--rfx-surface-1); }
-#tab-fx #fxt-search:focus { background: var(--rfx-surface-2); }
+#tab-fx #fxt-search:focus { background: var(--rfx-surface-1); }
 #tab-fx #fxt-search::placeholder { color: var(--rfx-text-3); }
 #tab-fx .fxt-search-clear {
     position: absolute;

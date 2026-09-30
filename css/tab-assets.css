@@ -55,10 +55,11 @@
 /* ---------- Search + view controls ---------- */
 .assets-searchbar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .assets-search-wrap { position: relative; flex: 1; min-width: 0; }
-.assets-search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--rfx-text-3); }
+/* only the magnifier: the clear button's own icon must stay inside its button */
+.assets-search-wrap > svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--rfx-text-3); }
 #assets-search { width: 100%; box-sizing: border-box; height: 34px; padding: 0 30px; background: var(--rfx-input); border: 1px solid transparent; border-radius: var(--rfx-r-lg); color: var(--rfx-text-1); font-size: var(--rfx-fs-lg); outline: none; transition: background var(--rfx-dur); }
 #assets-search:hover { background: var(--rfx-surface-1); }
-#assets-search:focus { background: var(--rfx-surface-2); }
+#assets-search:focus { background: var(--rfx-surface-1); }
 #assets-search::placeholder { color: var(--rfx-text-3); }
 .assets-search-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; display: none; background: none; border: none; color: var(--rfx-text-3); padding: 2px; line-height: 0; }
 .assets-search-clear:hover { color: var(--rfx-text-1); }
@@ -316,7 +317,6 @@
 #asset-delete-modal .btn-primary:hover, #asset-delete-modal .btn-secondary:hover, #asset-save-input-modal .btn-primary:hover, #asset-save-input-modal .btn-secondary:hover {
     background: var(--rfx-surface-3) !important; color: var(--rfx-text-1) !important;
 }
-#tab-assets .btn-primary:active, .asset-drawer .btn-primary:active { background: var(--rfx-fill-selected) !important; }
 .asset-drawer #ad-import { background: var(--rfx-accent) !important; color: var(--rfx-on-accent) !important; font-weight: var(--rfx-fw-strong) !important; }
 .asset-drawer #ad-import:hover { background: var(--rfx-accent-hover) !important; }
 /* Delete is a normal dark button */
@@ -339,7 +339,7 @@
 /* ----- tag editor + filter popover ----- */
 .tag-picked { display: flex; flex-wrap: wrap; gap: 5px; min-height: 24px; align-items: center; padding: 8px; border-radius: var(--rfx-r-lg); background: var(--rfx-input); border: none; }
 #tg-input { transition: background var(--rfx-dur); }
-#tg-input:focus { background: var(--rfx-surface-2); }
+#tg-input:hover, #tg-input:focus { background: var(--rfx-surface-1); }
 .tag-all { display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 18px 0; max-height: 150px; overflow-y: auto; }
 .tag-opt { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; padding: 4px 9px; border-radius: var(--rfx-r-md); border: none; cursor: pointer; white-space: nowrap;
     color: hsl(var(--th), var(--rfx-tag-sat), 74%); background: hsla(var(--th), var(--rfx-tag-sat), 50%, .13); transition: background .13s, color .13s; }

@@ -6,8 +6,9 @@
      rfxDensity          'compact' | 'standard' (default) | 'comfortable'
      rfxRadius           'sharp' | 'standard' (default) | 'round'
      rfxReduceMotion     '1' when on
-     rfxUiBrightness     -100..100 (0)    page and surface lightness; text follows
-     rfxSurfaceContrast  40..250  (100)  separation of page, cards, inputs, buttons
+     rfxUiBrightness     -100..100 (0)    page and surface lightness (text is not affected)
+     rfxSurfaceContrast  20..200  (100)  separation of page, cards, inputs, buttons
+     rfxUiSaturation     0..100 or '' (theme default: Monochrome 0, Color 14)  colour in the surfaces, hue from the accent
      rfxTextColor        '#rrggbb' or '' (theme default)  base UI text colour
      rfxTextContrast     40..160  (100)  separation of primary / secondary / muted text
      rfxDarkText         '' theme default | '1' | '0'  dark text + icons on light accent buttons
@@ -26,7 +27,7 @@
     var root = document.documentElement;
     var KEYS = {
         theme: 'rfxTheme', accent: 'rfxAccent', density: 'rfxDensity', radius: 'rfxRadius', reduceMotion: 'rfxReduceMotion',
-        brightness: 'rfxUiBrightness', surfaceContrast: 'rfxSurfaceContrast', textColor: 'rfxTextColor', textContrast: 'rfxTextContrast',
+        brightness: 'rfxUiBrightness', surfaceContrast: 'rfxSurfaceContrast', uiSaturation: 'rfxUiSaturation', textColor: 'rfxTextColor', textContrast: 'rfxTextContrast',
         darkText: 'rfxDarkText', darkKnob: 'rfxDarkKnob', darkMarks: 'rfxDarkMarks', navPos: 'rfxNavPos', navIcons: 'rfxNavIcons', subTabPos: 'rfxSubTabPos'
     };
 
@@ -34,9 +35,9 @@
        fraction of its lightness (Color = cool graphite). */
     var THEMES = [
         { id: 'mono', label: 'Monochrome', hint: 'Black, white and greys', accentDefault: '#e8e8e8', textDefault: '#ffffff', tint: [0, 0, 0],
-          dark: { text: true, knob: true, marks: true } },
+          dark: { text: true, knob: true, marks: true }, saturation: 0 },
         { id: 'color', label: 'Color', hint: 'Graphite with soft colour', accentDefault: '#7d9cc7', textDefault: '#ffffff', tint: [-0.10, 0, 0.18],
-          dark: { text: false, knob: true, marks: false } }
+          dark: { text: false, knob: true, marks: false }, saturation: 14 }
     ];
     /* accent presets per theme: greys for Monochrome, soft colours for Color */
     var MONO_ACCENTS = [
@@ -61,10 +62,10 @@
     var RADII = [{ id: 'sharp', label: 'Sharp' }, { id: 'standard', label: 'Standard' }, { id: 'round', label: 'Round' }];
     var NAV_POSITIONS = [{ id: 'top', label: 'Top' }, { id: 'bottom', label: 'Bottom' }, { id: 'left', label: 'Left' }, { id: 'right', label: 'Right' }];
     var SUB_POSITIONS = [{ id: 'top', label: 'Top' }, { id: 'bottom', label: 'Bottom' }];
-    var RANGES = { brightness: [-100, 100], surfaceContrast: [40, 250], textContrast: [40, 160] };
+    var RANGES = { brightness: [-100, 100], surfaceContrast: [20, 200], textContrast: [40, 160], uiSaturation: [0, 100] };
     var DEFAULTS = {
         theme: 'mono', accent: '', density: 'comfortable', radius: 'round', reduceMotion: false,
-        brightness: 0, surfaceContrast: 100, textColor: '', textContrast: 100, darkText: '', darkKnob: '', darkMarks: '',
+        brightness: 0, surfaceContrast: 100, uiSaturation: '', textColor: '', textContrast: 100, darkText: '', darkKnob: '', darkMarks: '',
         navPos: 'left', navIcons: false, subTabPos: 'bottom'
     };
 
@@ -77,6 +78,8 @@
         return Math.max(r[0], Math.min(r[1], Math.round(n)));
     }
 
+    /* '' (theme default) or a number in range */
+    function optNum(v, key) { return v === null || v === undefined || v === '' ? '' : num(v, key); }
     function tri(v) { return v === '1' || v === true ? '1' : v === '0' || v === false ? '0' : ''; }
     function normalizeHex(v) {
         var m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(v || '').trim());
@@ -116,6 +119,7 @@
             reduceMotion: read(KEYS.reduceMotion) === '1',
             brightness: num(read(KEYS.brightness), 'brightness'),
             surfaceContrast: num(read(KEYS.surfaceContrast), 'surfaceContrast'),
+            uiSaturation: optNum(read(KEYS.uiSaturation), 'uiSaturation'),
             textColor: normalizeHex(read(KEYS.textColor)),
             textContrast: num(read(KEYS.textContrast), 'textContrast'),
             darkText: tri(read(KEYS.darkText)),
@@ -127,43 +131,69 @@
         };
     }
 
-    /* The surface and text ramps. At the defaults they reproduce css/theme.css with
-       a little more separation between the page, cards and controls. */
+    function hueOf(hex) {
+        var c = rgb(hex).map(function (x) { return x / 255; }), mx = Math.max.apply(null, c), mn = Math.min.apply(null, c), d = mx - mn;
+        if (d < 0.06) return null;                                   // grey: no hue of its own
+        var h = mx === c[0] ? ((c[1] - c[2]) / d) % 6 : mx === c[1] ? (c[2] - c[0]) / d + 2 : (c[0] - c[1]) / d + 4;
+        return (h * 60 + 360) % 360;
+    }
+    function hslHex(h, sat, L) {                                    // L in 0-255 units, sat 0..1
+        var l = Math.max(0, Math.min(255, L)) / 255, ch = (1 - Math.abs(2 * l - 1)) * sat, x = ch * (1 - Math.abs((h / 60) % 2 - 1)), m = l - ch / 2;
+        var r = h < 60 ? [ch, x, 0] : h < 120 ? [x, ch, 0] : h < 180 ? [0, ch, x] : h < 240 ? [0, x, ch] : h < 300 ? [x, 0, ch] : [ch, 0, x];
+        return toHex(r.map(function (v) { return (v + m) * 255; }));
+    }
+    function themeOf(s) { return THEMES.filter(function (t) { return t.id === s.theme; })[0] || THEMES[0]; }
+    /* UI saturation actually used: the setting, else the theme default. */
+    function saturationOf(s) { return s.uiSaturation === '' ? themeOf(s).saturation : s.uiSaturation; }
+
+    /* The surface and text ramps.
+       - UI brightness moves the page lightness and scales the steps with it, so a
+         brighter UI keeps its separation instead of looking washed out.
+       - Surface contrast scales the steps (100% is a clearly separated default).
+       - UI saturation tints the surfaces with the accent's hue (Color default 14%).
+       - Text never follows brightness: its ramp steps from the chosen text colour
+         toward a fixed dark reference. */
     function palette(s) {
-        var th = THEMES.filter(function (t) { return t.id === s.theme; })[0] || THEMES[0];
-        var b = s.brightness / 100, c = s.surfaceContrast / 100, k = s.textContrast / 100;
-        var base = 22 + (b > 0 ? b * 30 : b * 12);                 // page lightness, 10..52 (0-255)
-        var surf = function (steps) {
-            var L = Math.max(0, base + steps * c);
-            return toHex([0, 1, 2].map(function (i) { return L * (1 + th.tint[i]); }));
+        var th = themeOf(s);
+        var b = s.brightness / 100, c = 2.5 * s.surfaceContrast / 100, k = s.textContrast / 100;
+        var base = 22 + (b > 0 ? b * 22 : b * 12);                 // page lightness, 10..44 (0-255)
+        var gain = Math.pow(base / 22, 0.35) * c;                    // step size
+        var ac0 = s.accent || th.accentDefault;
+        var hue = hueOf(ac0);
+        if (hue === null) hue = 215;                                // grey accent: a cool neutral hue
+        var sat = saturationOf(s) / 100 * 0.9;
+        var surf = function (steps, cap) {
+            var d = steps * gain;
+            if (cap !== undefined) d = Math.max(-cap, Math.min(cap, d));
+            return hslHex(hue, sat, base + d);
         };
         var bg = surf(0);
         var v = {
             '--rfx-bg': bg,
-            '--rfx-input': surf(-6),
+            '--rfx-input': surf(-6, 12),
             '--rfx-surface-1': surf(8),
             '--rfx-surface-2': surf(18),
             '--rfx-surface-3': surf(28),
             '--rfx-menu': surf(12),
             '--rfx-dialog': surf(8),
-            '--rfx-line': surf(20),
-            '--rfx-line-2': surf(32),
-            '--rfx-scrollbar': surf(44),
-            '--rfx-scrollbar-hover': surf(62)
+            '--rfx-line': surf(20, 44),
+            '--rfx-line-2': surf(32, 60),
+            '--rfx-scrollbar': surf(44, 80),
+            '--rfx-scrollbar-hover': surf(62, 100)
         };
-        var a = Math.pow(c, 0.6);
-        v['--rfx-fill-hover'] = 'rgba(255, 255, 255, ' + (0.06 * a).toFixed(3) + ')';
-        v['--rfx-fill-active'] = 'rgba(255, 255, 255, ' + (0.10 * a).toFixed(3) + ')';
-        v['--rfx-fill-selected'] = 'rgba(255, 255, 255, ' + (0.14 * a).toFixed(3) + ')';
-        v['--rfx-fill-track'] = 'rgba(255, 255, 255, ' + (0.10 * a).toFixed(3) + ')';
+        var a = Math.pow(c / 2.5, 0.4);
+        v['--rfx-fill-hover'] = 'rgba(255, 255, 255, ' + (0.07 * a).toFixed(3) + ')';
+        v['--rfx-fill-active'] = 'rgba(255, 255, 255, ' + (0.11 * a).toFixed(3) + ')';
+        v['--rfx-fill-selected'] = 'rgba(255, 255, 255, ' + (0.15 * a).toFixed(3) + ')';
+        v['--rfx-fill-track'] = 'rgba(255, 255, 255, ' + (0.12 * a).toFixed(3) + ')';
 
-        // text: the chosen colour, lifted or dimmed with the UI brightness, then stepped toward the page
-        var t1 = s.textColor || th.textDefault;
-        t1 = b > 0 ? mix(t1, '#ffffff', b * 0.35) : mix(t1, bg, -b * 0.18);
+        // text: the chosen colour, stepped toward a fixed dark reference (not the page, so
+        // UI brightness never changes text brightness)
+        var t1 = s.textColor || th.textDefault, ref = '#161616';
         v['--rfx-text-1'] = t1;
-        v['--rfx-text-2'] = mix(t1, bg, Math.min(0.85, 0.36 * k));
-        v['--rfx-text-3'] = mix(t1, bg, Math.min(0.88, 0.50 * k));
-        v['--rfx-text-4'] = mix(t1, bg, Math.min(0.92, 0.72 * Math.max(k, 0.8)));
+        v['--rfx-text-2'] = mix(t1, ref, Math.min(0.85, 0.36 * k));
+        v['--rfx-text-3'] = mix(t1, ref, Math.min(0.88, 0.50 * k));
+        v['--rfx-text-4'] = mix(t1, ref, Math.min(0.92, 0.72 * Math.max(k, 0.8)));
 
         // accent (user colour or theme default) and readable text on it
         var ac = s.accent || th.accentDefault, rc = rgb(ac), light = luminance(ac) > 0.45;
@@ -208,6 +238,7 @@
         s.radius = oneOf(RADII, s.radius, DEFAULTS.radius);
         s.brightness = num(s.brightness, 'brightness');
         s.surfaceContrast = num(s.surfaceContrast, 'surfaceContrast');
+        s.uiSaturation = optNum(s.uiSaturation, 'uiSaturation');
         s.textColor = normalizeHex(s.textColor);
         s.textContrast = num(s.textContrast, 'textContrast');
         s.navPos = oneOf(NAV_POSITIONS, s.navPos, DEFAULTS.navPos);
@@ -220,6 +251,7 @@
         write(KEYS.reduceMotion, s.reduceMotion ? '1' : '');
         store('brightness', s.brightness, DEFAULTS.brightness);
         store('surfaceContrast', s.surfaceContrast, DEFAULTS.surfaceContrast);
+        write(KEYS.uiSaturation, s.uiSaturation === '' ? '' : String(s.uiSaturation));
         write(KEYS.textColor, s.textColor);
         store('textContrast', s.textContrast, DEFAULTS.textContrast);
         write(KEYS.darkText, tri(s.darkText));
@@ -241,7 +273,7 @@
         return v || fallback || '';
     }
 
-    var APPEARANCE_KEYS = ['theme', 'accent', 'density', 'radius', 'reduceMotion', 'brightness', 'surfaceContrast', 'textColor', 'textContrast', 'darkText', 'darkKnob', 'darkMarks'];
+    var APPEARANCE_KEYS = ['theme', 'accent', 'density', 'radius', 'reduceMotion', 'brightness', 'surfaceContrast', 'uiSaturation', 'textColor', 'textContrast', 'darkText', 'darkKnob', 'darkMarks'];
     window.RFXTheme = {
         THEMES: THEMES, ACCENTS: ACCENTS, MONO_ACCENTS: MONO_ACCENTS,
         accentsFor: function (theme) { return theme === 'mono' ? MONO_ACCENTS : ACCENTS; },
@@ -259,6 +291,7 @@
         contrastText: contrastText,
         contrast: contrast,
         normalizeHex: normalizeHex,
+        saturation: function () { return saturationOf(get()); },
         palette: palette
     };
 
