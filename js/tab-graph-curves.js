@@ -81,8 +81,8 @@
        place in time sets the timing (the first landing is at x / (1 + d); Gravity).
        Every rebound is a parabola, d times as deep and d times as long as the one before (the
        first lasts 2 x landing time x d); they settle only once they have shrunk to nothing.
-       A rebound still in the air when time runs out keeps its shape and is cut at the end; in AE
-       it holds from one frame before the second key and snaps to that key's value on it.
+       A rebound that would still be in the air at the end is shortened (same proportions) so it
+       lands exactly on the second key: no hold, no extra key.
        Right-click extras (defaults give exactly that): Decay X / Decay Y = rebounds get
        shorter / shallower faster, Hang = how round their tops are. */
     function bnCore(p) {
@@ -94,44 +94,29 @@
         const k = [K(0, 0, 0, 0, 0, QUAD)];
         let imp = K(t1, 1, 2 / t1, 0, QUAD, QUAD);
         k.push(imp);
-        let s = t1, D = c.d1, d = 2 * t1 * c.d1, cut = false;
-        // no limit on the number of rebounds: they only settle once they have shrunk to nothing
-        for (let n = 0; n < 5000 && s < 1 - 1e-6; n++) {
-            // settled: too shallow to see, or narrower than a frame (0.6% of the move) - AE could not key it
-            if (D < 0.002 || d < 0.006) break;
-            if (s + d <= 1 + 1e-9) {                                 // a whole rebound
-                imp.so = -4 * D / d;
-                k.push(K(s + d / 2, 1 - D, 0, 0, B, B));
-                s += d;
-                imp = K(s, 1, 4 * D / d, 0, QUAD, QUAD);
-                k.push(imp);
-            } else {
-                // a rebound still in the air at the end keeps its shape and is cut there;
-                // a landing in the very last moments lands on the second key instead
-                if (s < 1 - 0.012 - 0.006) {
-                    const e = 0.012, w = (1 - e - s) / d;   // ~ one frame; in AE the key sits exactly one frame before
-                    imp.so = -4 * D / d;
-                    if (s + d / 2 < 1 - e - 0.005) k.push(K(s + d / 2, 1 - D, 0, 0, B, QUAD));
-                    else imp.io = QUAD;
-                    const cutK = K(1 - e, 1 - 4 * D * w * (1 - w), -4 * D * (1 - 2 * w) / d, 0, QUAD, 0, 1);
-                    cutK.frame = 2;                                  // one frame before the second key
-                    k.push(cutK);
-                    cut = true;
-                } else {
-                    // lands on the second key: the last half arc (from its top) is now a little wider,
-                    // so its landing speed follows (the old, steeper speed made the curve overshoot)
-                    const top = k[k.length - 2];
-                    imp.u = 1;
-                    if (top && top.v < 1) imp.si = 2 * (1 - top.v) / (1 - top.u);
-                }
+        let s = t1, D = c.d1, d = 2 * t1 * c.d1;
+        // rebounds shrink level by level until they are too shallow to see
+        for (let n = 0; n < 1000 && s < 1 - 1e-6; n++) {
+            if (D < 0.002 || d < 1e-4) break;
+            let dd = d, DD = D;
+            const rem = 1 - s;
+            if (s + d > 1 + 1e-9) { dd = rem; DD = D * rem / d; }    // the last rebound is shortened to land on the second key
+            if (dd !== d && dd < 0.003) {                             // a shortened last rebound too short to draw: that landing is the second key
+                const top = k[k.length - 2];
+                imp.u = 1;
+                if (top && top.v < 1 && top.u < 1) imp.si = 2 * (1 - top.v) / (1 - top.u);
                 break;
             }
+            imp.so = -4 * DD / dd;
+            k.push(K(s + dd / 2, 1 - DD, 0, 0, B, B));
+            s += dd;
+            imp = K(s, 1, 4 * DD / dd, 0, QUAD, QUAD);
+            k.push(imp);
+            if (dd !== d) break;
             D *= c.ry; d *= c.rx;
         }
-        if (!cut) {
-            if (imp.u > 1 - 1e-6) { imp.u = 1; imp.io = 0; }
-            else { imp.so = 0; k.push(K(1, 1, 0, 0, QUAD, 0)); }
-        } else k.push(K(1, 1, 0, 0, 0, 0));
+        if (imp.u > 1 - 1e-6) { imp.u = 1; imp.io = 0; }
+        else { imp.so = 0; k.push(K(1, 1, 0, 0, QUAD, 0)); }
         const hy = 1 - c.d1;
         return { knots: k, handles: [
             { id: 'bounce', x: t1 * (1 + c.d1), y: hy, label: 'Bounciness ' + p.bnc.toFixed(1) + '  ·  Gravity ' + p.grav.toFixed(1),

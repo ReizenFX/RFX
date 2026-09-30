@@ -326,7 +326,8 @@ function readBezierEaseV2() {
 //  (u = time, v = value, si/so = slope in/out, ii/io = influence %, hold = hold after).
 //  Baked between each pair of keyframes: inner keys that were there are replaced, the
 //  pair's own keys keep their other side, every key stays editable in the graph editor.
-//  Pairs: consecutive selected keys; one selected key + the next; none = every pair.
+//  Two or more keys selected: the first and last selected key (the keys between are replaced);
+//  one selected key: it and the next; none: every pair of keys.
 // -----------------------------------------------------------
 // Keys added by a curve type, per property: { "<comp>|<layer>|<property path>": [times] }.
 // Kept for the After Effects session (all panels share one ExtendScript scope) so going
@@ -344,16 +345,19 @@ function graphCurvePropKey(prop) {
     } catch (e) { return null; }
 }
 
+// Removes the keys a curve type added to this property, selected or not, except the first and
+// last selected key (those are the ends of what is being applied to).
 function graphCurveRemoveAdded(prop) {
     var key = graphCurvePropKey(prop);
     if (!key || !graphCurveAdded[key]) return 0;
-    var times = graphCurveAdded[key], removed = 0;
+    var times = graphCurveAdded[key], removed = 0, sel = prop.selectedKeys, keepA = -1, keepB = -1;
+    if (sel.length) { keepA = prop.keyTime(sel[0]); keepB = prop.keyTime(sel[sel.length - 1]); }
     for (var i = times.length - 1; i >= 0; i--) {
         if (prop.numKeys < 1) break;
-        var k = prop.nearestKeyIndex(times[i]);
-        var sel = false;
-        try { sel = prop.keySelected(k); } catch (e) {}
-        if (Math.abs(prop.keyTime(k) - times[i]) < 0.0001 && !sel) { prop.removeKey(k); removed++; }
+        var k = prop.nearestKeyIndex(times[i]), tk = prop.keyTime(k);
+        if (Math.abs(tk - times[i]) >= 0.0001) continue;
+        if (Math.abs(tk - keepA) < 0.0001 || Math.abs(tk - keepB) < 0.0001) continue;
+        prop.removeKey(k); removed++;
     }
     delete graphCurveAdded[key];
     return removed;
@@ -487,10 +491,13 @@ function graphApplyCurveKnots(spec, label) {
             graphCurveRemoveAdded(prop);
             if (prop.numKeys < 2) continue;
             var times = [], sel = prop.selectedKeys, s;
-            if (sel.length >= 2) { for (s = 0; s < sel.length - 1; s++) times.push([prop.keyTime(sel[s]), prop.keyTime(sel[s + 1])]); }
+            // two or more selected: one move from the first to the last selected key (keys between go)
+            if (sel.length >= 2) times.push([prop.keyTime(sel[0]), prop.keyTime(sel[sel.length - 1])]);
             else if (sel.length === 1) { if (sel[0] < prop.numKeys) times.push([prop.keyTime(sel[0]), prop.keyTime(sel[0] + 1)]); }
             else { for (s = 1; s < prop.numKeys; s++) times.push([prop.keyTime(s), prop.keyTime(s + 1)]); }
             for (s = 0; s < times.length; s++) { added += graphCurveApplyPair(prop, times[s][0], times[s][1], knots, minGap); pairs++; }
+            // nothing was selected: leave nothing selected, so the next apply works on every pair again
+            if (sel.length === 0) { for (s = 1; s <= prop.numKeys; s++) { try { prop.setSelectedAtKey(s, false); } catch (e7) {} } }
         }
         app.endUndoGroup();
         return 'OK ' + pairs + ' ' + added;
