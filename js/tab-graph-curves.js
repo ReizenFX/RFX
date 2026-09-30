@@ -15,7 +15,8 @@
                     second rebound = Decay Y + Decay X, last landing = Bounciness, arm = Hang
      Cyclic         (Alight Motion model) bottom handle = Frequency, right edge = End (baseline),
                     top handle = Tilt, the knob above it = Smoothness
-     Steps          top of the last riser = Steps, foot of the first riser = Smoothness
+     Steps          (Alight Motion model) bottom handle, left / right = Frequency (step length);
+                    top handle, left / right = Smoothness (right above the bottom one = hard steps)
      Elastic Steps  (Alight Motion model) bottom handle, left / right = Frequency (step length);
                     right-edge handle, up / down = smooth steps (bottom) to sharp, ringing ones (top)
      Random         top of the band = Amount, dot on the middle line = Density,
@@ -338,34 +339,91 @@
     }
 
     // ------------------------------------------------------------------ Steps
+    /* Same model as Alight Motion's steps: the move is cut into steps of equal length P, each one
+       also P high, so the staircase follows the straight line from the first key to the second.
+         bottom handle  on the zero line at the first step, left / right only: Frequency (1 / P)
+         top handle     on the top line, left / right only: Smoothness. Right above the bottom
+                        handle = hard steps; further right, each step becomes an S curve that
+                        still arrives on time and starts that much earlier (at most a whole step).
+       Smooth end (on by default): the first step stays at the handle and the rest are spread
+       evenly so the last one reaches the target a whole step before the second key and holds
+       there. Off: the last level holds and the second key jumps (a step still rising at the end
+       is cut there). The jump onto the second key is not drawn. */
+    function stJumps(p) {
+        const P = 1 / p.freq, s = clamp(p.soft / 100, 0, 1), out = [];
+        if (p.smooth) {
+            const m = Math.max(1, R((1 - P) / P)), t1 = m === 1 ? Math.min(P, 0.9) : P, Q = (1 - t1) / m, wMax = Math.min(P, Q);
+            for (let i = 0; i < m; i++) out.push({ b: t1 + i * Q, lo: i / m, hi: (i + 1) / m });
+            return { J: out, w: s * wMax, wMax: wMax, t1: t1 };
+        }
+        const wMax = Math.min(P, 1 - P), w = s * wMax;
+        for (let j = 1; j * P - w < 1 - 0.005; j++) {
+            let bj = j * P, hi = Math.min(j * P, 1);                    // never past the target
+            if (w < 1e-6 && bj > 1 - 0.02) break;                          // a hard step right at the end is the second key's
+            if (w >= 1e-6 && Math.abs(bj - 1) < 0.01) { bj = 1; hi = 1; }   // a smooth one arrives on the second key
+            out.push({ b: bj, lo: (j - 1) * P, hi: hi });
+        }
+        return { J: out, w: w, wMax: wMax, t1: P };
+    }
     function buildSteps(p, rev) {
-        const n = p.steps, s = p.smooth / 100, k = [];
-        if (s < 0.02) {
-            if (!rev) {
-                // held levels 0, 1/n ... (n-1)/n; the jump to the last value lands on the second key
-                k.push(K(0, 0, 0, 0, 0, 0, 1));
-                for (let j = 1; j < n; j++) k.push(K(j / n, j / n, 0, 0, 0, 0, 1));
-                k.push(K(1, 1, 0, 0, 0, 0));
-            } else {
-                // reversed: the first jump happens right away (one frame after the first key)
-                k.push(K(0, 0, 0, 0, 0, 0, 2));
-                const f = K(0.012, 1 / n, 0, 0, 0, 0, 1); f.frame = 1; k.push(f);
-                for (let j = 1; j < n; j++) k.push(K(j / n, (j + 1) / n, 0, 0, 0, j < n - 1 ? 0 : QUAD, j < n - 1 ? 1 : 0));
-                k.push(K(1, 1, 0, 0, QUAD, 0));
-                k.noMirror = true;
-            }
+        const S = stJumps(p), J = S.J, w = S.w, RI = 0.55;
+        let k;
+        if (w < 1e-6 && rev) {
+            // reversed hard steps, built directly (a hold only jumps forwards in time)
+            const Ll = J.length ? J[J.length - 1].hi : 0;
+            if (p.smooth) k = [K(0, 0, 0, 0, 0, 0, 1)];
+            else { k = [K(0, 0, 0, 0, 0, 0, 2)]; const f1 = K(0.012, 1 - Ll, 0, 0, 0, 0, 1); f1.frame = 1; k.push(f1); }  // the first jump, one frame in
+            for (let i = J.length - 1; i >= 0; i--) k.push(K(1 - J[i].b, 1 - J[i].lo, 0, 0, 0, 0, 1));
+            k.push(K(1, 1, 0, 0, 0, 0));
+            k.noMirror = true;
+        } else if (w < 1e-6) {
+            // hard steps: held levels
+            k = [K(0, 0, 0, 0, 0, 0, 1)];
+            J.forEach(r => k.push(K(r.b, r.hi, 0, 0, 0, 0, 1)));
+            if (!p.smooth) k.jumpEnd = true;
+            k.push(K(1, 1, 0, 0, 0, 0));
         } else {
-            const RAMP = 0.45;
-            k.push(K(0, 0, 0, 0, 0, QUAD));
-            for (let j = 1; j <= n; j++) {
-                const a = j / n - s / n, last = k[k.length - 1];
-                if (a - last.u > 1e-6) k.push(K(a, (j - 1) / n, 0, 0, QUAD, RAMP)); else last.io = RAMP;
-                k.push(K(j / n, j / n, 0, 0, RAMP, j < n ? QUAD : 0));
+            k = [K(0, 0, 0, 0, 0, QUAD)];
+            let cut = false;
+            for (const r of J) {
+                const a0 = r.b - w, last = k[k.length - 1];
+                let A;
+                if (a0 - last.u > 1e-6) { A = K(a0, r.lo, 0, 0, QUAD, RI); k.push(A); } else { A = last; A.io = RI; }
+                const B = K(r.b, r.hi, 0, 0, RI, QUAD);
+                if (r.b > 1 + 1e-9) {
+                    // still rising at the end: the true shape, cut at the edge (the jump onto the key is not drawn)
+                    const sp = splitSeg(A, B, 1);
+                    A.io = sp.aio;
+                    const c = K(1, sp.v, sp.si, 0, sp.ii, 0, 2); c.frame = 3;
+                    k.push(c);
+                    cut = true;
+                    break;
+                }
+                k.push(B);
+            }
+            const tail = k[k.length - 1];
+            if (cut) k.push(K(1, 1, 0, 0, 0, 0));
+            else if (tail.u > 1 - 1e-9) { tail.u = 1; tail.v = 1; tail.io = 0; }      // arrives on the second key
+            else {
+                tail.io = 0;
+                if (!p.smooth) {
+                    tail.seg = 1; k.jumpEnd = true;                                    // the last level holds; the second key jumps
+                    if (rev && tail.u < 1 - 0.008) {
+                        // reversed, the first jump has to happen right away: one frame after the first key
+                        tail.seg = 0; tail.io = QUAD;
+                        const h = K(1 - 0.004, tail.v, 0, 0, QUAD, 0, 1); h.frame = 6;
+                        k.push(h);
+                    }
+                }
+                k.push(K(1, 1, 0, 0, 0, 0));
             }
         }
+        const t1 = S.t1, top1 = J.length ? J[0].hi : 1;
         return { knots: k, handles: [
-            { id: 'count', x: (n - 1) / n, y: (n - 1) / n, label: 'Steps ' + n, drag: x => { p.steps = clamp(R(1 / Math.max(0.02, 1 - x)), 2, 24); } },
-            { id: 'smooth', x: 1 / n - s / n, y: 0, label: 'Smoothness ' + p.smooth, drag: x => { p.smooth = clamp(R((1 / n - x) * n * 100), 0, 100); if (p.smooth < 4) p.smooth = 0; } }
+            { id: 'freq', x: t1, y: 0, label: 'Frequency ' + p.freq.toFixed(2),
+              drag: x => { p.freq = clamp(R(100 / clamp(x, 1 / 24, 1 / 1.05)) / 100, 1.05, 24); } },
+            { id: 'soft', x: t1 + w, y: 1, lines: [[t1, top1, t1 + w, 1]], label: w > 0 ? 'Smoothness ' + p.soft.toFixed(1) : 'Hard steps',
+              drag: x => { let v = clamp(R((x - t1) / Math.max(1e-6, S.wMax) * 1000) / 10, 0, 100); if (v < 2) v = 0; p.soft = v; } }
         ] };
     }
 
@@ -440,7 +498,7 @@
             if (swing) tail.io = I;
             k.push(K(1, 1, 0, 0, swing ? I : 0, 0));
         } else {
-            tail.io = 0; tail.seg = 1;                                // the last level holds; the second key jumps
+            tail.io = 0; tail.seg = 1; k.jumpEnd = true;                  // the last level holds; the second key jumps (not drawn)
             if (rev && tail.u < 1 - 0.008) {
                 // reversed, the first jump has to happen right away: one frame after the first key
                 tail.seg = 0; tail.io = QUAD;
@@ -496,7 +554,8 @@
             params: [P('bnc', 'Bounciness', 0, 100, 80, false, 0.1), P('grav', 'Gravity', 1, 100, 74, false, 0.1), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 90, 0), P('hang', 'Hang', 0, 100, 75), P('smooth', 'Smooth end', 0, 1, 1, true)] },
         cyclic: { name: 'Cyclic', build: buildCyclicShape, view: [-0.12, 1.65],
             params: [P('freq', 'Frequency', 1, 50, 3.2, false, 0.01), P('tilt', 'Tilt', 0, 100, 50, false, 0.1), P('soft', 'Smoothness', 0, 100, 0, false, 0.1), P('end', 'End', 0, 100, 0, false, 0.1), P('smooth', 'Smooth end', 0, 1, 1, true)] },
-        steps: { name: 'Steps', build: buildSteps, params: [P('steps', 'Steps', 2, 24, 4), P('smooth', 'Smoothness', 0, 100, 0)] },
+        steps: { name: 'Steps', build: buildSteps, view: [-0.1, 1.12],
+            params: [P('freq', 'Frequency', 1.05, 24, 4, false, 0.01), P('soft', 'Smoothness', 0, 100, 0, false, 0.1), P('smooth', 'Smooth end', 0, 1, 1, true)] },
         elasticsteps: { name: 'Elastic Steps', build: buildElasticSteps,
             // fits the highest overshoot the step height allows (it only changes with Frequency and Strength)
             view: p => { const J = esJumps(p, esCore(p)), q = J[J.length - 1]; return [-0.12, Math.max(1.12, q[2] + 0.45 * (q[2] - q[1]) * p.str / 100 + 0.1)]; },
@@ -510,7 +569,7 @@
     }
 
     // ------------------------------------------------------------------ state
-    const VERSION = 3, MODEL_VERSION = { elastic: 2, bounce: 3, cyclic: 2, elasticsteps: 5 };
+    const VERSION = 3, MODEL_VERSION = { elastic: 2, bounce: 3, cyclic: 2, elasticsteps: 5, steps: 2 };
     function defaults() { const s = { v: VERSION, vm: Object.assign({}, MODEL_VERSION), mode: 'bezier', rev: false }; Object.keys(MODELS).forEach(m => { s[m] = defParams(m); }); return s; }
     let st = load();
     function load() {
@@ -547,7 +606,7 @@
         if (!s.rev) return b;
         const f = (x, y) => ({ x: 1 - x, y: 1 - y });
         return {
-            knots: b.knots.noMirror ? b.knots : mirrorKnots(b.knots),
+            knots: b.knots.noMirror ? b.knots : Object.assign(mirrorKnots(b.knots), { jumpStart: !!b.knots.jumpEnd }),
             band: b.band && b.band.map(r => [1 - r[0], 1 - r[2], 1 - r[1]]),
             handles: b.handles.map(h => Object.assign({}, h, f(h.x, h.y), { lines: h.lines && h.lines.map(l => [1 - l[0], 1 - l[1], 1 - l[2], 1 - l[3]]) }))
         };
@@ -599,7 +658,8 @@
     // ------------------------------------------------------------------ drawing
     // a jump onto a key (a cut bounce snapping to the second key's value) is not drawn: the curve ends mid-air as in Alight Motion
     const snapEnd = k => k.length > 2 && k[k.length - 2].seg === 2 && k[k.length - 2].frame === 3;
-    const snapStart = k => k.length > 2 && k[0].seg === 2 && (k[1].frame === 1 || k[1].frame === 4);
+    // a held last level jumping onto the second key (Steps / Elastic Steps, Smooth end off) is drawn up to the edge, without the jump
+    const snapStart = k => k.length > 2 && k[0].seg === 2 && (k[1].frame === 1 || k[1].frame === 4 || !!k.jumpStart);
     function pathD(k, toPx) {
         let d = '';
         const skipLast = snapEnd(k), skipFirst = snapStart(k);
@@ -609,7 +669,7 @@
             const P0 = toPx(skipFirst && i === 1 ? 0 : (skipLast && i === k.length - 2 ? 1 : q.u), q.v);
             if (!d) { d = 'M ' + P0.x + ',' + P0.y; return; }
             const a = k[i - 1], du = q.u - a.u;
-            if (a.seg === 1) { const H = toPx(q.u, a.v); d += ' L ' + H.x + ',' + H.y + ' L ' + P0.x + ',' + P0.y; return; }
+            if (a.seg === 1) { const H = toPx(q.u, a.v); d += ' L ' + H.x + ',' + H.y + (k.jumpEnd && i === k.length - 1 ? '' : ' L ' + P0.x + ',' + P0.y); return; }
             if (a.seg === 2) { d += ' L ' + P0.x + ',' + P0.y; return; }
             const c1 = toPx(a.u + a.io * du, a.v + a.so * a.io * du), c2 = toPx(q.u - q.ii * du, q.v - q.si * q.ii * du);
             d += ' C ' + c1.x + ',' + c1.y + ' ' + c2.x + ',' + c2.y + ' ' + P0.x + ',' + P0.y;
@@ -849,7 +909,7 @@
         const b = document.getElementById('graph-reverse-btn');
         if (b) b.classList.toggle('active', !!model() && st.rev);
     }
-    const hasSmoothEnd = m => m === 'bounce' || m === 'cyclic' || m === 'elasticsteps';
+    const hasSmoothEnd = m => m === 'bounce' || m === 'cyclic' || m === 'steps' || m === 'elasticsteps';
     function toggleSmooth() {
         if (!hasSmoothEnd(st.mode)) return;
         const p = st[st.mode];
