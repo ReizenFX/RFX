@@ -80,11 +80,11 @@
        the first rebound. Its height sets how deep that rebound drops (d = Bounciness), its
        place in time sets the timing (the first landing is at x / (1 + d); Gravity).
        Every rebound is a parabola, d times as deep and d times as long as the one before (the
-       first lasts 2 x landing time x d), up to 10 rebounds. When time runs out near or
-       after a rebound's top, the curve is cut there and snaps to the second key's value on that key
-       (it holds until one frame before it); otherwise it rests on the target.
+       first lasts 2 x landing time x d); they settle only once they have shrunk to nothing.
+       A rebound still in the air when time runs out keeps its shape and is cut at the end; in AE
+       it holds from one frame before the second key and snaps to that key's value on it.
        Right-click extras (defaults give exactly that): Decay X / Decay Y = rebounds get
-       shorter / shallower faster, Hang = how round their tops are, Bounces = the limit. */
+       shorter / shallower faster, Hang = how round their tops are. */
     function bnCore(p) {
         const d1 = clamp(p.bnc / 100, 0, 1), hx = clamp((101 - p.grav) / 100, 0.01, 1);
         return { d1: d1, hx: hx, t1: hx / (1 + d1), ry: d1 * (1 - p.dy / 100), rx: d1 * (1 - p.dx / 100) };
@@ -95,8 +95,9 @@
         let imp = K(t1, 1, 2 / t1, 0, QUAD, QUAD);
         k.push(imp);
         let s = t1, D = c.d1, d = 2 * t1 * c.d1, cut = false;
-        for (let n = 0; n < p.maxb && s < 1 - 1e-6; n++) {
-            if (D < 0.002 || d < 1e-4) break;                        // settled
+        // no limit on the number of rebounds: they only settle once they have shrunk to nothing
+        for (let n = 0; n < 5000 && s < 1 - 1e-6; n++) {
+            if (D < 0.002 || d < 1e-4) break;                        // settled (gradually)
             if (s + d <= 1 + 1e-9) {                                 // a whole rebound
                 imp.so = -4 * D / d;
                 k.push(K(s + d / 2, 1 - D, 0, 0, B, B));
@@ -104,7 +105,9 @@
                 imp = K(s, 1, 4 * D / d, 0, QUAD, QUAD);
                 k.push(imp);
             } else {
-                if (s + d / 2 <= 1.03 && s < 1 - 0.012 - 0.006) {   // (a landing in the last moments just rests)                              // near or past its top: cut at the end
+                // a rebound still in the air at the end keeps its shape and is cut there;
+                // a landing in the very last moments lands on the second key instead
+                if (s < 1 - 0.012 - 0.006) {
                     const e = 0.012, w = (1 - e - s) / d;   // ~ one frame; in AE the key sits exactly one frame before
                     imp.so = -4 * D / d;
                     if (s + d / 2 < 1 - e - 0.005) k.push(K(s + d / 2, 1 - D, 0, 0, B, QUAD));
@@ -113,7 +116,7 @@
                     cutK.frame = 2;                                  // one frame before the second key
                     k.push(cutK);
                     cut = true;
-                }
+                } else imp.u = 1;
                 break;
             }
             D *= c.ry; d *= c.rx;
@@ -239,7 +242,7 @@
         elastic: { name: 'Elastic', build: buildElastic, view: [-0.15, 2.35],
             params: [P('amp', 'Amplitude', 0, 120, 60), P('freq', 'Frequency', 2, 50, 5, false, 0.1), P('dur', 'Duration', 10, 100, 100), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 100, 0), P('hang', 'Hang', 0, 100, 50)] },
         bounce: { name: 'Bounce', build: buildBounce, view: [-0.1, 1.25],
-            params: [P('bnc', 'Bounciness', 0, 100, 80, false, 0.1), P('grav', 'Gravity', 1, 100, 74, false, 0.1), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 90, 0), P('hang', 'Hang', 0, 100, 75), P('maxb', 'Bounces', 1, 20, 10)] },
+            params: [P('bnc', 'Bounciness', 0, 100, 80, false, 0.1), P('grav', 'Gravity', 1, 100, 74, false, 0.1), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 90, 0), P('hang', 'Hang', 0, 100, 75)] },
         cyclic: { name: 'Cyclic', build: buildCyclic, params: [P('cyc', 'Cycles', 1, 15, 3), P('start', 'Start', 0, 150, 100), P('end', 'End', -50, 100, 0), P('hang', 'Hang', 0, 100, 50)] },
         steps: { name: 'Steps', build: buildSteps, params: [P('steps', 'Steps', 2, 24, 4), P('smooth', 'Smoothness', 0, 100, 0)] },
         elasticsteps: { name: 'Elastic Steps', build: buildElasticSteps, params: [P('steps', 'Steps', 2, 12, 3), P('amp', 'Amplitude', 0, 100, 50), P('decay', 'Decay', 0, 95, 65), P('hang', 'Hang', 0, 100, 50)] },
