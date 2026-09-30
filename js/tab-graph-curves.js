@@ -13,7 +13,8 @@
      Bounce         (Alight Motion model) one handle anywhere = the bottom of the first rebound:
                     up / down = Bounciness, left / right = Gravity (timing)
                     second rebound = Decay Y + Decay X, last landing = Bounciness, arm = Hang
-     Cyclic         first peak = Cycles + Start, last low = Cycles + End, arm = Hang
+     Cyclic         (Alight Motion model) bottom handle = Frequency, right edge = End (baseline),
+                    top handle = Tilt, the knob above it = Smoothness
      Steps          top of the last riser = Steps, foot of the first riser = Smoothness
      Elastic Steps  last overshoot = Steps + Amplitude, the dip after it = Decay, arm = Hang
      Random         top of the band = Amount, dot on the middle line = Density,
@@ -193,16 +194,145 @@
     }
 
     // ------------------------------------------------------------------ Cyclic
+    /* Same model as Alight Motion's cyclic, four handles:
+         bottom handle (sideways)      the first trough = one cycle's length (Frequency)
+         right-edge handle (up / down) where the baseline ends (End): every trough lies on the
+                                       line from the start to it, every peak touches the target,
+                                       so raising it makes the waves smaller towards the end
+         top handle (sideways)         where the peak sits inside the cycle (Tilt): middle =
+                                       symmetric waves, cycle end = rising sawtooth, start =
+                                       falling sawtooth
+         knob above it (sideways)      Smoothness, from its place in the first cycle: at the
+                                       cycle's end = straight lines, at its start = fully rounded
+       Each wave is squeezed between the baseline and the target (value = base + (1 - base) x
+       wave), which is why a raised baseline bends even straight waves, as in Alight Motion.
+       Smooth end (default on): the cycles after the first are stretched or squeezed a little so
+       the curve finishes on a peak exactly at the second key (otherwise it is cut at the end). */
+    const cyInf = s => QUAD + s * (0.4 - QUAD);
+    const CY_EPS = 0.0015;
+    // value / slope / influence split of the bezier segment A -> B at time u (the part A -> u);
+    // the same maths as jsx/graph.jsx graphCurveSplit
+    function splitSeg(A, B2, u) {
+        const du = B2.u - A.u;
+        const x0 = A.u, y0 = A.v, x3 = B2.u, y3 = B2.v;
+        const x1 = A.u + A.io * du, y1 = A.v + A.so * A.io * du, x2 = B2.u - B2.ii * du, y2 = B2.v - B2.si * B2.ii * du;
+        const bz = (p0, p1, p2, p3, s) => { const m = 1 - s; return m * m * m * p0 + 3 * m * m * s * p1 + 3 * m * s * s * p2 + s * s * s * p3; };
+        let lo = 0, hi = 1;
+        for (let i = 0; i < 50; i++) { const s = (lo + hi) / 2; if (bz(x0, x1, x2, x3, s) < u) lo = s; else hi = s; }
+        const s = (lo + hi) / 2;
+        const ax = x0 + (x1 - x0) * s, ay = y0 + (y1 - y0) * s, bx = x1 + (x2 - x1) * s, by = y1 + (y2 - y1) * s;
+        const cx = x2 + (x3 - x2) * s, cy = y2 + (y3 - y2) * s;
+        const dx = ax + (bx - ax) * s, dy = ay + (by - ay) * s, ex = bx + (cx - bx) * s, ey = by + (cy - by) * s;
+        const px = dx + (ex - dx) * s, py = dy + (ey - dy) * s, nu = px - x0;
+        return { v: py, si: px - dx > 1e-12 ? (py - dy) / (px - dx) : (ey - py) / Math.max(1e-12, ex - px), ii: nu > 1e-12 ? (px - dx) / nu : QUAD, aio: nu > 1e-12 ? (ax - x0) / nu : QUAD };
+    }
+    function cyCore(p) {
+        const P0 = clamp(1 / p.freq, 0.02, 1), tau = p.tilt / 100;
+        let fAll = 1, g = 1, landsOnPeak = false;
+        if (p.smooth) {
+            let best = null;
+            const consider = (sc, gg, ff) => { if (!best || sc < best.sc) best = { sc: sc, g: gg, f: ff }; };
+            // keep the first cycle (and so the handles) and fit the later ones
+            if (P0 < 1 - 1e-6) for (let k = 1; k < 2000; k++) {
+                const den = (k - 1 + tau) * P0;
+                if (den <= 1e-9) continue;
+                const gg = (1 - P0) / den;
+                consider(Math.abs(Math.log(gg)), gg, 1);
+                if (gg < 0.4) break;
+            }
+            // or scale everything (the handles move with it) - only when that is clearly closer
+            for (let k = 0; k < 2000; k++) {
+                const den = (k + tau) * P0;
+                if (den <= 1e-9) continue;
+                const ff = 1 / den;
+                consider(Math.abs(Math.log(ff)) * 4 + 0.15, 1, ff);   // rarely: the handles would leave the pointer
+                if (ff < 0.4) break;
+            }
+            if (best) { g = best.g; fAll = best.f; landsOnPeak = true; }
+        }
+        return { P0: P0, tau: tau, s: p.soft / 100, B: p.end / 100, g: g, fAll: fAll, landsOnPeak: landsOnPeak };
+    }
     function buildCyclic(p) {
-        const N = 2 * p.cyc + 1, hs = p.start / 100, le = p.end / 100, I = infE(p.hang), k = [];
-        for (let i = 0; i <= N; i++) k.push(K(i / N, i % 2 === 0 ? le * i / N : hs + (1 - hs) * i / N, 0, 0, i ? I : 0, i < N ? I : 0));
-        const cyc = Nf => clamp(R((Nf - 1) / 2), 1, 15);
-        return { knots: k, handles: [
-            { id: 'first', x: 1 / N, y: hs + (1 - hs) / N, label: 'Cycles ' + p.cyc + '  ·  Start ' + p.start,
-              drag: (x, y) => { p.cyc = cyc(1 / clamp(x, 0.02, 1)); const u = 1 / (2 * p.cyc + 1); p.start = clamp(R((y - u) / (1 - u) * 100), 0, 150); } },
-            { id: 'last', x: (N - 1) / N, y: le * (N - 1) / N, label: 'Cycles ' + p.cyc + '  ·  End ' + p.end,
-              drag: (x, y) => { p.cyc = cyc(1 / clamp(1 - x, 0.02, 1)); const u = 1 - 1 / (2 * p.cyc + 1); p.end = clamp(R(y / u * 100), -50, 100); } },
-            { id: 'hang', arm: true, x: 1 / N, y: hs + (1 - hs) / N, label: 'Hang ' + p.hang }
+        const c = cyCore(p), I = cyInf(c.s), sm = 1 - c.s, L = u => c.B * Math.min(u, 1), EPS = CY_EPS;   // the baseline stops at the edge
+        const k = [K(0, 0, 0, 0, 0, I)];
+        let cs = 0, last = k[0];
+        // one cycle past the end too: a falling sawtooth reaches its last peak through the edge after it
+        for (let cyc = 0, extra = 1; cyc < 4000; cyc++) {
+            if (cs >= 1 - 1e-9 && extra-- <= 0) break;
+            const len = (cyc === 0 ? c.P0 : c.P0 * c.g) * c.fAll, ra = c.tau * len, fb = len - ra;
+            const pk = cs + ra, ce = cs + len;
+            // rise: trough (last) -> peak
+            if (ra < EPS) {
+                last.seg = 2;
+                const pkK = K(cs + EPS, 1, 0, 0, 0, I); pkK.frame = 5;   // a vertical edge (at least a frame in AE)
+                k.push(pkK); last = pkK;
+            } else {
+                last.so = c.B + (1 - L(cs)) * sm / ra; last.io = I;
+                const pkK = K(pk, 1, (1 - L(pk)) * sm / ra, 0, I, I);
+                k.push(pkK); last = pkK;
+            }
+            // fall: peak -> next trough
+            if (fb < EPS) {
+                last.seg = 2;
+                const trK = K(ce + EPS, L(ce), 0, 0, 0, I); trK.frame = 5;
+                k.push(trK); last = trK;
+            } else {
+                last.so = (1 - L(pk)) * -sm / fb; last.io = I;
+                const trK = K(ce, L(ce), c.B - (1 - L(ce)) * sm / fb, 0, I, I);
+                k.push(trK); last = trK;
+            }
+            cs = ce;
+        }
+        // end: on a peak exactly at the second key (Smooth end), or cut at the edge
+        let i = k.findIndex(q => q.u > 1 - 1e-7);
+        if (i < 0) i = k.length - 1;
+        if (c.landsOnPeak) {
+            // the peak that lands on 1 (a falling sawtooth reaches it through its vertical edge)
+            let j = i;
+            while (j < k.length && k[j].v < 1 - 1e-9) j++;
+            if (j >= k.length) j = i;
+            const out = k.slice(0, j + 1);
+            const endK = out[out.length - 1];
+            if (endK.frame === 5 && out.length >= 2) {           // edge onto the final peak: its trough sits a frame before the key
+                const tr = out[out.length - 2]; tr.u = 1 - EPS; tr.frame = 6; tr.seg = 2;   // 6: a frame before the key, on the curve, drawn
+                endK.frame = 0;
+            }
+            endK.u = 1; endK.io = 0; endK.so = 0; endK.seg = 0;
+            endK.v = 1;
+            return { core: c, knots: out };
+        }
+        const A = k[i - 1], Bk = k[i];
+        if (Math.abs(Bk.u - 1) < 1e-7 && !Bk.frame) {            // a knot right on the end
+            const out = k.slice(0, i + 1); const e2 = out[out.length - 1];
+            if (Math.abs(e2.v - 1) < 1e-9) { e2.u = 1; e2.io = 0; e2.seg = 0; return { core: c, knots: out }; }
+            e2.u = 1; e2.seg = 2; e2.frame = 3; out.push(K(1, 1, 0, 0, 0, 0)); return { core: c, knots: out };
+        }
+        const out = k.slice(0, i);
+        let cut;
+        if (A.seg === 2) {                                        // inside a vertical edge
+            cut = K(1, A.v + (Bk.v - A.v) * (1 - A.u) / Math.max(1e-9, Bk.u - A.u), 0, 0, 0, 0, 2);
+        } else {
+            const sp = splitSeg(A, Bk, 1);
+            A.io = sp.aio;
+            cut = K(1, sp.v, sp.si, 0, sp.ii, 0, 2);
+        }
+        cut.frame = 3;
+        out.push(cut);
+        out.push(K(1, 1, 0, 0, 0, 0));
+        return { core: c, knots: out };
+    }
+    function buildCyclicShape(p) {
+        const r = buildCyclic(p), c = r.core, P1 = c.P0 * c.fAll;
+        const hx = c.tau * P1, wx = (1 - c.s) * P1;
+        return { knots: r.knots, handles: [
+            { id: 'freq', x: P1, y: 0, label: 'Frequency ' + p.freq.toFixed(2),
+              drag: x => { p.freq = clamp(R(1 / clamp(x, 0.02, 1) * 100) / 100, 1, 50); } },
+            { id: 'end', x: 1, y: c.B, lines: [[0, 0, 1, c.B]], label: 'End ' + p.end.toFixed(1),
+              drag: (x, y) => { p.end = clamp(R(clamp(y, 0, 1) * 1000) / 10, 0, 100); } },
+            { id: 'tilt', x: hx, y: 1, label: 'Tilt ' + p.tilt.toFixed(1),
+              drag: x => { p.tilt = clamp(R(clamp(x / P1, 0, 1) * 1000) / 10, 0, 100); } },
+            { id: 'soft', x: wx, y: 1.5, small: true, lines: [[hx, 1, wx, 1.5]], label: 'Smoothness ' + p.soft.toFixed(1),
+              drag: x => { p.soft = clamp(R((1 - clamp(x / P1, 0, 1)) * 1000) / 10, 0, 100); } }
         ] };
     }
 
@@ -303,7 +433,8 @@
             params: [P('amp', 'Amplitude', 0, 120, 60), P('freq', 'Frequency', 2, 50, 5, false, 0.1), P('dur', 'Duration', 10, 100, 100), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 100, 0), P('hang', 'Hang', 0, 100, 50)] },
         bounce: { name: 'Bounce', build: buildBounce, view: [-0.1, 1.25],
             params: [P('bnc', 'Bounciness', 0, 100, 80, false, 0.1), P('grav', 'Gravity', 1, 100, 74, false, 0.1), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 90, 0), P('hang', 'Hang', 0, 100, 75), P('smooth', 'Smooth end', 0, 1, 1, true)] },
-        cyclic: { name: 'Cyclic', build: buildCyclic, params: [P('cyc', 'Cycles', 1, 15, 3), P('start', 'Start', 0, 150, 100), P('end', 'End', -50, 100, 0), P('hang', 'Hang', 0, 100, 50)] },
+        cyclic: { name: 'Cyclic', build: buildCyclicShape, view: [-0.12, 1.65],
+            params: [P('freq', 'Frequency', 1, 50, 3.2, false, 0.01), P('tilt', 'Tilt', 0, 100, 50, false, 0.1), P('soft', 'Smoothness', 0, 100, 0, false, 0.1), P('end', 'End', 0, 100, 0, false, 0.1), P('smooth', 'Smooth end', 0, 1, 1, true)] },
         steps: { name: 'Steps', build: buildSteps, params: [P('steps', 'Steps', 2, 24, 4), P('smooth', 'Smoothness', 0, 100, 0)] },
         elasticsteps: { name: 'Elastic Steps', build: buildElasticSteps, params: [P('steps', 'Steps', 2, 12, 3), P('amp', 'Amplitude', 0, 100, 50), P('decay', 'Decay', 0, 95, 65), P('hang', 'Hang', 0, 100, 50)] },
         random: { name: 'Random', build: buildRandom, params: [P('amount', 'Amount', 0, 100, 35), P('density', 'Density', 0, 100, 40), P('traj', 'Trajectory', -50, 150, 100), P('seed', 'Seed', 0, 999999, 0, true)] }
@@ -315,7 +446,7 @@
     }
 
     // ------------------------------------------------------------------ state
-    const VERSION = 3, MODEL_VERSION = { elastic: 2, bounce: 3 };
+    const VERSION = 3, MODEL_VERSION = { elastic: 2, bounce: 3, cyclic: 2 };
     function defaults() { const s = { v: VERSION, vm: Object.assign({}, MODEL_VERSION), mode: 'bezier', rev: false }; Object.keys(MODELS).forEach(m => { s[m] = defParams(m); }); return s; }
     let st = load();
     function load() {
@@ -339,7 +470,9 @@
         const N = k.length;
         return k.slice().reverse().map((q, j) => {
             const src = k[N - 2 - j], m = K(1 - q.u, 1 - q.v, q.so, q.si, q.io, q.ii, src ? (src.seg === 1 ? 2 : src.seg) : 0);
-            if (q.frame) m.frame = { 1: 2, 2: 1, 3: 4, 4: 3 }[q.frame];
+            if (q.frame && q.frame !== 5) m.frame = { 1: 2, 2: 1, 3: 4, 4: 3, 6: 7, 7: 6 }[q.frame];
+            const after = k[N - j];
+            if (after && after.frame === 5) m.frame = 5;
             return m;
         });
     }
@@ -486,7 +619,8 @@
                     '<circle data-id="' + h.id + '" class="gx-handle gx-handle-sm' + (on ? ' is-on' : '') + '" cx="' + x2 + '" cy="' + base0.y + '" r="' + (on ? 5.5 : 4.5) + '" stroke-width="2"/>';
                 lastPx.push({ id: h.id, arm: true, px: x2, py: base0.y, bx: base0.x, h: h });
             } else {
-                html += '<circle data-id="' + h.id + '" class="gx-handle' + (on ? ' is-on' : '') + '" cx="' + base0.x + '" cy="' + base0.y + '" r="' + (on ? 8 : 6.5) + '" stroke-width="2.5"/>';
+                const rr = h.small ? (on ? 6 : 5) : (on ? 8 : 6.5);
+                html += '<circle data-id="' + h.id + '" class="gx-handle' + (h.small ? ' gx-handle-sm' : '') + (on ? ' is-on' : '') + '" cx="' + base0.x + '" cy="' + base0.y + '" r="' + rr + '" stroke-width="2.5"/>';
                 lastPx.push({ id: h.id, px: base0.x, py: base0.y, h: h });
             }
         });
@@ -606,7 +740,7 @@
         menu.appendChild(grid);
         const sep = document.createElement('div'); sep.className = 'ctx-sep'; menu.appendChild(sep);
         const item = (label, fn) => { const it = document.createElement('div'); it.className = 'ctx-item'; it.textContent = label; it.addEventListener('click', () => { closeMenu(); fn(); }); menu.appendChild(it); };
-        if (st.mode === 'bounce') item(p.smooth ? 'Smooth end: on' : 'Smooth end: off', () => toggleSmooth());
+        if (hasSmoothEnd(st.mode)) item(p.smooth ? 'Smooth end: on' : 'Smooth end: off', () => toggleSmooth());
         item('Reverse value', () => api.reverse());
         if (st.mode === 'random') item('New pattern', () => { p.seed = (p.seed + 1) % 1000000; save(); redraw(); autoApply(); });
         item('Reset ' + M.name, () => api.reset());
@@ -648,8 +782,10 @@
         const b = document.getElementById('graph-reverse-btn');
         if (b) b.classList.toggle('active', !!model() && st.rev);
     }
+    const hasSmoothEnd = m => m === 'bounce' || m === 'cyclic';
     function toggleSmooth() {
-        const p = st.bounce;
+        if (!hasSmoothEnd(st.mode)) return;
+        const p = st[st.mode];
         p.smooth = p.smooth ? 0 : 1;
         save(); syncChip(); redraw(); autoApply();
     }
@@ -667,8 +803,8 @@
             area.appendChild(chip);
         }
         if (!chip) return;
-        chip.style.display = st.mode === 'bounce' ? '' : 'none';
-        chip.classList.toggle('on', !!st.bounce.smooth);
+        chip.style.display = hasSmoothEnd(st.mode) ? '' : 'none';
+        chip.classList.toggle('on', hasSmoothEnd(st.mode) && !!st[st.mode].smooth);
     }
     function setMode(m) {
         if (m !== 'bezier' && !MODELS[m]) return;

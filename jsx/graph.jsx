@@ -375,6 +375,33 @@ function graphCurveParse(spec) {
     return out;
 }
 
+// Splits the AE bezier segment a -> b (influences in %) at time u (de Casteljau). Returns the
+// point, its slope and the influences of both halves, so a key placed there keeps the curve exact.
+function graphCurveSplit(a, b, u) {
+    var du = b.u - a.u;
+    if (du <= 0) return null;
+    var x0 = a.u, y0 = a.v, x3 = b.u, y3 = b.v;
+    var x1 = a.u + a.io / 100 * du, y1 = a.v + a.so * a.io / 100 * du;
+    var x2 = b.u - b.ii / 100 * du, y2 = b.v - b.si * b.ii / 100 * du;
+    var lo = 0, hi = 1, s, m, it;
+    for (it = 0; it < 50; it++) {
+        s = (lo + hi) / 2; m = 1 - s;
+        if (m * m * m * x0 + 3 * m * m * s * x1 + 3 * m * s * s * x2 + s * s * s * x3 < u) lo = s; else hi = s;
+    }
+    s = (lo + hi) / 2;
+    var ax = x0 + (x1 - x0) * s, ay = y0 + (y1 - y0) * s, bx = x1 + (x2 - x1) * s, by = y1 + (y2 - y1) * s;
+    var cx = x2 + (x3 - x2) * s, cy = y2 + (y3 - y2) * s;
+    var dx = ax + (bx - ax) * s, dy = ay + (by - ay) * s, ex = bx + (cx - bx) * s, ey = by + (cy - by) * s;
+    var px = dx + (ex - dx) * s, py = dy + (ey - dy) * s;
+    var nL = px - x0, nR = x3 - px;
+    return {
+        v: py,
+        slopeIn: px - dx > 1e-12 ? (py - dy) / (px - dx) : 0, slopeOut: ex - px > 1e-12 ? (ey - py) / (ex - px) : 0,
+        aio: nL > 1e-12 ? (ax - x0) / nL * 100 : 33.33, ii: nL > 1e-12 ? (px - dx) / nL * 100 : 33.33,
+        io: nR > 1e-12 ? (ex - px) / nR * 100 : 33.33, bii: nR > 1e-12 ? (x3 - cx) / nR * 100 : 33.33
+    };
+}
+
 // value and slope of the Hermite segment a -> b (influence 1/3 both sides) at u
 function graphCurveHermite(a, b, u) {
     var du = b.u - a.u;
@@ -411,19 +438,35 @@ function graphCurveApplyPair(prop, ta, tb, knots0, minGap) {
     var frameDur = minGap * 2;
     for (i = 0; i < knots.length; i++) {
         var fr = (T > frameDur * 3) ? knots[i].frame : 0;
-        knots[i].t = (fr === 1 || fr === 4) ? ta + frameDur : ((fr === 2 || fr === 3) ? tb - frameDur : ta + knots[i].u * T);
+        // frame flags: 1 / 2 pinned after the first / before the second key; 3 / 4 a cut there (on the curve);
+        // 6 / 7 like 3 / 4 but part of a drawn edge; 5 the top of a vertical edge (see below)
+        knots[i].t = (fr === 1 || fr === 4 || fr === 7) ? ta + frameDur : ((fr === 2 || fr === 3 || fr === 6) ? tb - frameDur : ta + knots[i].u * T);
         // a curve cut at the edge: its key sits one frame inside, on the same curve
         var hp;
-        if (fr === 3 && i > 0) { hp = graphCurveHermite(knots[i - 1], knots[i], (knots[i].t - ta) / T); knots[i].v = hp[0]; knots[i].si = hp[1]; }
-        if (fr === 4 && i < knots.length - 1) { hp = graphCurveHermite(knots[i], knots[i + 1], (knots[i].t - ta) / T); knots[i].v = hp[0]; knots[i].so = hp[1]; }
+        // (split the curve there exactly: the neighbour's influence changes with the shorter segment)
+        if ((fr === 3 || fr === 6) && i > 0) { hp = graphCurveSplit(knots[i - 1], knots[i], (knots[i].t - ta) / T); if (hp) { knots[i].v = hp.v; knots[i].si = hp.slopeIn; knots[i].ii = Math.max(0.1, Math.min(100, hp.ii)); knots[i - 1].io = Math.max(0.1, Math.min(100, hp.aio)); } }
+        if ((fr === 4 || fr === 7) && i < knots.length - 1) { hp = graphCurveSplit(knots[i], knots[i + 1], (knots[i].t - ta) / T); if (hp) { knots[i].v = hp.v; knots[i].so = hp.slopeOut; knots[i].io = Math.max(0.1, Math.min(100, hp.io)); knots[i + 1].ii = Math.max(0.1, Math.min(100, hp.bii)); } }
     }
     // a key pinned one frame after the first / before the second key wins over knots crowding it
     var tFirst = -1e9, tLast = 1e9;
     for (i = 0; i < knots.length; i++) {
-        if (knots[i].t !== undefined && knots[i].frame && T > frameDur * 3) { if (knots[i].frame === 1 || knots[i].frame === 4) tFirst = knots[i].t; else tLast = knots[i].t; }
+        if (knots[i].t !== undefined && knots[i].frame && knots[i].frame !== 5 && T > frameDur * 3) { if (knots[i].frame === 1 || knots[i].frame === 4 || knots[i].frame === 7) tFirst = knots[i].t; else tLast = knots[i].t; }
     }
     var use = [knots[0]];
     for (i = 1; i < knots.length - 1; i++) {
+        // the top of a vertical edge: at least one frame after the key before it, never dropped
+        if (knots[i].frame === 5) {
+            var tEdge = Math.max(knots[i].t, use[use.length - 1].t + frameDur);
+            if (tEdge > knots[i].t + 1e-9 && i < knots.length - 1 && !knots[i].lin && !knots[i].hold) {
+                // moved later: take the value / speed there from the curve that follows, so it stays exact
+                var hs = graphCurveSplit(knots[i], knots[i + 1], (tEdge - ta) / T);
+                if (hs) { knots[i].v = hs.v; knots[i].so = hs.slopeOut; knots[i].io = Math.max(0.1, Math.min(100, hs.io)); knots[i + 1].ii = Math.max(0.1, Math.min(100, hs.bii)); knots[i].u = (tEdge - ta) / T; }
+            }
+            knots[i].t = tEdge;
+            if (tb - knots[i].t < minGap) continue;
+            use.push(knots[i]);
+            continue;
+        }
         var pinned = knots[i].frame && T > frameDur * 3;
         if (!pinned && (knots[i].t < tFirst + minGap || knots[i].t > tLast - minGap)) continue;
         if (knots[i].t - use[use.length - 1].t < minGap && !pinned) continue;
