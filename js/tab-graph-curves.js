@@ -302,7 +302,7 @@
         elastic: { name: 'Elastic', build: buildElastic, view: [-0.15, 2.35],
             params: [P('amp', 'Amplitude', 0, 120, 60), P('freq', 'Frequency', 2, 50, 5, false, 0.1), P('dur', 'Duration', 10, 100, 100), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 100, 0), P('hang', 'Hang', 0, 100, 50)] },
         bounce: { name: 'Bounce', build: buildBounce, view: [-0.1, 1.25],
-            params: [P('bnc', 'Bounciness', 0, 100, 80, false, 0.1), P('grav', 'Gravity', 1, 100, 74, false, 0.1), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 90, 0), P('hang', 'Hang', 0, 100, 75), P('smooth', 'Smooth end', 0, 1, 0, true)] },
+            params: [P('bnc', 'Bounciness', 0, 100, 80, false, 0.1), P('grav', 'Gravity', 1, 100, 74, false, 0.1), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 90, 0), P('hang', 'Hang', 0, 100, 75), P('smooth', 'Smooth end', 0, 1, 1, true)] },
         cyclic: { name: 'Cyclic', build: buildCyclic, params: [P('cyc', 'Cycles', 1, 15, 3), P('start', 'Start', 0, 150, 100), P('end', 'End', -50, 100, 0), P('hang', 'Hang', 0, 100, 50)] },
         steps: { name: 'Steps', build: buildSteps, params: [P('steps', 'Steps', 2, 24, 4), P('smooth', 'Smoothness', 0, 100, 0)] },
         elasticsteps: { name: 'Elastic Steps', build: buildElasticSteps, params: [P('steps', 'Steps', 2, 12, 3), P('amp', 'Amplitude', 0, 100, 50), P('decay', 'Decay', 0, 95, 65), P('hang', 'Hang', 0, 100, 50)] },
