@@ -145,3 +145,5 @@ function openLayerColorMenu(btnEl, type, indicatorEl) {
 }
 
 document.addEventListener('DOMContentLoaded', initNewLayerButtons);
+// 'Relative to' (Comp / Selection) uses the shared custom dropdown; runAlign still reads the select's value.
+document.addEventListener('DOMContentLoaded', () => { if (document.getElementById('align-relative-to')) window.buildCustomDropdown('align-relative-to'); });

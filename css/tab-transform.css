@@ -186,3 +186,14 @@ input[type="checkbox"].big-checkbox:checked::after {
     opacity: 1 !important;
     visibility: visible !important;
 }
+
+/* compact shared dropdown for "Relative to" in the section header */
+#tab-transform .tf-rel { flex-shrink: 0; width: 112px; }
+#tab-transform .tf-rel .custom-select-display {
+    min-height: 0 !important; height: var(--rfx-h-sm) !important; padding: 0 28px 0 10px !important;
+    font-size: var(--rfx-fs-sm); background: var(--rfx-surface-2); border-radius: var(--rfx-r-md);
+}
+#tab-transform .tf-rel .custom-select-display:hover, #tab-transform .tf-rel .custom-select-wrapper.active .custom-select-display { background: var(--rfx-surface-3); }
+#tab-transform .tf-rel .custom-select-display::after { right: 9px; width: 12px; height: 12px; }
+#tab-transform .tf-rel .custom-select-option { font-size: var(--rfx-fs-md); padding: 6px 10px 6px 28px !important; }
+#tab-transform .tf-rel .custom-select-option::before { left: 9px; width: 11px; height: 11px; }
