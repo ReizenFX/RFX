@@ -188,9 +188,10 @@ button:focus-visible, [role="button"]:focus-visible { filter: brightness(1.2); }
 #rfx-nav-flyout .rfx-fly-title { padding: 5px 10px; font-weight: var(--rfx-fw-strong); }
 #rfx-nav-flyout.has-subs .rfx-fly-title { padding-bottom: 6px; margin-bottom: 3px; border-bottom: 1px solid var(--rfx-line); color: var(--rfx-text-2); font-size: var(--rfx-fs-sm); }
 #rfx-nav-flyout .rfx-fly-item {
-    padding: 6px 10px; border-radius: var(--rfx-r-md); color: var(--rfx-text-2); cursor: pointer;
+    padding: 6px 10px; margin-bottom: 3px; border-radius: var(--rfx-r-md); color: var(--rfx-text-2); cursor: pointer;
     transition: background var(--rfx-dur), color var(--rfx-dur);
 }
+#rfx-nav-flyout .rfx-fly-item:last-child { margin-bottom: 0; }
 #rfx-nav-flyout .rfx-fly-item:hover { background: var(--rfx-fill-hover); color: var(--rfx-text-1); }
 #rfx-nav-flyout .rfx-fly-item.active { background: var(--rfx-fill-active); color: var(--rfx-text-1); }
 
@@ -408,7 +409,7 @@ button:focus-visible, [role="button"]:focus-visible { filter: brightness(1.2); }
     transition: background 0.1s;
     white-space: nowrap;
     border-radius: var(--rfx-r-md) !important;
-    margin: 1px 0 !important;
+    margin: 0 0 3px !important;   /* a small gap so hover and selected fills never touch */
 }
 .ctx-item:hover { background: var(--rfx-fill-active); color: var(--rfx-text-1); z-index: 9999; }
 .ctx-item:first-child { margin-top: 0 !important; }
@@ -592,8 +593,8 @@ select option { background: var(--rfx-menu); color: var(--rfx-text-1); }
 
 /* Individual Options */
 .custom-select-option {
-    padding: 8px 12px 8px 32px !important;
-    margin: 1px 0; font-size: var(--rfx-fs-lg); color: var(--rfx-text-1);
+    padding: 7px 12px 7px 32px !important;
+    margin: 0 0 3px; font-size: var(--rfx-fs-lg); color: var(--rfx-text-1);
     border-radius: var(--rfx-r-md);
     position: relative; cursor: pointer;
     transition: background var(--rfx-dur) ease, color var(--rfx-dur) ease;
@@ -616,6 +617,7 @@ select option { background: var(--rfx-menu); color: var(--rfx-text-1); }
     transition: opacity var(--rfx-dur) ease;
 }
 .custom-select-option.selected::before { opacity: 1; }
+.custom-select-option:last-child { margin-bottom: 0; }
 
 /* =======================================
    GLOBAL TOGGLE SWITCHES
@@ -647,7 +649,7 @@ input:checked + .slider {
 }
 input:checked + .slider:before {
     transform: translateX(16px) !important;
-    background-color: var(--rfx-on-accent) !important;
+    background-color: var(--rfx-on-accent-knob) !important;
 }
 
 /* ---------- Global notification / toast ----------

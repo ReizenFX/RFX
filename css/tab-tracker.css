@@ -41,7 +41,7 @@
     color: var(--rfx-text-4); transition: background var(--rfx-dur-slow), color var(--rfx-dur-slow);
 }
 .streak-circle.elite, .streak-circle.strong, .streak-circle.basic {
-    background: var(--rfx-accent); border-color: transparent; color: var(--rfx-on-accent);
+    background: var(--rfx-accent); border-color: transparent; color: var(--rfx-on-accent-mark);
 }
 .streak-circle.current { background: var(--rfx-fill-active); border-color: transparent; color: var(--rfx-text-1); }
 .streak-circle.missed { border-color: var(--rfx-fill-active); color: var(--rfx-text-3); }
@@ -204,7 +204,7 @@
 .dh-week-container { display: flex; justify-content: space-between; background: var(--rfx-surface-1); border: 1px solid transparent; padding: 12px 14px; border-radius: var(--rfx-r-lg); width: 100%; }
 .dh-day-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .dh-day-circle { width: 24px; height: 24px; border-radius: 50%; background: transparent; border: 2px solid var(--rfx-fill-hover); display: flex; align-items: center; justify-content: center; color: var(--rfx-text-4); transition: background var(--rfx-dur), color var(--rfx-dur); }
-.dh-day-circle.elite, .dh-day-circle.strong, .dh-day-circle.basic { background: var(--rfx-accent); border-color: transparent; color: var(--rfx-on-accent); }
+.dh-day-circle.elite, .dh-day-circle.strong, .dh-day-circle.basic { background: var(--rfx-accent); border-color: transparent; color: var(--rfx-on-accent-mark); }
 .dh-day-circle.current { background: var(--rfx-fill-active); border-color: transparent; color: var(--rfx-text-1); }
 .dh-day-circle.missed { border-color: var(--rfx-fill-active); color: var(--rfx-text-3); }
 .dh-day-label { font-size: var(--rfx-fs-xs); color: var(--rfx-text-3); }

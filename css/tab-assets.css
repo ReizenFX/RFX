@@ -153,7 +153,8 @@
 .assets-save-menu { position: absolute; bottom: calc(100% + 6px); left: 0; right: 0; background: var(--rfx-menu); border: 1px solid var(--rfx-line); border-radius: var(--rfx-r-lg); box-shadow: var(--rfx-shadow); padding: 5px; z-index: 200; display: none; }
 .assets-save-menu.open { display: block; animation: assetsMenuIn .13s ease; }
 @keyframes assetsMenuIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-.assets-save-menu .item { display: flex; align-items: center; gap: 11px; padding: 8px 10px; border-radius: var(--rfx-r-md); cursor: pointer; color: var(--rfx-text-1); font-size: var(--rfx-fs-md); }
+.assets-save-menu .item { margin-bottom: 3px; display: flex; align-items: center; gap: 11px; padding: 8px 10px; border-radius: var(--rfx-r-md); cursor: pointer; color: var(--rfx-text-1); font-size: var(--rfx-fs-md); }
+.assets-save-menu .item:last-child { margin-bottom: 0; }
 .assets-save-menu .item:hover { background: var(--rfx-fill-active); }
 .assets-save-menu .item .ic { width: 15px; height: 15px; flex-shrink: 0; display: flex; }
 .assets-save-menu .item .desc { display: block; font-size: 9.5px; color: var(--rfx-text-3); margin-top: 1px; }
@@ -373,7 +374,7 @@
 #assets-sort-menu.in { opacity: 1; transform: none; }
 #assets-sort-menu .sm-head { font-size: 9.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--rfx-text-3); padding: 7px 10px 4px; }
 #assets-sort-menu .sm-sep { height: 1px; background: var(--rfx-line); margin: 5px -5px; }
-#assets-sort-menu .sm-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: var(--rfx-r-md); cursor: pointer; white-space: nowrap; transition: background .1s; }
+#assets-sort-menu .sm-row { margin-bottom: 3px; display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: var(--rfx-r-md); cursor: pointer; white-space: nowrap; transition: background .1s; }
 #assets-sort-menu .sm-row:hover { background: var(--rfx-fill-active); }
 #assets-sort-menu .sm-row.on { color: var(--rfx-text-1); }
 #assets-sort-menu .sm-tick { width: 14px; flex: 0 0 14px; display: inline-flex; align-items: center; justify-content: center; color: var(--rfx-text-1); }

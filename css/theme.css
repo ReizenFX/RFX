@@ -32,7 +32,7 @@
     --rfx-overlay: rgba(0, 0, 0, 0.6);
 
     /* ---- text ---- */
-    --rfx-text-1: #ededed;           /* primary */
+    --rfx-text-1: #ffffff;           /* primary */
     --rfx-text-2: #a0a0a0;           /* secondary, labels */
     --rfx-text-3: #7d7d7d;           /* hints, placeholders, metadata */
     --rfx-text-4: #4a4a4a;           /* disabled */
@@ -69,7 +69,9 @@
     --rfx-accent: #e8e8e8;
     --rfx-accent-hover: #ffffff;
     --rfx-accent-soft: rgba(232, 232, 232, 0.14);
-    --rfx-on-accent: #111111;
+    --rfx-on-accent: #000000;          /* text + icons on accent buttons */
+    --rfx-on-accent-knob: #000000;     /* switch knob when on */
+    --rfx-on-accent-mark: #000000;     /* ticks, dots, day-circle icons */
 
     /* ---- status (greys in mono: meaning comes from icon + wording; what needs
        attention is brighter, what is fine is quieter) ---- */
@@ -151,7 +153,7 @@
     --rfx-surface-3: #292e35;
     --rfx-menu: #1c2026;
     --rfx-dialog: #1a1d22;
-    --rfx-text-1: #e4e8ee;
+    --rfx-text-1: #ffffff;
     --rfx-text-2: #99a2ae;
     --rfx-text-3: #7a838f;
     --rfx-text-4: #474d56;
@@ -164,7 +166,9 @@
     --rfx-accent: #7d9cc7;
     --rfx-accent-hover: #8fabd2;
     --rfx-accent-soft: rgba(125, 156, 199, 0.16);
-    --rfx-on-accent: #0e1116;
+    --rfx-on-accent: #ffffff;
+    --rfx-on-accent-knob: #000000;
+    --rfx-on-accent-mark: #ffffff;
 
     --rfx-ok: #8db596;
     --rfx-warn: #c9ae78;

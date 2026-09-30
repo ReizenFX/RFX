@@ -89,7 +89,7 @@
     top: 3px;
     width: 5px;
     height: 12px;
-    border: solid var(--rfx-on-accent);
+    border: solid var(--rfx-on-accent-mark);
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
 }

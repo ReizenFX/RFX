@@ -221,7 +221,7 @@ window.addEventListener("DOMContentLoaded", () => {
                     // Exact values from original style.css ::after rule:
                     // display:block, width:5px, height:12px, border shorthand,
                     // rotate(45deg), margin-bottom:3px (shifts tick up inside flex center)
-                    tick.style.cssText = 'display:block; width:5px; height:12px; border:solid var(--rfx-on-accent); border-width:0 2px 2px 0; transform:rotate(45deg); margin-bottom:3px; box-sizing:border-box;';
+                    tick.style.cssText = 'display:block; width:5px; height:12px; border:solid var(--rfx-on-accent-mark); border-width:0 2px 2px 0; transform:rotate(45deg); margin-bottom:3px; box-sizing:border-box;';
                     el.appendChild(tick);
                 }
             } else {

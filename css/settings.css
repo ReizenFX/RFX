@@ -219,3 +219,4 @@
 .rfx-swatch.is-text { box-shadow: inset 0 0 0 1px var(--rfx-line-2); flex-shrink: 0; }
 .rfx-row-end .rfx-hex { width: 84px; }
 .rfx-row-end .rfx-btn { height: 26px; padding: 0 8px; }
+.rfx-swatch-group { display: contents; }

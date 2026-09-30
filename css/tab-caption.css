@@ -276,13 +276,13 @@
 #tab-caption .cap-toggle-label input[type="checkbox"] { border-radius: 4px; }
 #tab-caption .cap-toggle-label input:checked { border-color: var(--rfx-accent); background-color: var(--rfx-accent); }
 #tab-caption .cap-toggle-label input[type="radio"]::before {
-    content: ''; width: 6px; height: 6px; background-color: var(--rfx-on-accent);
+    content: ''; width: 6px; height: 6px; background-color: var(--rfx-on-accent-mark);
     border-radius: 50%; position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%) scale(0);
     transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 #tab-caption .cap-toggle-label input[type="checkbox"]::before {
-    content: ''; width: 6px; height: 6px; background-color: var(--rfx-on-accent);
+    content: ''; width: 6px; height: 6px; background-color: var(--rfx-on-accent-mark);
     border-radius: 1px; position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%) scale(0);
     transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -340,7 +340,7 @@
        overlaps the label. This rule only needs to set the font size; the
        previous 2-value `padding: 10px 14px` was shorthand for all four sides and
        silently wiped that gutter, which is why the tick kept merging with text. */
-    padding: 10px 14px 10px 34px !important;
+    padding: 8px 14px 8px 34px !important;
     font-size: 13px !important;
 }
 
@@ -629,7 +629,7 @@ input[type=range].cap-cp-slider:focus { outline: none; }
     content: '';
     position: absolute; left: 50%; top: 50%;
     width: 4px; height: 8px;
-    border: solid var(--rfx-on-accent); border-width: 0 2px 2px 0;
+    border: solid var(--rfx-on-accent-mark); border-width: 0 2px 2px 0;
     transform: translate(-50%, -60%) rotate(45deg);
 }
 

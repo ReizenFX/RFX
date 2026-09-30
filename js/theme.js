@@ -10,10 +10,12 @@
      rfxSurfaceContrast  40..250  (100)  separation of page, cards, inputs, buttons
      rfxTextColor        '#rrggbb' or '' (theme default)  base UI text colour
      rfxTextContrast     40..160  (100)  separation of primary / secondary / muted text
-     rfxBlackButtonText  '1' when on     light accent buttons get pure #000 text
-     rfxNavPos           'top' (default) | 'bottom' | 'left' | 'right'
+     rfxDarkText         '' theme default | '1' | '0'  dark text + icons on light accent buttons
+     rfxDarkKnob         '' | '1' | '0'  dark knob on switches that are on (light accent)
+     rfxDarkMarks        '' | '1' | '0'  dark ticks / dots / day-circle icons on the accent
+     rfxNavPos           'left' (default) | 'top' | 'bottom' | 'right'
      rfxNavIcons         '1' when main tabs are icon-only at top/bottom (sides always are)
-     rfxSubTabPos        'top' (default) | 'bottom'  sub-tab bars when the nav is on a side
+     rfxSubTabPos        'bottom' (default) | 'top'  sub-tab bars when the nav is on a side
    The surface and text ramps are generated here from those numbers and written
    as --rfx-* variables on <html>; css/theme.css keeps the defaults and every
    other token. Layout is exposed as attributes that css/global.css reads:
@@ -25,14 +27,25 @@
     var KEYS = {
         theme: 'rfxTheme', accent: 'rfxAccent', density: 'rfxDensity', radius: 'rfxRadius', reduceMotion: 'rfxReduceMotion',
         brightness: 'rfxUiBrightness', surfaceContrast: 'rfxSurfaceContrast', textColor: 'rfxTextColor', textContrast: 'rfxTextContrast',
-        blackButtonText: 'rfxBlackButtonText', navPos: 'rfxNavPos', navIcons: 'rfxNavIcons', subTabPos: 'rfxSubTabPos'
+        darkText: 'rfxDarkText', darkKnob: 'rfxDarkKnob', darkMarks: 'rfxDarkMarks', navPos: 'rfxNavPos', navIcons: 'rfxNavIcons', subTabPos: 'rfxSubTabPos'
     };
 
     /* tint: how much each RGB channel of a surface differs from neutral grey, as a
        fraction of its lightness (Color = cool graphite). */
     var THEMES = [
-        { id: 'mono', label: 'Monochrome', hint: 'Black, white and greys', accentDefault: '#e8e8e8', textDefault: '#ededed', tint: [0, 0, 0] },
-        { id: 'color', label: 'Color', hint: 'Graphite with soft colour', accentDefault: '#7d9cc7', textDefault: '#e4e8ee', tint: [-0.10, 0, 0.18] }
+        { id: 'mono', label: 'Monochrome', hint: 'Black, white and greys', accentDefault: '#e8e8e8', textDefault: '#ffffff', tint: [0, 0, 0],
+          dark: { text: true, knob: true, marks: true } },
+        { id: 'color', label: 'Color', hint: 'Graphite with soft colour', accentDefault: '#7d9cc7', textDefault: '#ffffff', tint: [-0.10, 0, 0.18],
+          dark: { text: false, knob: true, marks: false } }
+    ];
+    /* accent presets per theme: greys for Monochrome, soft colours for Color */
+    var MONO_ACCENTS = [
+        { id: 'snow', label: 'Snow', hex: '#e8e8e8' },
+        { id: 'white', label: 'White', hex: '#ffffff' },
+        { id: 'pearl', label: 'Pearl', hex: '#d2d2d2' },
+        { id: 'silver', label: 'Silver', hex: '#b4b4b4' },
+        { id: 'stone', label: 'Stone', hex: '#8f8f8f' },
+        { id: 'graphite', label: 'Graphite', hex: '#6c6c6c' }
     ];
     var ACCENTS = [
         { id: 'snow', label: 'Snow', hex: '#e8e8e8' },
@@ -50,9 +63,9 @@
     var SUB_POSITIONS = [{ id: 'top', label: 'Top' }, { id: 'bottom', label: 'Bottom' }];
     var RANGES = { brightness: [-100, 100], surfaceContrast: [40, 250], textContrast: [40, 160] };
     var DEFAULTS = {
-        theme: 'mono', accent: '', density: 'standard', radius: 'standard', reduceMotion: false,
-        brightness: 0, surfaceContrast: 100, textColor: '', textContrast: 100, blackButtonText: false,
-        navPos: 'top', navIcons: false, subTabPos: 'top'
+        theme: 'mono', accent: '', density: 'comfortable', radius: 'round', reduceMotion: false,
+        brightness: 0, surfaceContrast: 100, textColor: '', textContrast: 100, darkText: '', darkKnob: '', darkMarks: '',
+        navPos: 'left', navIcons: false, subTabPos: 'bottom'
     };
 
     function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -64,6 +77,7 @@
         return Math.max(r[0], Math.min(r[1], Math.round(n)));
     }
 
+    function tri(v) { return v === '1' || v === true ? '1' : v === '0' || v === false ? '0' : ''; }
     function normalizeHex(v) {
         var m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(v || '').trim());
         if (!m) return '';
@@ -83,6 +97,14 @@
         var dark = black ? '#000000' : '#111111';
         return contrast(hex, dark) >= contrast(hex, '#ffffff') ? dark : '#ffffff';
     }
+    /* Is the accent light enough for dark content on it? */
+    function isLight(hex) { return contrast(hex, '#000000') >= contrast(hex, '#ffffff'); }
+    /* Resolved dark-on-accent choices: explicit setting, else the theme default. */
+    function darkOn(s) {
+        var th = THEMES.filter(function (t) { return t.id === s.theme; })[0] || THEMES[0];
+        var r = function (v, d) { return v === '1' ? true : v === '0' ? false : d; };
+        return { text: r(s.darkText, th.dark.text), knob: r(s.darkKnob, th.dark.knob), marks: r(s.darkMarks, th.dark.marks) };
+    }
     function mix(hex, withHex, t) { var a = rgb(hex), b = rgb(withHex); return toHex([0, 1, 2].map(function (i) { return a[i] + (b[i] - a[i]) * t; })); }
 
     function get() {
@@ -96,7 +118,9 @@
             surfaceContrast: num(read(KEYS.surfaceContrast), 'surfaceContrast'),
             textColor: normalizeHex(read(KEYS.textColor)),
             textContrast: num(read(KEYS.textContrast), 'textContrast'),
-            blackButtonText: read(KEYS.blackButtonText) === '1',
+            darkText: tri(read(KEYS.darkText)),
+            darkKnob: tri(read(KEYS.darkKnob)),
+            darkMarks: tri(read(KEYS.darkMarks)),
             navPos: oneOf(NAV_POSITIONS, read(KEYS.navPos), DEFAULTS.navPos),
             navIcons: read(KEYS.navIcons) === '1',
             subTabPos: oneOf(SUB_POSITIONS, read(KEYS.subTabPos), DEFAULTS.subTabPos)
@@ -146,7 +170,12 @@
         v['--rfx-accent'] = ac;
         v['--rfx-accent-hover'] = light ? mix(ac, '#ffffff', 0.35) : mix(ac, '#ffffff', 0.14);
         v['--rfx-accent-soft'] = 'rgba(' + rc.join(', ') + ', 0.16)';
-        v['--rfx-on-accent'] = contrastText(ac, s.blackButtonText);
+        // text, icons, knobs and marks on the accent: white by default, pure black when
+        // chosen and the accent is light enough to carry it
+        var dk = darkOn(s), lightAc = isLight(ac);
+        v['--rfx-on-accent'] = dk.text && lightAc ? '#000000' : '#ffffff';
+        v['--rfx-on-accent-knob'] = dk.knob && lightAc ? '#000000' : '#ffffff';
+        v['--rfx-on-accent-mark'] = dk.marks && lightAc ? '#000000' : '#ffffff';
         return v;
     }
 
@@ -193,7 +222,9 @@
         store('surfaceContrast', s.surfaceContrast, DEFAULTS.surfaceContrast);
         write(KEYS.textColor, s.textColor);
         store('textContrast', s.textContrast, DEFAULTS.textContrast);
-        write(KEYS.blackButtonText, s.blackButtonText ? '1' : '');
+        write(KEYS.darkText, tri(s.darkText));
+        write(KEYS.darkKnob, tri(s.darkKnob));
+        write(KEYS.darkMarks, tri(s.darkMarks));
         store('navPos', s.navPos, DEFAULTS.navPos);
         write(KEYS.navIcons, s.navIcons ? '1' : '');
         store('subTabPos', s.subTabPos, DEFAULTS.subTabPos);
@@ -210,9 +241,12 @@
         return v || fallback || '';
     }
 
-    var APPEARANCE_KEYS = ['theme', 'accent', 'density', 'radius', 'reduceMotion', 'brightness', 'surfaceContrast', 'textColor', 'textContrast', 'blackButtonText'];
+    var APPEARANCE_KEYS = ['theme', 'accent', 'density', 'radius', 'reduceMotion', 'brightness', 'surfaceContrast', 'textColor', 'textContrast', 'darkText', 'darkKnob', 'darkMarks'];
     window.RFXTheme = {
-        THEMES: THEMES, ACCENTS: ACCENTS, DENSITIES: DENSITIES, RADII: RADII, DEFAULTS: DEFAULTS,
+        THEMES: THEMES, ACCENTS: ACCENTS, MONO_ACCENTS: MONO_ACCENTS,
+        accentsFor: function (theme) { return theme === 'mono' ? MONO_ACCENTS : ACCENTS; },
+        darkOn: function () { return darkOn(get()); },
+        isLight: isLight, DENSITIES: DENSITIES, RADII: RADII, DEFAULTS: DEFAULTS,
         NAV_POSITIONS: NAV_POSITIONS, SUB_POSITIONS: SUB_POSITIONS, RANGES: RANGES,
         get: get,
         set: set,

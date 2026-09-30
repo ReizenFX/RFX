@@ -308,7 +308,20 @@
             return s;
         };
         const autoSw = mkSwatch(null, 'Theme default', () => { theme.set({ accent: '' }); sync(); });
-        theme.ACCENTS.forEach(a => swEls.push({ hex: a.hex, el: mkSwatch(a.hex, a.label, () => { theme.set({ accent: a.hex }); sync(); }) }));
+        // presets follow the theme: greys for Monochrome, soft colours for Color
+        const presetBox = el('div', 'rfx-swatch-group');
+        sw.appendChild(presetBox);
+        let presetsFor = null;
+        const buildPresets = th => {
+            presetsFor = th;
+            presetBox.innerHTML = '';
+            swEls.length = 0;
+            theme.accentsFor(th).forEach(a => {
+                const s = mkSwatch(a.hex, a.label, () => { theme.set({ accent: a.hex }); sync(); });
+                presetBox.appendChild(s);
+                swEls.push({ hex: a.hex, el: s });
+            });
+        };
         const colorInput = el('input', 'rfx-colorinput');
         colorInput.type = 'color';
         const customSw = mkSwatch(null, 'Custom colour', () => colorInput.click(), 'is-custom');
@@ -405,21 +418,36 @@
         colorRow.appendChild(colorEnd);
         textGroup.appendChild(colorRow);
         const textConRow = sliderRow(textGroup, 'Text contrast', 'Separation of primary, secondary and muted text', 'textContrast', pct);
-        const blackRow = el('div', 'rfx-row');
-        const bt = el('div', 'rfx-row-text');
-        bt.appendChild(el('div', 'rfx-row-title', 'Black button text'));
-        bt.appendChild(el('div', 'rfx-row-sub', 'Light accent buttons (like Apply) use pure black text'));
-        blackRow.appendChild(bt);
-        const bsw = el('label', 'switch');
-        const blackToggle = el('input');
-        blackToggle.type = 'checkbox';
-        blackToggle.onchange = () => { theme.set({ blackButtonText: blackToggle.checked }); sync(); };
-        bsw.appendChild(blackToggle);
-        bsw.appendChild(el('span', 'slider'));
-        blackRow.appendChild(bsw);
-        textGroup.appendChild(blackRow);
         secText.appendChild(textGroup);
         inner.appendChild(secText);
+
+        // what sits on the accent colour: white by default, black when chosen and the accent is light enough
+        const secOn = el('div', 'rfxset-section');
+        secOn.appendChild(label('On the accent colour'));
+        const onGroup = el('div', 'rfx-group');
+        const toggleRow = (title, sub, key) => {
+            const row = el('div', 'rfx-row');
+            const tx = el('div', 'rfx-row-text');
+            tx.appendChild(el('div', 'rfx-row-title', title));
+            tx.appendChild(el('div', 'rfx-row-sub', sub));
+            row.appendChild(tx);
+            const sl = el('label', 'switch');
+            const input = el('input');
+            input.type = 'checkbox';
+            input.onchange = () => { const o = {}; o[key] = input.checked ? '1' : '0'; theme.set(o); sync(); };
+            sl.appendChild(input);
+            sl.appendChild(el('span', 'slider'));
+            row.appendChild(sl);
+            onGroup.appendChild(row);
+            return input;
+        };
+        const darkTextT = toggleRow('Black text and icons on buttons', 'Apply, Paste, Download, Done and other accent buttons', 'darkText');
+        const darkKnobT = toggleRow('Black switch knobs', 'The circle of switches that are on', 'darkKnob');
+        const darkMarksT = toggleRow('Black checkmarks and dots', 'Checkboxes, radio buttons and Tracker day circles', 'darkMarks');
+        secOn.appendChild(onGroup);
+        const onNote = el('div', 'rfx-note', '');
+        secOn.appendChild(onNote);
+        inner.appendChild(secOn);
 
         // layout
         const secLayout = el('div', 'rfxset-section');
@@ -491,13 +519,14 @@
         secPrev.appendChild(prev);
         inner.appendChild(secPrev);
 
-        const reset = btn('Reset appearance', '', () => { theme.reset(); sync(); }, 'Monochrome theme, default accent, standard density and roundness');
+        const reset = btn('Reset appearance', '', () => { theme.reset(); sync(); }, 'Monochrome theme, default accent and text, comfortable density, round corners');
         inner.appendChild(reset);
 
         function sync(fromPicker) {
             const s = theme.get();
             Object.keys(cardEls).forEach(k => cardEls[k].classList.toggle('on', k === s.theme));
             const thDef = theme.THEMES.find(x => x.id === s.theme);
+            if (presetsFor !== s.theme) buildPresets(s.theme);
             const defHex = (thDef && thDef.accentDefault) || '';
             autoSw.style.setProperty('--sw', defHex);
             autoSw.style.setProperty('--swt', defHex ? theme.contrastText(defHex) : '');
@@ -520,7 +549,12 @@
             if (document.activeElement !== textHex) textHex.value = textShown;
             if (!fromPicker && textShown) textInput.value = textShown;
             textDefault.style.visibility = s.textColor ? '' : 'hidden';
-            blackToggle.checked = s.blackButtonText;
+            const dk = theme.darkOn();
+            darkTextT.checked = dk.text;
+            darkKnobT.checked = dk.knob;
+            darkMarksT.checked = dk.marks;
+            const acNow = s.accent || defHex;
+            onNote.textContent = theme.isLight(acNow) ? 'Black is used only while the accent is light enough; otherwise these stay white.' : 'The current accent is dark, so these stay white.';
         }
         sync();
     }

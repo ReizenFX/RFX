@@ -45,11 +45,14 @@
         const tabId = btn.id.replace(/^btn-/, '');
         const subs = subButtons(tabId);
         fly.innerHTML = '';
-        const title = document.createElement('div');
-        title.className = 'rfx-fly-title';
-        title.textContent = tabName(btn);
-        fly.appendChild(title);
         fly.classList.toggle('has-subs', subs.length > 0);
+        // a tab without sub-tabs shows its name; with sub-tabs the list itself is enough
+        if (!subs.length) {
+            const title = document.createElement('div');
+            title.className = 'rfx-fly-title';
+            title.textContent = tabName(btn);
+            fly.appendChild(title);
+        }
         subs.forEach(b => {
             const item = document.createElement('div');
             item.className = 'rfx-fly-item' + (subIsActive(b) ? ' active' : '');
@@ -73,7 +76,7 @@
         let x, y;
         if (p === 'left' || p === 'right') {
             x = p === 'left' ? r.right + GAP : r.left - GAP - w;
-            y = subs ? r.top - 4 : r.top + r.height / 2 - h / 2;
+            y = subs ? r.top - 5 : r.top + r.height / 2 - h / 2;
         } else {
             x = subs ? r.left - 4 : r.left + r.width / 2 - w / 2;
             y = p === 'bottom' ? r.top - GAP - h : r.bottom + GAP;

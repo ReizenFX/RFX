@@ -155,22 +155,17 @@ function initPaths() {
 /* ---------------------------------------------------------------------------
    PRESETS FOLDER
    Default %APPDATA%\RFX\Caption (changeable in Caption settings), one subfolder per
-   preset kind. The old RFX Suite folder is never moved or deleted: the settings can
-   copy its presets in ("Import"), keeping anything already there.
+   preset kind.
    --------------------------------------------------------------------------- */
 var CAP_SUBFOLDERS        = { effect: 'Effect Presets', styles: 'Text Styles', formats: 'Format Presets',
                               boxPresets: 'Box Presets', boxFormats: 'Box Formats', styleFormats: 'Style Formats' };
-var CAP_LEGACY_SUBFOLDERS = { effect: 'Effect Preset', styles: 'Text Properties', formats: 'Formats',
-                              boxPresets: 'BoxPresets', boxFormats: 'BoxFormats', styleFormats: 'StyleFormats' };
 var CAP_PRESETS_DIR_KEY = 'rfxCaptionPresetsDir';     // custom presets folder (absent = default)
-var CAP_IMPORT_KEY      = 'rfxCaptionLegacyImport';   // 'done' | 'dismissed' once the import offer was answered
 
 function capAppDataPath() {
     return isMac ? path.join(os.homedir(), 'Library', 'Application Support')
                  : (process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'));
 }
 function capDefaultPresetsDir() { return path.join(capAppDataPath(), 'RFX', 'Caption'); }
-function capLegacyDataDir() { return path.join(capAppDataPath(), 'RFX Suite', 'Caption Tab'); }
 function capPresetsDir() { return localStorage.getItem(CAP_PRESETS_DIR_KEY) || capDefaultPresetsDir(); }
 
 function applyPresetsDir() {
@@ -2311,7 +2306,7 @@ function bindPresetLoaders() {
 }
 
 /* ---------------------------------------------------------------------------
-   SETTINGS: presets folder, import from RFX Suite, AI engine downloads
+   SETTINGS: presets folder, AI engine downloads
    (dialog look shared with the other tabs via js/deps.js + css/deps.css)
    --------------------------------------------------------------------------- */
 function capListFiles(dir) {
@@ -2353,34 +2348,12 @@ function capCopyPresets(fromRoot, fromMap, toRoot, toMap) {
     return result;
 }
 
-function capLegacyPresetCount() {
-    var legacy = capLegacyDataDir();
-    if (path.resolve(legacy) === path.resolve(extDataDir)) return 0;
-    return Object.keys(CAP_LEGACY_SUBFOLDERS).reduce(function(n, k) {
-        return n + capListFiles(path.join(legacy, CAP_LEGACY_SUBFOLDERS[k])).length;
-    }, 0);
-}
-
-function capImportLegacyPresets() {
-    var r = capCopyPresets(capLegacyDataDir(), CAP_LEGACY_SUBFOLDERS, extDataDir, CAP_SUBFOLDERS);
-    localStorage.setItem(CAP_IMPORT_KEY, 'done');
-    window.captionRefreshFolders();
-    capShowImportOffer();
-    var msg = 'Imported ' + r.copied + ' preset' + (r.copied === 1 ? '' : 's') + ' from RFX Suite';
-    if (r.renamed) msg += ' (' + r.renamed + ' renamed to avoid replacing yours)';
-    if (r.skipped) msg += ', ' + r.skipped + ' already here';
-    if (r.failed) msg += '. ' + r.failed + ' could not be copied';
-    if (typeof showToast === 'function') showToast(msg);
-    return r;
-}
-
 function capSetPresetsDir(dir) {
     if (dir) localStorage.setItem(CAP_PRESETS_DIR_KEY, path.resolve(dir));
     else localStorage.removeItem(CAP_PRESETS_DIR_KEY);
     applyPresetsDir();
     ensureFolders();
     window.captionRefreshFolders();
-    capShowImportOffer();
 }
 
 function capChangePresetsDir(onDone) {
@@ -2426,17 +2399,6 @@ function capOpenSettings(reason) {
     row.appendChild(ui.button('Open', 'is-ghost', function() { RFXDeps.openFolder(extDataDir); }));
     presets.appendChild(row);
 
-    var legacyCount = capLegacyPresetCount();
-    if (legacyCount) {
-        var imp = ui.el('div', 'rfxdep-text', '');
-        imp.style.marginTop = '10px';
-        imp.textContent = legacyCount + ' preset' + (legacyCount === 1 ? '' : 's') + ' from RFX Suite are in ' + capLegacyDataDir() + '. Importing copies them here; the old folder is left as it is.';
-        presets.appendChild(imp);
-        presets.appendChild(ui.button('Import ' + legacyCount + ' preset' + (legacyCount === 1 ? '' : 's') + ' from RFX Suite', 'is-primary', function() {
-            capImportLegacyPresets();
-            reopen();
-        }));
-    }
     m.body.appendChild(presets);
 
     var engine = ui.section('AI engine and tools');
@@ -2447,33 +2409,6 @@ function capOpenSettings(reason) {
     RFXDeps.ui.renderPanel(host, 'caption');
 }
 window.captionOpenSettings = function() { capOpenSettings(); };
-
-/* One-time offer to copy presets from the old RFX Suite folder (until imported or dismissed). */
-function capShowImportOffer() {
-    var old = $id('cap-import-offer');
-    if (old) old.remove();
-    if (!nodeReady || localStorage.getItem(CAP_IMPORT_KEY)) return;
-    var count = capLegacyPresetCount();
-    if (!count) return;
-    var bar = document.createElement('div');
-    bar.id = 'cap-import-offer';
-    bar.className = 'rfxdep-notice';
-    var text = document.createElement('span');
-    text.textContent = 'Found ' + count + ' caption preset' + (count === 1 ? '' : 's') + ' from RFX Suite. Import copies them into the new presets folder (the old folder stays as it is).';
-    bar.appendChild(text);
-    var imp = document.createElement('button');
-    imp.className = 'rfxdep-btn is-primary';
-    imp.textContent = 'Import';
-    imp.onclick = function() { capImportLegacyPresets(); };
-    var later = document.createElement('button');
-    later.className = 'rfxdep-btn is-ghost';
-    later.textContent = 'Not now';
-    later.onclick = function() { localStorage.setItem(CAP_IMPORT_KEY, 'dismissed'); bar.remove(); };
-    bar.appendChild(imp);
-    bar.appendChild(later);
-    var host = $id('tab-caption') && $id('tab-caption').querySelector('.cap-flex-col');
-    if (host) host.insertBefore(bar, host.children[1] || null);
-}
 
 /* Notice at the top of Generate while an engine part is missing. */
 function capUpdateEngineNotice() {
@@ -2521,7 +2456,6 @@ document.addEventListener("DOMContentLoaded", function() {
     if (nodeReady) loadCaptionBackend(function(){});
     if (nodeReady) window.captionRefreshFolders();
     if (nodeReady) {
-        capShowImportOffer();
         capUpdateEngineNotice();
         if (window.RFXDeps) {
             var capNoticeTimer = null;

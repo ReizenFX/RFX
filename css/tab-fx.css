@@ -221,7 +221,7 @@
     transition: transform var(--rfx-dur), background var(--rfx-dur);
 }
 #tab-fx .fxt-switch input:checked + .fxt-switch-track { background: var(--rfx-accent); }
-#tab-fx .fxt-switch input:checked + .fxt-switch-track::after { transform: translateX(11px); background: var(--rfx-on-accent); }
+#tab-fx .fxt-switch input:checked + .fxt-switch-track::after { transform: translateX(11px); background: var(--rfx-on-accent-knob); }
 #tab-fx .fxt-switch-label { font-size: var(--rfx-fs-sm); color: var(--rfx-text-3); }
 #tab-fx .fxt-switch input:checked ~ .fxt-switch-label { color: var(--rfx-text-1); }
 
@@ -241,7 +241,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: var(--rfx-on-accent);
+    background: var(--rfx-on-accent-mark);
     -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2.6 6.3 4.9 8.5 9.4 3.6' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / 11px 11px no-repeat;
     transform: scale(0);
     transition: transform var(--rfx-dur);
