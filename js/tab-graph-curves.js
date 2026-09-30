@@ -81,8 +81,9 @@
        place in time sets the timing (the first landing is at x / (1 + d); Gravity).
        Every rebound is a parabola, d times as deep and d times as long as the one before (the
        first lasts 2 x landing time x d); they settle only once they have shrunk to nothing.
-       A rebound that would still be in the air at the end is shortened (same proportions) so it
-       lands exactly on the second key: no hold, no extra key.
+       A rebound still in the air at the end keeps the handle's rule and is cut at the end, as in
+       Alight Motion. A key has to reach its value, so in AE the last frame moves straight onto the
+       second key (a normal key one frame before it; no hold).
        Right-click extras (defaults give exactly that): Decay X / Decay Y = rebounds get
        shorter / shallower faster, Hang = how round their tops are. */
     function bnCore(p) {
@@ -95,27 +96,42 @@
         let imp = K(t1, 1, 2 / t1, 0, QUAD, QUAD);
         k.push(imp);
         let s = t1, D = c.d1, d = 2 * t1 * c.d1;
-        // rebounds shrink level by level until they are too shallow to see
+        // rebounds shrink level by level until they are too shallow to see; every rebound follows
+        // the handle's rule, including one still in the air at the end (cut there, like Alight Motion)
+        let cut = false;
         for (let n = 0; n < 1000 && s < 1 - 1e-6; n++) {
             if (D < 0.002 || d < 1e-4) break;
-            let dd = d, DD = D;
-            const rem = 1 - s;
-            if (s + d > 1 + 1e-9) { dd = rem; DD = D * rem / d; }    // the last rebound is shortened to land on the second key
-            if (dd !== d && dd < 0.003) {                             // a shortened last rebound too short to draw: that landing is the second key
-                const top = k[k.length - 2];
-                imp.u = 1;
-                if (top && top.v < 1 && top.u < 1) imp.si = 2 * (1 - top.v) / (1 - top.u);
+            if (s + d <= 1 + 1e-9) {                                  // a whole rebound
+                imp.so = -4 * D / d;
+                k.push(K(s + d / 2, 1 - D, 0, 0, B, B));
+                s += d;
+                imp = K(s, 1, 4 * D / d, 0, QUAD, QUAD);
+                k.push(imp);
+            } else if (s < 1 - 0.018) {                               // still in the air at the end: cut there
+                const e = 0.012, w = (1 - e - s) / d;                 // ~ one frame; in AE the key sits exactly one frame before
+                imp.so = -4 * D / d;
+                if (s + d / 2 < 1 - e - 0.005) k.push(K(s + d / 2, 1 - D, 0, 0, B, QUAD));
+                else imp.io = QUAD;
+                // a normal key one frame before the second key; the last frame moves straight onto it
+                const cutK = K(1 - e, 1 - 4 * D * w * (1 - w), -4 * D * (1 - 2 * w) / d, 0, QUAD, 0, 2);
+                cutK.frame = 2;
+                k.push(cutK);
+                cut = true;
+                break;
+            } else {
+                // the next rebound would start in the very last moments: a landing within 0.3% of the
+                // end lands on the second key, otherwise it rests there for that sliver
+                if (1 - s < 0.003) {
+                    const top = k[k.length - 2];
+                    imp.u = 1;
+                    if (top && top.v < 1 && top.u < 1) imp.si = 2 * (1 - top.v) / (1 - top.u);
+                }
                 break;
             }
-            imp.so = -4 * DD / dd;
-            k.push(K(s + dd / 2, 1 - DD, 0, 0, B, B));
-            s += dd;
-            imp = K(s, 1, 4 * DD / dd, 0, QUAD, QUAD);
-            k.push(imp);
-            if (dd !== d) break;
             D *= c.ry; d *= c.rx;
         }
-        if (imp.u > 1 - 1e-6) { imp.u = 1; imp.io = 0; }
+        if (cut) k.push(K(1, 1, 0, 0, 0, 0));
+        else if (imp.u > 1 - 1e-6) { imp.u = 1; imp.io = 0; }
         else { imp.so = 0; k.push(K(1, 1, 0, 0, QUAD, 0)); }
         const hy = 1 - c.d1;
         return { knots: k, handles: [
@@ -330,7 +346,7 @@
 
     // ------------------------------------------------------------------ drawing
     // a jump onto a key (a cut bounce snapping to the second key's value) is not drawn: the curve ends mid-air as in Alight Motion
-    const snapEnd = k => k.length > 2 && k[k.length - 2].seg === 1 && k[k.length - 2].frame === 2;
+    const snapEnd = k => k.length > 2 && k[k.length - 2].seg === 2 && k[k.length - 2].frame === 2;
     const snapStart = k => k.length > 2 && k[0].seg === 2 && k[1].frame === 1;
     function pathD(k, toPx) {
         let d = '';
