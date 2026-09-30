@@ -16,7 +16,8 @@
      Cyclic         (Alight Motion model) bottom handle = Frequency, right edge = End (baseline),
                     top handle = Tilt, the knob above it = Smoothness
      Steps          top of the last riser = Steps, foot of the first riser = Smoothness
-     Elastic Steps  the Steps graph; top of the last riser = Steps, first dip = Elastic + Wobble
+     Elastic Steps  the Steps graph; top of the last riser = Steps, a sideways slider on the first
+                    step = Elastic (further right = more elastic, rounder swings)
      Random         top of the band = Amount, dot on the middle line = Density,
                     end of the middle line = Trajectory (right-click: New pattern)
 
@@ -370,60 +371,52 @@
 
     // ------------------------------------------------------------------ Elastic Steps
     /* The Steps graph (same staircase, same step-count handle) with the smoothness handle replaced
-       by an elastic handle: every jump overshoots its new level and wobbles, and the wobble dies
-       out (fading in a straight line, like Elastic) before the next jump.
-         elastic handle  the first dip after the first jump: down / up = more / less elastic
-                         (how far each step overshoots), left / right = how quickly it wobbles
-                         (Wobble: the length of a half swing, as a share of the step). All the way
-                         up (no dip) = hard steps, exactly the Steps graph.
+       by an elastic handle that only moves sideways, along the first step:
+         far left    no elastic: hard steps, exactly the Steps graph
+         further right  more elastic, and each jump's overshoot gets rounder and its wobble slower
+         far right   (95% of the step) one big, round swing per step, like the Elastic graph
+       Each jump rises into a rounded overshoot and wobbles, fading so it has settled by the next
+       jump; the last step settles at 85% of its length and holds, so the jump onto the second key
+       has no key crowding it. Right-click: Strength scales how far the steps overshoot.
        Reverse mirrors it: the wobble comes before each jump (at the end of each step). */
     function buildElasticSteps(p, rev) {
-        const n = p.steps, A = p.amp / 100, hf = p.wob / 100;
-        // a half swing is never shorter than 0.25% of the move (faster is far below a frame)
-        const S = 1 / n, D = 1 / n, h = Math.max(hf * S, 0.0025), I = infE(50), eE = Math.min(CY_EPS, h / 3);
-        const L = j => j / n;                                   // the levels of the Steps graph
-        const E = tau => A * D * Math.max(0, 1 - tau / S);    // overshoot envelope inside a step
+        const n = p.steps, S = 1 / n, D = 1 / n, L = j => j / n, I = infE(50);
+        const e = clamp(p.el / 100, 0, 1) * 0.95;           // where the handle is, as a share of the step
+        const A = Math.min(1, 1.4 * e) * p.str / 100;       // overshoot, as a share of the step height
+        // half swing: short = sharp, long = round; never shorter than 0.25% of the move (faster is below a frame)
+        const T = Math.max(S * (0.03 + 0.42 * e), 0.0025);
         let k;
         if (A < 0.005) {
             k = buildSteps({ steps: n, smooth: 0 }, rev).knots;
         } else {
             k = [K(0, 0, 0, 0, 0, QUAD)];
             for (let j = 1; j < n; j++) {
-                const t0 = j * S, lastStep = j === n - 1;
-                // the jump: a vertical edge from the flat step up to the overshoot, which rounds over
-                const foot = K(t0, L(j - 1), 0, 0, QUAD, 0, 2);
-                k.push(foot);
-                const top = K(t0 + eE, L(j) + E(0), 0, 0, 0, I);
-                top.frame = 5;                                  // the top of an edge: at least a frame in AE
-                k.push(top);
-                let m = 0;
-                const limit = lastStep ? S - Math.max(0.3 * h, 0.012) : S - 0.3 * h;
-                for (;;) {
-                    m++;
-                    const tau = m * h;
-                    if (tau > limit) break;
-                    const e = E(tau);
-                    if (e < 0.0015 * D) break;
-                    k.push(K(t0 + tau, L(j) + (m % 2 ? -1 : 1) * e, 0, 0, I, I));
+                const t0 = j * S, last = j === n - 1, span = last ? 0.85 * S : S;
+                const E = tau => A * D * Math.max(0, 1 - tau / span);
+                const pk = L(j) + E(T);
+                // the jump: from the flat step up into the first, rounded overshoot
+                k.push(K(t0, L(j - 1), 0, (pk - L(j - 1)) / T, QUAD, QUAD));
+                k.push(K(t0 + T, pk, 0, 0, 0.42, I));
+                for (let m = 2; ; m++) {
+                    const tau = m * T;
+                    if (tau > span - 0.3 * T) break;
+                    const v = E(tau);
+                    if (v < 0.0015 * D) break;
+                    k.push(K(t0 + tau, L(j) + (m % 2 ? 1 : -1) * v, 0, 0, I, I));
                 }
-                if (lastStep) {
-                    // settles on the last level and jumps to the second key's value on that key
-                    const st = K(1 - 0.004, L(j), 0, 0, I, 0, 1);
-                    st.frame = 6;                                   // a frame before the key, on the curve
+                if (last) {
+                    // settled: holds the last level until the jump onto the second key
+                    const st = K(t0 + span, L(j), 0, 0, I, 0, 1);
+                    if (rev) { st.u = 1 - 0.004; st.frame = 6; }  // reversed, the first jump must happen right away
                     k.push(st);
                 }
             }
-            if (n < 2) k.push(K(1 - 0.004, 0, 0, 0, QUAD, 0, 1));
             k.push(K(1, 1, 0, 0, 0, 0));
         }
         return { knots: k, handles: [
             { id: 'count', x: (n - 1) / n, y: (n - 1) / n, label: 'Steps ' + n, drag: x => { p.steps = clamp(R(1 / Math.max(0.02, 1 - x)), 2, 24); } },
-            { id: 'elastic', x: S + h, y: L(1) - E(h), label: 'Elastic ' + p.amp.toFixed(1) + '  \u00b7  Wobble ' + p.wob.toFixed(1),
-              drag: (x, y) => {
-                  const nhf = clamp((x - S) / S, 0.02, 0.6);
-                  p.wob = clamp(R(nhf * 1000) / 10, 2, 60);
-                  p.amp = clamp(R((L(1) - y) / (D * (1 - p.wob / 100)) * 1000) / 10, 0, 150);
-              } }
+            { id: 'elastic', x: S + e * S, y: L(1), label: 'Elastic ' + p.el.toFixed(1),
+              drag: x => { p.el = clamp(R((x - S) / S / 0.95 * 1000) / 10, 0, 100); } }
         ] };
     }
 
@@ -466,8 +459,10 @@
         cyclic: { name: 'Cyclic', build: buildCyclicShape, view: [-0.12, 1.65],
             params: [P('freq', 'Frequency', 1, 50, 3.2, false, 0.01), P('tilt', 'Tilt', 0, 100, 50, false, 0.1), P('soft', 'Smoothness', 0, 100, 0, false, 0.1), P('end', 'End', 0, 100, 0, false, 0.1), P('smooth', 'Smooth end', 0, 1, 1, true)] },
         steps: { name: 'Steps', build: buildSteps, params: [P('steps', 'Steps', 2, 24, 4), P('smooth', 'Smoothness', 0, 100, 0)] },
-        elasticsteps: { name: 'Elastic Steps', build: buildElasticSteps, view: [-0.3, 1.3],
-            params: [P('steps', 'Steps', 2, 24, 4), P('amp', 'Elastic', 0, 150, 60, false, 0.1), P('wob', 'Wobble', 2, 60, 18, false, 0.1)] },
+        elasticsteps: { name: 'Elastic Steps', build: buildElasticSteps,
+            // the view fits the tallest overshoot the step height allows (it only changes with the step count)
+            view: p => { const D = 1 / p.steps, o = D * p.str / 100; return [Math.min(-0.3, D - o - 0.12), Math.max(1.3, 1 - D + o + 0.12)]; },
+            params: [P('steps', 'Steps', 2, 24, 4), P('el', 'Elastic', 0, 100, 40, false, 0.1), P('str', 'Strength', 0, 200, 100, false, 1)] },
         random: { name: 'Random', build: buildRandom, params: [P('amount', 'Amount', 0, 100, 35), P('density', 'Density', 0, 100, 40), P('traj', 'Trajectory', -50, 150, 100), P('seed', 'Seed', 0, 999999, 0, true)] }
     };
     const defParams = m => { const o = {}; MODELS[m].params.forEach(q => { o[q.k] = q.def; }); return o; };
@@ -477,7 +472,7 @@
     }
 
     // ------------------------------------------------------------------ state
-    const VERSION = 3, MODEL_VERSION = { elastic: 2, bounce: 3, cyclic: 2, elasticsteps: 2 };
+    const VERSION = 3, MODEL_VERSION = { elastic: 2, bounce: 3, cyclic: 2, elasticsteps: 4 };
     function defaults() { const s = { v: VERSION, vm: Object.assign({}, MODEL_VERSION), mode: 'bezier', rev: false }; Object.keys(MODELS).forEach(m => { s[m] = defParams(m); }); return s; }
     let st = load();
     function load() {
@@ -522,7 +517,10 @@
     const shape = () => shapeFor(st);
     function viewRange(sh, noPad) {
         const M = model();
-        if (M && M.view) return st.rev ? [1 - M.view[1], 1 - M.view[0]] : M.view.slice();   // a fixed view: nothing rescales while dragging
+        if (M && M.view) {                                        // a fixed view: nothing rescales while dragging
+            const v = typeof M.view === 'function' ? M.view(st[st.mode]) : M.view;
+            return st.rev ? [1 - v[1], 1 - v[0]] : v.slice();
+        }
         sh = sh || shape();
         let lo = 0, hi = 1;
         sh.knots.forEach(q => { lo = Math.min(lo, q.v); hi = Math.max(hi, q.v); });
