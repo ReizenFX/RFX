@@ -95,6 +95,8 @@ function applyBezierEaseToSelection(x1, y1, x2, y2, type) {
     for (var p = 0; p < targetProps.length; p++) {
         var prop = targetProps[p];
         if (!prop.canVaryOverTime || prop.numKeys === 0) continue;
+        graphCurveRemoveAdded(prop);   // keys an Elastic / Bounce / ... apply added go again
+        if (prop.numKeys === 0) continue;
         
         var targetKeys = [];
         if (prop.selectedKeys.length > 0) {
@@ -326,6 +328,37 @@ function readBezierEaseV2() {
 //  pair's own keys keep their other side, every key stays editable in the graph editor.
 //  Pairs: consecutive selected keys; one selected key + the next; none = every pair.
 // -----------------------------------------------------------
+// Keys added by a curve type, per property: { "<comp>|<layer>|<property path>": [times] }.
+// Kept for the After Effects session (all panels share one ExtendScript scope) so going
+// back to Bezier, or applying another type, removes them. A key is only removed while it
+// is still there at exactly that time and not selected.
+var graphCurveAdded = (typeof graphCurveAdded !== 'undefined' && graphCurveAdded) ? graphCurveAdded : {};
+
+function graphCurvePropKey(prop) {
+    try {
+        var parts = [], p = prop;
+        while (p && p.propertyDepth > 0) { parts.unshift(p.matchName + '#' + p.propertyIndex); p = p.parentProperty; }
+        var layer = prop.propertyGroup(prop.propertyDepth);
+        var lid = (layer.id !== undefined) ? ('id' + layer.id) : ('ix' + layer.index);
+        return layer.containingComp.id + '|' + lid + '|' + parts.join('/');
+    } catch (e) { return null; }
+}
+
+function graphCurveRemoveAdded(prop) {
+    var key = graphCurvePropKey(prop);
+    if (!key || !graphCurveAdded[key]) return 0;
+    var times = graphCurveAdded[key], removed = 0;
+    for (var i = times.length - 1; i >= 0; i--) {
+        if (prop.numKeys < 1) break;
+        var k = prop.nearestKeyIndex(times[i]);
+        var sel = false;
+        try { sel = prop.keySelected(k); } catch (e) {}
+        if (Math.abs(prop.keyTime(k) - times[i]) < 0.0001 && !sel) { prop.removeKey(k); removed++; }
+    }
+    delete graphCurveAdded[key];
+    return removed;
+}
+
 function graphCurveParse(spec) {
     var out = [], rows = String(spec).split(';');
     for (var i = 0; i < rows.length; i++) {
@@ -363,12 +396,14 @@ function graphCurveApplyPair(prop, ta, tb, knots, minGap) {
     use.push(knots[knots.length - 1]);
 
     // 3. add the inner keys
+    var added = [];
     for (i = 1; i < use.length - 1; i++) {
         var val;
         if (isArr) { val = []; for (d = 0; d < n; d++) val.push(va[d] + (vb[d] - va[d]) * use[i].v); }
         else val = va + (vb - va) * use[i].v;
         var idx = prop.addKey(ta + use[i].u * T);
         prop.setValueAtKey(idx, val);
+        added.push(prop.keyTime(idx));
     }
 
     // 4. interpolation, speeds and influences (endpoints: only the side facing the segment)
@@ -394,8 +429,9 @@ function graphCurveApplyPair(prop, ta, tb, knots, minGap) {
             if (i > 0 && i < use.length - 1) { prop.setTemporalContinuousAtKey(k, q.si === q.so); prop.setTemporalAutoBezierAtKey(k, false); }
             else { prop.setTemporalAutoBezierAtKey(k, false); prop.setTemporalContinuousAtKey(k, false); }   // the pair's own keys: its other side keeps its speed
         } catch (e3) {}
-        prop.setInterpolationTypeAtKey(k, inType, outType);
+        prop.setInterpolationTypeAtKey(k, BEZ, BEZ);
         try { prop.setTemporalEaseAtKey(k, inE, outE); } catch (e4) {}
+        prop.setInterpolationTypeAtKey(k, inType, outType);   // last: an ease change turns hold / linear into bezier
         if (spatial) {
             try {
                 var zero = []; for (d = 0; d < n; d++) zero.push(0);
@@ -407,6 +443,8 @@ function graphCurveApplyPair(prop, ta, tb, knots, minGap) {
         }
         try { prop.setSelectedAtKey(k, i === 0 || i === use.length - 1); } catch (e6) {}
     }
+    var rk = graphCurvePropKey(prop);
+    if (rk) graphCurveAdded[rk] = (graphCurveAdded[rk] || []).concat(added);
     return use.length - 2;
 }
 
@@ -433,6 +471,8 @@ function graphApplyCurveKnots(spec, label) {
             for (var t = 0; t < okTypes.length; t++) if (prop.propertyValueType === okTypes[t]) ok = true;
             if (!ok) continue;
             // pairs as times (indices move while keys are added / removed)
+            graphCurveRemoveAdded(prop);
+            if (prop.numKeys < 2) continue;
             var times = [], sel = prop.selectedKeys, s;
             if (sel.length >= 2) { for (s = 0; s < sel.length - 1; s++) times.push([prop.keyTime(sel[s]), prop.keyTime(sel[s + 1])]); }
             else if (sel.length === 1) { if (sel[0] < prop.numKeys) times.push([prop.keyTime(sel[0]), prop.keyTime(sel[0] + 1)]); }

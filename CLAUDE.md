@@ -52,7 +52,7 @@ The panel is dark, minimal and premium: ~95% black, white and greys, one look ac
 - No `git reset --hard`, `git clean -fd` or force push without explicit approval.
 
 ## Graph curve types
-- The Graph tab's type row (Bezier / Elastic / Bounce / Steps) is `js/tab-graph-curves.js` (loaded after `js/tab-graph.js`, state in `rfxGraphCurve`, row order `rfxGraphTypeOrder`, row hidden `rfxGraphTypeBarCollapsed`). Non-Bezier types are built as knots (time, value, speeds, influences, hold) in 0..1 space; the graph draws exactly the AE interpolation of those knots and `graphApplyCurveKnots` in `jsx/graph.jsx` bakes them as ordinary keyframes between each key pair (replacing keys it added before). Keep preview and bake on the same knots.
+- The Graph tab's type row (Bezier / Elastic / Bounce / Cyclic / Steps / Elastic Steps / Random) is `js/tab-graph-curves.js` (loaded after `js/tab-graph.js`, state in `rfxGraphCurve`, row order `rfxGraphTypeOrder`, row hidden `rfxGraphTypeBarCollapsed`). Non-Bezier types are built as knots (time, value, speeds, influences, hold) in 0..1 space; the graph draws exactly the AE interpolation of those knots and `graphApplyCurveKnots` in `jsx/graph.jsx` bakes them as ordinary keyframes between each key pair. The keys it adds are remembered for the AE session (`graphCurveAdded`), replaced on the next apply and removed by a Bezier apply. Keep preview and bake on the same knots. In AE, setting a temporal ease turns a hold / linear side into bezier: set the ease first, the interpolation type last.
 
 ## Known issues (leave unless asked)
 - `js/tab-graph.js` calls `applyBezierEaseToExpression`, which no jsx file defines ("Apply to expression" does nothing).

@@ -21,7 +21,8 @@
 #tab-graph .graph-type-row { display: flex; align-items: center; gap: 6px; padding: 6px 8px 0 10px; overflow: hidden; max-height: 48px; opacity: 1;
     transition: max-height var(--rfx-dur-slow) ease, opacity var(--rfx-dur) ease, padding var(--rfx-dur-slow) ease; }
 #tab-graph.graph-type-collapsed .graph-type-row { max-height: 0; opacity: 0; padding-top: 0; pointer-events: none; }
-#tab-graph .graph-type-header { flex: 1; min-width: 0; padding: 0; border: none; }
+#tab-graph .graph-type-header { flex: 1; min-width: 0; padding: 0; border: none; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+#tab-graph .graph-type-header::-webkit-scrollbar { display: none; }
 #tab-graph .graph-type-btn {
     background: transparent; color: var(--rfx-text-2); border: 1px solid transparent;
     padding: 5px 12px; border-radius: var(--rfx-r-pill); cursor: pointer; font-size: var(--rfx-fs-md);
@@ -30,9 +31,8 @@
 #tab-graph .graph-type-btn:hover { background: var(--rfx-fill-hover); color: var(--rfx-text-1); }
 #tab-graph .graph-type-btn.active { background: var(--rfx-fill-active); color: var(--rfx-text-1); }
 #tab-graph .graph-type-btn.dragging { position: relative; z-index: 100; background: var(--rfx-surface-3); }
-#tab-graph .graph-mirror-btn { flex-shrink: 0; width: 28px; height: 28px; }
-#tab-graph .graph-mirror-btn.active { background: var(--rfx-fill-selected); color: var(--rfx-text-1); }
-#tab-graph .graph-mirror-btn.is-hidden { display: none; }
+/* Reverse: lit while an Elastic / Bounce / ... shape plays backwards */
+#tab-graph .graph-reverse-btn.active { background: var(--rfx-fill-selected); color: var(--rfx-text-1); }
 #tab-graph .graph-type-handle { height: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: ns-resize; touch-action: none; }
 #tab-graph .graph-type-handle > div { width: 40px; height: 4px; border-radius: 2px; background: var(--rfx-scrollbar); pointer-events: none; transition: background var(--rfx-dur), width var(--rfx-dur); }
 #tab-graph .graph-type-handle:hover > div { background: var(--rfx-scrollbar-hover); width: 52px; }
@@ -42,8 +42,13 @@
 #tab-graph.graph-shape-mode #bezier-handle1, #tab-graph.graph-shape-mode #bezier-handle2 { display: none; }
 #tab-graph:not(.graph-shape-mode) #gx-shape { display: none; }
 #tab-graph.graph-shape-mode .ease-btn:not(#html-auto-btn) { opacity: 0.35; pointer-events: none; }
-#tab-graph .gx-shape-h { cursor: grab; }
-.gx-shape-guide { stroke: var(--rfx-text-4); stroke-opacity: .6; }
+/* controls of the other types: main ones like the bezier handles, the secondary one hollow */
+.gx-track { stroke: var(--rfx-accent); stroke-opacity: .45; }
+.gx-track-alt { stroke: var(--rfx-text-3); stroke-opacity: .6; }
+.gx-stem { stroke-opacity: .75; }
+.gx-handle-alt { fill: var(--rfx-bg); stroke: var(--rfx-text-1); }
+.gx-handle.is-dragging { stroke-width: 3.5; }
+.gx-hit { fill: transparent; stroke: none; pointer-events: all; }
 .gx-knot { fill: var(--rfx-text-3); }
 
 /* ===========================================================

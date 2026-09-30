@@ -206,12 +206,19 @@ const graphJsx = window.createJsxLoader('graph.jsx');
         }).observe(document.getElementById('tab-graph'));
     }
 
+    /* Reverse (button next to Save, and the graph's right-click menu): the bezier is mirrored;
+       Elastic / Bounce / ... play backwards (js/tab-graph-curves.js). */
+    window.graphReverse = function() {
+        if (window.RFXGraphCurves && window.RFXGraphCurves.active()) { window.RFXGraphCurves.reverse(); return; }
+        animateGraphUpdate({x: 1 - cp2.x, y: 1 - cp2.y}, {x: 1 - cp1.x, y: 1 - cp1.y});
+        if (window.isAutoGraph) setTimeout(() => window.applyGraphToKeyframesWithCheck(window._activeEaseType), 350);
+    };
     window._graphRedraw = function() { if (document.getElementById('bezier-svg')) updateGraphUI(); };
     window._graphResetFn = function() { animateGraphUpdate({x: 0.0, y: 0.0}, {x: 1.0, y: 1.0}); };
     window._graphGetCp = function() { return { x1: cp1.x, y1: cp1.y, x2: cp2.x, y2: cp2.y }; };
 
     function getGraphMetrics() {
-        var svg = document.getElementById('bezier-svg'), rawW = Math.max(0.1, svg.clientWidth), rawH = Math.max(0.1, svg.clientHeight), pad = 16;
+        var svg = document.getElementById('bezier-svg'), rawW = Math.max(0.1, svg.clientWidth), rawH = Math.max(0.1, svg.clientHeight), pad = (window.RFXGraphCurves && window.RFXGraphCurves.active()) ? 30 : 16;
         var minValY = Math.min(0, cp1.y, cp2.y), maxValY = Math.max(1, cp1.y, cp2.y);
         var curves = window.RFXGraphCurves && window.RFXGraphCurves.active();
         
@@ -235,6 +242,8 @@ const graphJsx = window.createJsxLoader('graph.jsx');
         var rangeY = maxValY - minValY; if (rangeY < 1) rangeY = 1;
         var availableW = Math.max(0.1, rawW - pad * 2), availableH = Math.max(0.1, rawH - pad * 2);
         var pixelsPerUnit = Math.min(availableW, availableH / rangeY), drawW = pixelsPerUnit, drawH = pixelsPerUnit, totalDrawH = pixelsPerUnit * rangeY;
+        // Elastic / Bounce / ... fill the whole area (the bezier keeps its square box)
+        if (curves) { drawW = availableW; drawH = availableH / rangeY; totalDrawH = availableH; }
         var offsetX = pad + (availableW - drawW) / 2, offsetY = pad + (availableH - totalDrawH) / 2;
         return { rawW: rawW, rawH: rawH, pad: pad, drawW: drawW, drawH: drawH, offsetX: offsetX, offsetY: offsetY, minValY: minValY, rangeY: rangeY, svg: svg };
     }
@@ -430,19 +439,18 @@ const graphJsx = window.createJsxLoader('graph.jsx');
             e.preventDefault();
             var C = window.RFXGraphCurves;
             if (C && C.active()) {
-                var mb = document.getElementById('graph-mirror-btn');
                 showCtxMenu(e.clientX, e.clientY, [
                     { label: 'Apply', action: () => C.apply() },
-                    { label: 'Play at the start', disabled: !mb || mb.classList.contains('is-hidden'), action: () => mb.click() },
+                    { label: 'Reverse value', action: () => C.reverse() },
                     { sep: true },
-                    { label: 'Reset ' + C.mode().charAt(0).toUpperCase() + C.mode().slice(1), action: () => C.reset() }
+                    { label: 'Reset ' + C.name(), action: () => C.reset() }
                 ]);
                 return;
             }
 
             showCtxMenu(e.clientX, e.clientY, [
                 { label: 'Apply', action: () => window.applyGraphToKeyframesWithCheck(window._activeEaseType) },
-                { label: 'Reverse value', action: () => { animateGraphUpdate({x: 1 - cp2.x, y: 1 - cp2.y}, {x: 1 - cp1.x, y: 1 - cp1.y}); if (window.isAutoGraph) setTimeout(() => window.applyGraphToKeyframesWithCheck(window._activeEaseType), 350); }},
+                { label: 'Reverse value', action: () => window.graphReverse() },
                 { sep: true },
                 { label: 'Undo', disabled: undoStack.length === 0, action: () => window._undoGraph() },
                 { label: 'Redo', disabled: redoStack.length === 0, action: () => window._redoGraph() },
