@@ -90,7 +90,61 @@
         const d1 = clamp(p.bnc / 100, 0, 1), hx = clamp((101 - p.grav) / 100, 0.01, 1);
         return { d1: d1, hx: hx, t1: hx / (1 + d1), ry: d1 * (1 - p.dy / 100), rx: d1 * (1 - p.dx / 100) };
     }
+    /* Smooth end: the rebounds keep the handle's depths, but their timing is stretched or squeezed a
+       little so a landing falls exactly on the second key - whichever (one rebound more or less)
+       needs the smaller change. The first rebound, where the handle sits, keeps its place unless it
+       is the only one that reaches the end. */
+    function buildBounceSmooth(p, c, B) {
+        const t1 = c.t1, seq = [];
+        let s = t1, D = c.d1, d = 2 * t1 * c.d1;
+        for (let n = 0; n < 1000; n++) {
+            if (D < 0.002 || d < 1e-4) break;
+            seq.push({ D: D, d: d });
+            s += d;
+            if (s > 1 + 1e-9) break;
+            D *= c.ry; d *= c.rx;
+        }
+        const ends = []; let acc = t1;
+        seq.forEach(r => { acc += r.d; ends.push(acc); });
+        let use = seq, g = 1, j0 = 1;
+        const L = ends.length - 1;
+        if (L >= 0 && ends[L] > 1 + 1e-9) {
+            // A: keep the rebound that crosses the end, squeezed; B: drop it, stretch the rest
+            const fit = (last) => {
+                const j = last >= 1 ? 1 : 0, base = j ? ends[0] : t1, span = ends[last] - base;
+                return span > 1e-9 ? { last: last, j: j, g: (1 - base) / span } : null;
+            };
+            const A = fit(L), Bo = L >= 1 ? fit(L - 1) : null;
+            let pick = A;
+            if (Bo && (!A || Math.abs(Math.log(Bo.g)) < Math.abs(Math.log(A.g)))) pick = Bo;
+            if (!pick || pick.g < 0.35) { use = seq.slice(0, L); pick = null; }   // the only rebound would be squeezed too far: rest
+            if (pick) { use = seq.slice(0, pick.last + 1); g = pick.g; j0 = pick.j; }
+        }
+        const k = [K(0, 0, 0, 0, 0, QUAD)];
+        let imp = K(t1, 1, 2 / t1, 0, QUAD, QUAD);
+        k.push(imp);
+        let u = t1, valleyX = null;
+        use.forEach((r, i) => {
+            const dd = r.d * (i >= j0 ? g : 1);
+            imp.so = -4 * r.D / dd;
+            k.push(K(u + dd / 2, 1 - r.D, 0, 0, B, B));
+            if (i === 0) valleyX = u + dd / 2;
+            u += dd;
+            imp = K(u, 1, 4 * r.D / dd, 0, QUAD, QUAD);
+            k.push(imp);
+        });
+        if (imp.u > 1 - 1e-6) { imp.u = 1; imp.io = 0; }
+        else { imp.so = 0; k.push(K(1, 1, 0, 0, QUAD, 0)); }
+        return { knots: k, valleyX: valleyX };
+    }
     function buildBounce(p) {
+        if (p.smooth) {
+            const c0 = bnCore(p), sm = buildBounceSmooth(p, c0, infB(p.hang));
+            return { knots: sm.knots, handles: [
+                { id: 'bounce', x: sm.valleyX !== null ? sm.valleyX : c0.t1 * (1 + c0.d1), y: 1 - c0.d1, label: 'Bounciness ' + p.bnc.toFixed(1) + '  \u00b7  Gravity ' + p.grav.toFixed(1),
+                  drag: (x, y) => { p.bnc = clamp(R((1 - clamp(y, 0, 1)) * 1000) / 10, 0, 100); p.grav = clamp(R((101 - clamp(x, 0.01, 1) * 100) * 10) / 10, 1, 100); } }
+            ] };
+        }
         const c = bnCore(p), B = infB(p.hang), t1 = c.t1;
         const k = [K(0, 0, 0, 0, 0, QUAD)];
         let imp = K(t1, 1, 2 / t1, 0, QUAD, QUAD);
@@ -248,7 +302,7 @@
         elastic: { name: 'Elastic', build: buildElastic, view: [-0.15, 2.35],
             params: [P('amp', 'Amplitude', 0, 120, 60), P('freq', 'Frequency', 2, 50, 5, false, 0.1), P('dur', 'Duration', 10, 100, 100), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 100, 0), P('hang', 'Hang', 0, 100, 50)] },
         bounce: { name: 'Bounce', build: buildBounce, view: [-0.1, 1.25],
-            params: [P('bnc', 'Bounciness', 0, 100, 80, false, 0.1), P('grav', 'Gravity', 1, 100, 74, false, 0.1), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 90, 0), P('hang', 'Hang', 0, 100, 75)] },
+            params: [P('bnc', 'Bounciness', 0, 100, 80, false, 0.1), P('grav', 'Gravity', 1, 100, 74, false, 0.1), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 90, 0), P('hang', 'Hang', 0, 100, 75), P('smooth', 'Smooth end', 0, 1, 0, true)] },
         cyclic: { name: 'Cyclic', build: buildCyclic, params: [P('cyc', 'Cycles', 1, 15, 3), P('start', 'Start', 0, 150, 100), P('end', 'End', -50, 100, 0), P('hang', 'Hang', 0, 100, 50)] },
         steps: { name: 'Steps', build: buildSteps, params: [P('steps', 'Steps', 2, 24, 4), P('smooth', 'Smoothness', 0, 100, 0)] },
         elasticsteps: { name: 'Elastic Steps', build: buildElasticSteps, params: [P('steps', 'Steps', 2, 12, 3), P('amp', 'Amplitude', 0, 100, 50), P('decay', 'Decay', 0, 95, 65), P('hang', 'Hang', 0, 100, 50)] },
@@ -443,6 +497,7 @@
         hint.textContent = seen ? '' : 'Drag the handles  ·  right-click for all settings';
         hint.setAttribute('x', 10); hint.setAttribute('y', m.rawH - 10);
         if (valueDisplay) valueDisplay.textContent = summary();
+        syncChip();   // the graph area is rebuilt on its first draw: keep the chip in it
     }
     // what the hovered / dragged handle changes, with the values
     function drawTip(g, m) {
@@ -551,6 +606,7 @@
         menu.appendChild(grid);
         const sep = document.createElement('div'); sep.className = 'ctx-sep'; menu.appendChild(sep);
         const item = (label, fn) => { const it = document.createElement('div'); it.className = 'ctx-item'; it.textContent = label; it.addEventListener('click', () => { closeMenu(); fn(); }); menu.appendChild(it); };
+        if (st.mode === 'bounce') item(p.smooth ? 'Smooth end: on' : 'Smooth end: off', () => toggleSmooth());
         item('Reverse value', () => api.reverse());
         if (st.mode === 'random') item('New pattern', () => { p.seed = (p.seed + 1) % 1000000; save(); redraw(); autoApply(); });
         item('Reset ' + M.name, () => api.reset());
@@ -592,6 +648,28 @@
         const b = document.getElementById('graph-reverse-btn');
         if (b) b.classList.toggle('active', !!model() && st.rev);
     }
+    function toggleSmooth() {
+        const p = st.bounce;
+        p.smooth = p.smooth ? 0 : 1;
+        save(); syncChip(); redraw(); autoApply();
+    }
+    function syncChip() {
+        let chip = document.getElementById('gx-smooth-end');
+        const area = document.getElementById('graph-editor-area');
+        if (!chip && area) {
+            chip = document.createElement('button');
+            chip.id = 'gx-smooth-end';
+            chip.className = 'gx-chip';
+            chip.setAttribute('data-tooltip', 'Land exactly on the second key: no cut, no last-frame jump');
+            chip.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18c3 0 4-12 7-12s3 8 5 8 3-4 6-4"/></svg><span>Smooth end</span>';
+            chip.addEventListener('pointerdown', e => e.stopPropagation());
+            chip.addEventListener('click', e => { e.stopPropagation(); toggleSmooth(); });
+            area.appendChild(chip);
+        }
+        if (!chip) return;
+        chip.style.display = st.mode === 'bounce' ? '' : 'none';
+        chip.classList.toggle('on', !!st.bounce.smooth);
+    }
     function setMode(m) {
         if (m !== 'bezier' && !MODELS[m]) return;
         closeMenu();
@@ -603,6 +681,7 @@
         if (tg) tg.classList.toggle('graph-shape-mode', m !== 'bezier');
         document.querySelectorAll('#graph-type-header .graph-type-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-type') === m));
         syncReverse();
+        syncChip();
         frozen = null;
         redraw();
     }

@@ -51,6 +51,16 @@
 .gx-arm-line { stroke: var(--rfx-accent); stroke-opacity: .8; }
 .gx-ctl-line { stroke: var(--rfx-accent); stroke-opacity: .7; pointer-events: none; }
 .gx-knot { fill: var(--rfx-text-4); }
+/* Bounce: "Smooth end" chip in the graph's top-right corner (lit = on) */
+#tab-graph .gx-chip {
+    position: absolute; top: 8px; right: 8px; z-index: 50;
+    display: none; align-items: center; gap: 6px; height: 24px; padding: 0 10px 0 8px;
+    border: none; border-radius: var(--rfx-r-pill); background: var(--rfx-surface-2); color: var(--rfx-text-2);
+    font-size: var(--rfx-fs-sm); cursor: pointer; transition: background var(--rfx-dur), color var(--rfx-dur);
+}
+#tab-graph.graph-shape-mode .gx-chip { display: flex; }
+#tab-graph .gx-chip:hover { background: var(--rfx-surface-3); color: var(--rfx-text-1); }
+#tab-graph .gx-chip.on { background: var(--rfx-accent); color: var(--rfx-on-accent); }
 .gx-band { fill: var(--rfx-fill-hover); stroke: none; }
 .gx-baseline { stroke: var(--rfx-text-4); }
 .gx-tip { pointer-events: none; }
