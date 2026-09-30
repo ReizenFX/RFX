@@ -375,7 +375,23 @@ function graphCurveParse(spec) {
     return out;
 }
 
-function graphCurveApplyPair(prop, ta, tb, knots, minGap) {
+// value and slope of the Hermite segment a -> b (influence 1/3 both sides) at u
+function graphCurveHermite(a, b, u) {
+    var du = b.u - a.u;
+    if (du <= 0) return [b.v, b.si];
+    var s = (u - a.u) / du, s2 = s * s, s3 = s2 * s, m0 = a.so * du, m1 = b.si * du;
+    var v = (2 * s3 - 3 * s2 + 1) * a.v + (s3 - 2 * s2 + s) * m0 + (-2 * s3 + 3 * s2) * b.v + (s3 - s2) * m1;
+    var dv = ((6 * s2 - 6 * s) * a.v + (3 * s2 - 4 * s + 1) * m0 + (-6 * s2 + 6 * s) * b.v + (3 * s2 - 2 * s) * m1) / du;
+    return [v, dv];
+}
+
+function graphCurveApplyPair(prop, ta, tb, knots0, minGap) {
+    // per-pair copy: pinned knots are moved and re-evaluated for this pair's length and frame rate
+    var knots = [], ci;
+    for (ci = 0; ci < knots0.length; ci++) {
+        var o = knots0[ci];
+        knots.push({ u: o.u, v: o.v, si: o.si, so: o.so, ii: o.ii, io: o.io, hold: o.hold, lin: o.lin, frame: o.frame });
+    }
     var ka = prop.nearestKeyIndex(ta), kb = prop.nearestKeyIndex(tb);
     if (kb <= ka) return 0;
     var va = prop.keyValue(ka), vb = prop.keyValue(kb), T = tb - ta;
@@ -395,12 +411,16 @@ function graphCurveApplyPair(prop, ta, tb, knots, minGap) {
     var frameDur = minGap * 2;
     for (i = 0; i < knots.length; i++) {
         var fr = (T > frameDur * 3) ? knots[i].frame : 0;
-        knots[i].t = fr === 1 ? ta + frameDur : (fr === 2 ? tb - frameDur : ta + knots[i].u * T);
+        knots[i].t = (fr === 1 || fr === 4) ? ta + frameDur : ((fr === 2 || fr === 3) ? tb - frameDur : ta + knots[i].u * T);
+        // a curve cut at the edge: its key sits one frame inside, on the same curve
+        var hp;
+        if (fr === 3 && i > 0) { hp = graphCurveHermite(knots[i - 1], knots[i], (knots[i].t - ta) / T); knots[i].v = hp[0]; knots[i].si = hp[1]; }
+        if (fr === 4 && i < knots.length - 1) { hp = graphCurveHermite(knots[i], knots[i + 1], (knots[i].t - ta) / T); knots[i].v = hp[0]; knots[i].so = hp[1]; }
     }
     // a key pinned one frame after the first / before the second key wins over knots crowding it
     var tFirst = -1e9, tLast = 1e9;
     for (i = 0; i < knots.length; i++) {
-        if (knots[i].t !== undefined && knots[i].frame && T > frameDur * 3) { if (knots[i].frame === 1) tFirst = knots[i].t; else tLast = knots[i].t; }
+        if (knots[i].t !== undefined && knots[i].frame && T > frameDur * 3) { if (knots[i].frame === 1 || knots[i].frame === 4) tFirst = knots[i].t; else tLast = knots[i].t; }
     }
     var use = [knots[0]];
     for (i = 1; i < knots.length - 1; i++) {

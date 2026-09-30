@@ -107,25 +107,23 @@
                 s += d;
                 imp = K(s, 1, 4 * D / d, 0, QUAD, QUAD);
                 k.push(imp);
-            } else if (s < 1 - 0.018) {                               // still in the air at the end: cut there
-                const e = 0.012, w = (1 - e - s) / d;                 // ~ one frame; in AE the key sits exactly one frame before
+            } else if (s < 1 - 1e-4) {                                 // still in the air at the end: the true shape, cut at the edge
+                const w = (1 - s) / d;
                 imp.so = -4 * D / d;
-                if (s + d / 2 < 1 - e - 0.005) k.push(K(s + d / 2, 1 - D, 0, 0, B, QUAD));
+                if (s + d / 2 < 1 - 1e-4) k.push(K(s + d / 2, 1 - D, 0, 0, B, QUAD));
                 else imp.io = QUAD;
-                // a normal key one frame before the second key; the last frame moves straight onto it
-                const cutK = K(1 - e, 1 - 4 * D * w * (1 - w), -4 * D * (1 - 2 * w) / d, 0, QUAD, 0, 2);
-                cutK.frame = 2;
+                // the curve's own value and speed at the edge; in AE this key is placed one frame before
+                // the second key (re-evaluated there from the same parabola) and the last frame moves
+                // straight onto the key - a normal key, no hold
+                const cutK = K(1, 1 - 4 * D * w * (1 - w), -4 * D * (1 - 2 * w) / d, 0, QUAD, 0, 2);
+                cutK.frame = 3;
                 k.push(cutK);
                 cut = true;
                 break;
-            } else {
-                // the next rebound would start in the very last moments: a landing within 0.3% of the
-                // end lands on the second key, otherwise it rests there for that sliver
-                if (1 - s < 0.003) {
-                    const top = k[k.length - 2];
-                    imp.u = 1;
-                    if (top && top.v < 1 && top.u < 1) imp.si = 2 * (1 - top.v) / (1 - top.u);
-                }
+            } else {                                                   // lands right at the end: on the second key
+                const top = k[k.length - 2];
+                imp.u = 1;
+                if (top && top.v < 1 && top.u < 1) imp.si = 2 * (1 - top.v) / (1 - top.u);
                 break;
             }
             D *= c.ry; d *= c.rx;
@@ -287,7 +285,7 @@
         const N = k.length;
         return k.slice().reverse().map((q, j) => {
             const src = k[N - 2 - j], m = K(1 - q.u, 1 - q.v, q.so, q.si, q.io, q.ii, src ? (src.seg === 1 ? 2 : src.seg) : 0);
-            if (q.frame) m.frame = q.frame === 2 ? 1 : 2;
+            if (q.frame) m.frame = { 1: 2, 2: 1, 3: 4, 4: 3 }[q.frame];
             return m;
         });
     }
@@ -346,8 +344,8 @@
 
     // ------------------------------------------------------------------ drawing
     // a jump onto a key (a cut bounce snapping to the second key's value) is not drawn: the curve ends mid-air as in Alight Motion
-    const snapEnd = k => k.length > 2 && k[k.length - 2].seg === 2 && k[k.length - 2].frame === 2;
-    const snapStart = k => k.length > 2 && k[0].seg === 2 && k[1].frame === 1;
+    const snapEnd = k => k.length > 2 && k[k.length - 2].seg === 2 && k[k.length - 2].frame === 3;
+    const snapStart = k => k.length > 2 && k[0].seg === 2 && (k[1].frame === 1 || k[1].frame === 4);
     function pathD(k, toPx) {
         let d = '';
         const skipLast = snapEnd(k), skipFirst = snapStart(k);
