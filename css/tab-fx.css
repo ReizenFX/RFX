@@ -120,8 +120,8 @@
     font-size: var(--rfx-fs-lg);
     transition: background var(--rfx-dur);
 }
-#tab-fx #fxt-search:hover { background: var(--rfx-surface-1); }
-#tab-fx #fxt-search:focus { background: var(--rfx-surface-1); }
+#tab-fx #fxt-search:hover { background: var(--rfx-input-hover); }
+#tab-fx #fxt-search:focus { background: var(--rfx-input-hover); }
 #tab-fx #fxt-search::placeholder { color: var(--rfx-text-3); }
 #tab-fx .fxt-search-clear {
     position: absolute;

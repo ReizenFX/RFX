@@ -24,11 +24,12 @@
     /* ---- surfaces (dark to light) ---- */
     --rfx-bg: #161616;               /* panel background */
     --rfx-input: #111111;            /* text fields, wells */
+    --rfx-input-hover: #202020;      /* hovered / focused wells (never equal to what is around them) */
     --rfx-surface-1: #1c1c1c;        /* cards, sections */
     --rfx-surface-2: #242424;        /* buttons, controls */
     --rfx-surface-3: #2c2c2c;        /* control hover, raised */
     --rfx-menu: #1f1f1f;             /* menus, dropdowns, tooltips */
-    --rfx-dialog: #1c1c1c;           /* dialogs */
+    --rfx-dialog: #191919;           /* dialogs: between bg and surface-1 so rows inside show */
     --rfx-overlay: rgba(0, 0, 0, 0.6);
 
     /* ---- text ---- */
@@ -148,11 +149,12 @@
 :root[data-rfx-theme="color"], [data-rfx-theme="color"] {
     --rfx-bg: #14161a;
     --rfx-input: #101216;
+    --rfx-input-hover: #1f2328;
     --rfx-surface-1: #1a1d22;
     --rfx-surface-2: #21252b;
     --rfx-surface-3: #292e35;
     --rfx-menu: #1c2026;
-    --rfx-dialog: #1a1d22;
+    --rfx-dialog: #171a1e;
     --rfx-text-1: #ffffff;
     --rfx-text-2: #99a2ae;
     --rfx-text-3: #7a838f;

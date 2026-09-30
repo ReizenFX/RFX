@@ -17,10 +17,11 @@
      rfxNavPos           'left' (default) | 'top' | 'bottom' | 'right'
      rfxNavIcons         '1' when main tabs are icon-only at top/bottom (sides always are)
      rfxSubTabPos        'bottom' (default) | 'top'  sub-tab bars when the nav is on a side
+     rfxNavArrows        '1' shows the small previous / next tab arrows in the bottom corners
    The surface and text ramps are generated here from those numbers and written
    as --rfx-* variables on <html>; css/theme.css keeps the defaults and every
    other token. Layout is exposed as attributes that css/global.css reads:
-     data-rfx-nav, data-rfx-navicons, data-rfx-subpos.
+     data-rfx-nav, data-rfx-navicons, data-rfx-subpos, data-rfx-navarrows.
    window.RFXTheme is the API used by the Settings page, js/nav.js and canvas drawing.
    ========================================================================== */
 (function () {
@@ -28,7 +29,7 @@
     var KEYS = {
         theme: 'rfxTheme', accent: 'rfxAccent', density: 'rfxDensity', radius: 'rfxRadius', reduceMotion: 'rfxReduceMotion',
         brightness: 'rfxUiBrightness', surfaceContrast: 'rfxSurfaceContrast', uiSaturation: 'rfxUiSaturation', textColor: 'rfxTextColor', textContrast: 'rfxTextContrast',
-        darkText: 'rfxDarkText', darkKnob: 'rfxDarkKnob', darkMarks: 'rfxDarkMarks', navPos: 'rfxNavPos', navIcons: 'rfxNavIcons', subTabPos: 'rfxSubTabPos'
+        darkText: 'rfxDarkText', darkKnob: 'rfxDarkKnob', darkMarks: 'rfxDarkMarks', navPos: 'rfxNavPos', navIcons: 'rfxNavIcons', subTabPos: 'rfxSubTabPos', navArrows: 'rfxNavArrows'
     };
 
     /* tint: how much each RGB channel of a surface differs from neutral grey, as a
@@ -66,7 +67,7 @@
     var DEFAULTS = {
         theme: 'mono', accent: '', density: 'comfortable', radius: 'round', reduceMotion: false,
         brightness: 0, surfaceContrast: 100, uiSaturation: '', textColor: '', textContrast: 100, darkText: '', darkKnob: '', darkMarks: '',
-        navPos: 'left', navIcons: false, subTabPos: 'bottom'
+        navPos: 'left', navIcons: false, subTabPos: 'bottom', navArrows: false
     };
 
     function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -127,7 +128,8 @@
             darkMarks: tri(read(KEYS.darkMarks)),
             navPos: oneOf(NAV_POSITIONS, read(KEYS.navPos), DEFAULTS.navPos),
             navIcons: read(KEYS.navIcons) === '1',
-            subTabPos: oneOf(SUB_POSITIONS, read(KEYS.subTabPos), DEFAULTS.subTabPos)
+            subTabPos: oneOf(SUB_POSITIONS, read(KEYS.subTabPos), DEFAULTS.subTabPos),
+            navArrows: read(KEYS.navArrows) === '1'
         };
     }
 
@@ -171,11 +173,12 @@
         var v = {
             '--rfx-bg': bg,
             '--rfx-input': surf(-6, 12),
+            '--rfx-input-hover': surf(14),          // hovered / focused wells: clear of bg, dialogs, cards and buttons
             '--rfx-surface-1': surf(8),
             '--rfx-surface-2': surf(18),
             '--rfx-surface-3': surf(28),
             '--rfx-menu': surf(12),
-            '--rfx-dialog': surf(8),
+            '--rfx-dialog': surf(4),                 // between bg and surface-1: cards / rows inside dialogs stay visible
             '--rfx-line': surf(20, 44),
             '--rfx-line-2': surf(32, 60),
             '--rfx-scrollbar': surf(44, 80),
@@ -226,6 +229,7 @@
         root.setAttribute('data-rfx-nav', s.navPos);
         if (side || s.navIcons) root.setAttribute('data-rfx-navicons', '1'); else root.removeAttribute('data-rfx-navicons');
         root.setAttribute('data-rfx-subpos', s.navPos === 'bottom' ? 'bottom' : side ? s.subTabPos : 'top');
+        if (s.navArrows) root.setAttribute('data-rfx-navarrows', '1'); else root.removeAttribute('data-rfx-navarrows');
     }
 
     var listeners = [];
@@ -260,6 +264,7 @@
         store('navPos', s.navPos, DEFAULTS.navPos);
         write(KEYS.navIcons, s.navIcons ? '1' : '');
         store('subTabPos', s.subTabPos, DEFAULTS.subTabPos);
+        write(KEYS.navArrows, s.navArrows ? '1' : '');
         apply(s);
         listeners.slice().forEach(function (fn) { try { fn(s); } catch (e) {} });
         try { window.dispatchEvent(new CustomEvent('rfx-theme-change', { detail: s })); } catch (e) {}
@@ -284,7 +289,7 @@
         set: set,
         /* Appearance only; the navigation layout has its own reset. */
         reset: function () { var d = {}; APPEARANCE_KEYS.forEach(function (k) { d[k] = DEFAULTS[k]; }); return set(d); },
-        resetLayout: function () { return set({ navPos: DEFAULTS.navPos, navIcons: false, subTabPos: DEFAULTS.subTabPos }); },
+        resetLayout: function () { return set({ navPos: DEFAULTS.navPos, navIcons: false, subTabPos: DEFAULTS.subTabPos, navArrows: false }); },
         onChange: function (fn) { listeners.push(fn); return function () { listeners = listeners.filter(function (f) { return f !== fn; }); }; },
         cssVar: cssVar,
         accent: function () { return cssVar('--rfx-accent'); },

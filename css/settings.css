@@ -47,7 +47,7 @@
     transition: background var(--rfx-dur);
 }
 .rfxset-change:hover { background: var(--rfx-surface-3); }
-.rfxset-seg { display: flex; background: var(--rfx-surface-1); border-radius: var(--rfx-r-lg); padding: 3px; gap: 3px; }
+.rfxset-seg { display: flex; background: var(--rfx-bg); border-radius: var(--rfx-r-lg); padding: 3px; gap: 3px; }
 .rfxset-opt {
     flex: 1; border: none; background: none; color: var(--rfx-text-2); border-radius: var(--rfx-r-md);
     padding: 9px 8px; cursor: pointer; text-align: center; transition: background var(--rfx-dur), color var(--rfx-dur);
@@ -160,8 +160,8 @@
     background: var(--rfx-input); color: var(--rfx-text-1); font-family: var(--rfx-font-mono); font-size: var(--rfx-fs-md);
     text-transform: lowercase; transition: background var(--rfx-dur);
 }
-.rfx-hex:hover { background: var(--rfx-surface-1); }
-.rfx-hex:focus { background: var(--rfx-surface-1); }
+.rfx-hex:hover { background: var(--rfx-input-hover); }
+.rfx-hex:focus { background: var(--rfx-input-hover); }
 .rfx-colorinput { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }
 
 /* live preview strip: real components, so it follows every token */

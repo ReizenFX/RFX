@@ -88,9 +88,40 @@ const graphJsx = window.createJsxLoader('graph.jsx');
         });
     }
     
+    /* Clicking the graph / presets divider collapses the presets area (the graph takes the
+       space) and clicking again brings it back at its previous size. */
+    var resizerMoved = false, presetsRestoreH = 0, presetsRestoreW = 0;
+    function tweenGraphVar(rootGrid, name, from, to) {
+        var reduce = document.documentElement.getAttribute('data-rfx-motion') === 'reduce';
+        if (reduce || Math.abs(to - from) < 2) { rootGrid.style.setProperty(name, to + 'px'); updateGraphUI(); return; }
+        var t0 = performance.now(), dur = 200;
+        (function step(now) {
+            var k = Math.min(1, (now - t0) / dur); k = 1 - Math.pow(1 - k, 3);
+            rootGrid.style.setProperty(name, Math.round(from + (to - from) * k) + 'px');
+            updateGraphUI();
+            if (k < 1) requestAnimationFrame(step);
+        })(t0);
+    }
+    function toggleGraphPresets() {
+        var rootGrid = document.getElementById('tab-graph');
+        var flexContainer = document.querySelector('#tab-graph .flex-column-container');
+        if (!rootGrid || !flexContainer) return;
+        if (getComputedStyle(flexContainer).display === 'grid') {
+            var w = startRightW;
+            if (w < 24) tweenGraphVar(rootGrid, '--right-panel-width', w, presetsRestoreW >= 24 ? presetsRestoreW : 260);
+            else { presetsRestoreW = w; tweenGraphVar(rootGrid, '--right-panel-width', w, 0); }
+        } else {
+            var barEl = document.querySelector('#tab-graph .fixed-bottom');
+            var maxH = flexContainer.clientHeight - resizer.offsetHeight - (barEl ? barEl.offsetHeight : 0);
+            var h = Math.min(startGraphH, maxH);
+            if (maxH - h < 24) tweenGraphVar(rootGrid, '--graph-panel-height', h, presetsRestoreH && presetsRestoreH < maxH - 24 ? presetsRestoreH : Math.round(maxH * 0.55));
+            else { presetsRestoreH = h; tweenGraphVar(rootGrid, '--graph-panel-height', h, maxH); }
+        }
+    }
+
     if (resizer) {
         resizer.addEventListener('pointerdown', function(e) {
-            isResizingGraph = true; collapsedInDrag = false;
+            isResizingGraph = true; collapsedInDrag = false; resizerMoved = false;
             startResizeY = e.clientY; 
             startResizeX = e.clientX; 
             
@@ -114,6 +145,9 @@ const graphJsx = window.createJsxLoader('graph.jsx');
         
         resizer.addEventListener('pointermove', function(e) {
             if (!isResizingGraph) return; 
+            // a press without movement is a click (collapse / expand), not a resize
+            if (!resizerMoved && Math.abs(e.clientX - startResizeX) < 4 && Math.abs(e.clientY - startResizeY) < 4) return;
+            resizerMoved = true;
             
             var flexContainer = document.querySelector('#tab-graph .flex-column-container');
             var rootGrid = document.getElementById('tab-graph');
@@ -157,6 +191,7 @@ const graphJsx = window.createJsxLoader('graph.jsx');
             if (isResizingGraph) { 
                 isResizingGraph = false; 
                 try { resizer.releasePointerCapture(e.pointerId); } catch(err){} 
+                if (!resizerMoved) toggleGraphPresets();
                 updateGraphUI(); 
             } 
         });
@@ -166,7 +201,8 @@ const graphJsx = window.createJsxLoader('graph.jsx');
     if (typeof ResizeObserver !== 'undefined') {
         new ResizeObserver(() => { 
             var graphRoot = document.getElementById('graph-editor-area');
-            if (graphRoot && graphRoot.clientHeight >= 15) updateGraphUI(); 
+            // the curve SVG is built on first init; a resize before that has nothing to lay out
+            if (graphRoot && graphRoot.clientHeight >= 15 && document.getElementById('bezier-svg')) updateGraphUI(); 
         }).observe(document.getElementById('tab-graph'));
     }
 

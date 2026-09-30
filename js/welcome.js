@@ -611,10 +611,24 @@
         group.appendChild(iconRow);
 
         const sub = segRow('Sub tabs', '', theme.SUB_POSITIONS, 'subTabPos');
+
+        const arrowRow = el('div', 'rfx-row');
+        const at = el('div', 'rfx-row-text');
+        at.appendChild(el('div', 'rfx-row-title', 'Tab switching arrows'));
+        at.appendChild(el('div', 'rfx-row-sub', 'Small previous / next tab buttons in the bottom corners'));
+        arrowRow.appendChild(at);
+        const asw = el('label', 'switch');
+        const arrows = el('input');
+        arrows.type = 'checkbox';
+        arrows.onchange = () => { theme.set({ navArrows: arrows.checked }); sync(); };
+        asw.appendChild(arrows);
+        asw.appendChild(el('span', 'slider'));
+        arrowRow.appendChild(asw);
+        group.appendChild(arrowRow);
         sec.appendChild(group);
         inner.appendChild(sec);
         inner.appendChild(el('div', 'rfx-note', 'With icon-only tabs, hovering a tab shows its name, and for Caption and Tracker its sub tabs, in a small menu that floats over the content.'));
-        const reset = btn('Reset navigation', '', () => { theme.resetLayout(); sync(); }, 'Tabs at the top with names');
+        const reset = btn('Reset navigation', '', () => { theme.resetLayout(); sync(); }, 'Tabs on the left as icons, sub tabs at the bottom, arrows off');
         reset.style.marginTop = '14px';
         inner.appendChild(reset);
 
@@ -622,6 +636,7 @@
             const s = theme.get(), side = s.navPos === 'left' || s.navPos === 'right';
             Object.keys(pos.opts).forEach(k => pos.opts[k].classList.toggle('on', k === s.navPos));
             icons.checked = side || s.navIcons;
+            arrows.checked = !!s.navArrows;
             iconRow.classList.toggle('is-disabled', side);
             iconSub.textContent = side ? 'Always on when the tabs are on a side' : 'Show the main tabs as icons at the top or bottom';
             Object.keys(sub.opts).forEach(k => sub.opts[k].classList.toggle('on', k === (s.navPos === 'bottom' ? 'bottom' : side ? s.subTabPos : 'top')));

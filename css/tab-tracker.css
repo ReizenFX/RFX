@@ -64,21 +64,32 @@
 .trend-bar-fill.today { background: var(--rfx-accent); }
 
 .metric-stack { display: flex; flex-direction: column; gap: 6px; flex: 1; justify-content: center;}
-.metric-pill { margin: 0; padding: 8px 12px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; flex: 1; background: var(--rfx-surface-1); border: 1px solid transparent; border-radius: var(--rfx-r-lg); }
+.metric-pill { margin: 0; padding: 8px 12px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; flex: 1; background: var(--rfx-bg); border: 1px solid transparent; border-radius: var(--rfx-r-lg); }
 .m-label { font-size: var(--rfx-fs-sm); color: var(--rfx-text-3); white-space: nowrap; }
 .m-val { font-size: 14px; font-weight: var(--rfx-fw-strong); color: var(--rfx-text-1); white-space: nowrap; }
 
 /* --- TIMER & STOPWATCH DUAL ENGINE UI --- */
-.timer-mode-switcher { display: flex; gap: 2px; background: var(--rfx-surface-1); border: 1px solid transparent; border-radius: var(--rfx-r-pill); padding: 5px; margin-top: 8px; margin-bottom: 24px; }
-.mode-btn { background: transparent; border: none; color: var(--rfx-text-2); padding: 5px 16px; border-radius: var(--rfx-r-pill); cursor: pointer; transition: background var(--rfx-dur), color var(--rfx-dur); font-size: var(--rfx-fs-sm); }
-.mode-btn:hover { color: var(--rfx-text-1); }
-.mode-btn.active { background: var(--rfx-fill-selected); color: var(--rfx-text-1); box-shadow: none; }
+/* Timer / Stopwatch: a second sub-tab row, same look as the Tracker sub tabs. It sits
+   under them when sub tabs are on top and above them when sub tabs are at the bottom. */
+#timer-mode-header { flex-shrink: 0; padding: 6px 10px; margin: -8px -8px 8px; border-bottom: 1px solid var(--rfx-line); }
+:root[data-rfx-subpos="bottom"] #timer-mode-header { order: 99; margin: 8px -8px -8px; border-bottom: none; border-top: 1px solid var(--rfx-line); }
+#timer-mode-header .mode-btn {
+    background: transparent; color: var(--rfx-text-2); border: 1px solid transparent;
+    padding: 5px 12px; border-radius: var(--rfx-r-pill); cursor: pointer; font-size: var(--rfx-fs-md);
+    white-space: nowrap; flex-shrink: 0; transition: background var(--rfx-dur), color var(--rfx-dur);
+}
+#timer-mode-header .mode-btn:hover { background: var(--rfx-fill-hover); color: var(--rfx-text-1); }
+#timer-mode-header .mode-btn.active { background: var(--rfx-fill-active); color: var(--rfx-text-1); }
+#timer-mode-header .mode-btn.dragging { position: relative; z-index: 100; background: var(--rfx-surface-3); }
 
 .time-view { display: none; flex-direction: column; align-items: center; width: 100%; }
 .time-view.active { display: flex; }
 
 /* Large Hero Controls */
-.playback-controls { display: flex; gap: 24px; align-items: center; margin-top: 4px; }
+.playback-controls { display: flex; gap: 24px; align-items: center; margin-top: 26px; }
+/* Stopwatch: laps go below the controls so circle and buttons sit exactly where they are on Timer */
+#view-stopwatch .playback-controls { order: 1; }
+#view-stopwatch .sw-laps-wrapper { order: 2; margin-top: 16px; }
 .round-btn { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; transition: transform 0.15s, background var(--rfx-dur); }
 .round-btn:active { transform: scale(0.92); }
 
@@ -98,8 +109,8 @@
     border-radius: var(--rfx-r-md); width: 44px; height: 38px; text-align: center; font-size: 16px;
     cursor: pointer; user-select: none; transition: background var(--rfx-dur);
 }
-.t-input:hover { background: var(--rfx-surface-1); }
-.t-input:focus { background: var(--rfx-surface-1); border-color: transparent; outline: none; }
+.t-input:hover { background: var(--rfx-input-hover); }
+.t-input:focus { background: var(--rfx-input-hover); border-color: transparent; outline: none; }
 .t-colon { color: var(--rfx-text-3); font-size: 16px; }
 
 /* HH : MM : SS in the timer circle: each part is a clickable field with a visible box */
@@ -221,7 +232,7 @@
 .dh-stat-label { font-size: var(--rfx-fs-sm); color: var(--rfx-text-3); }
 .dh-progress-bar { height: 8px; background: var(--rfx-fill-track); border-radius: 8px; overflow: hidden; }
 .dh-progress-fill { height: 100%; background: var(--rfx-accent); border-radius: 8px; width: 0%; transition: width 0.5s ease-out; }
-.dh-week-container { display: flex; justify-content: space-between; background: var(--rfx-surface-1); border: 1px solid transparent; padding: 12px 14px; border-radius: var(--rfx-r-lg); width: 100%; }
+.dh-week-container { display: flex; justify-content: space-between; background: var(--rfx-bg); border: 1px solid transparent; padding: 12px 14px; border-radius: var(--rfx-r-lg); width: 100%; }
 .dh-day-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .dh-day-circle { width: 24px; height: 24px; border-radius: 50%; background: transparent; border: 2px solid var(--rfx-fill-hover); display: flex; align-items: center; justify-content: center; color: var(--rfx-text-4); transition: background var(--rfx-dur), color var(--rfx-dur); }
 .dh-day-circle.elite, .dh-day-circle.strong, .dh-day-circle.basic { background: var(--rfx-accent); border-color: transparent; color: var(--rfx-on-accent-mark); }

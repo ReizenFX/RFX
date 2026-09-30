@@ -283,7 +283,7 @@
                 </div>
             </div>
             <div class="fixed-bottom graph-bottom-bar">
-                <div id="graph-bottom-handle" class="graph-bottom-handle" data-tooltip="Drag down or click to hide the controls, up to show them"><div></div></div>
+                <div id="graph-bottom-handle" class="graph-bottom-handle"><div></div></div>
                 <div class="graph-bottom-controls">
                 <div style="display:flex; align-items:center; gap:6px;">
                     <button class="btn-icon-square" style="width:26px; height:26px;" data-tooltip="Copy graph from keyframes" onclick="readGraphValues()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
@@ -735,6 +735,11 @@
             </div>
 
             <div class="tracker-tab-content" id="tab-timer" style="display: none; flex-direction: column; flex: 1; overflow: hidden; padding: 8px;">
+                <!-- second sub-tab row (Timer / Stopwatch): same look and drag-to-reorder as the Tracker sub tabs -->
+                <div class="tabs-header timer-mode-header" id="timer-mode-header">
+                    <button class="mode-btn active" id="btn-mode-timer" onclick="setTimerMode('timer')">Timer</button>
+                    <button class="mode-btn" id="btn-mode-stopwatch" onclick="setTimerMode('stopwatch')">Stopwatch</button>
+                </div>
                 <div class="flex-column-container" style="position: relative;">
                     
                     <button id="btn-presets-toggle" data-tooltip="Timer presets" style="position: absolute; top: 10px; left: 10px; background: transparent; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; transition: background 0.2s; z-index: 10;" onmouseover="this.style.background='var(--rfx-fill-active)'" onmouseout="this.style.background='transparent'" onclick="openPresetModal()" title="Timer Presets">
@@ -760,11 +765,6 @@
                     <div class="scrollable-content" style="padding: 2px;">
                         <div style="display: flex; flex-direction: column; align-items: center; padding-top: 10px;">
                             
-                            <div class="timer-mode-switcher">
-                                <button class="mode-btn active" id="btn-mode-timer" onclick="setTimerMode('timer')">Timer</button>
-                                <button class="mode-btn" id="btn-mode-stopwatch" onclick="setTimerMode('stopwatch')">Stopwatch</button>
-                            </div>
-
                             <div id="view-timer" class="time-view active">
                                 <div class="sw-dial-container" id="timer-ring-container">
                                     <svg viewBox="0 0 220 220" width="100%" height="100%" style="position:absolute; inset:0; z-index:1;">

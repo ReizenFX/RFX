@@ -1278,12 +1278,30 @@ function paintStaticViz(canvas, levels, key, bg){
         tries = 0; viz._t = null;
         viz.draw(canvas.getContext('2d'), s.W, s.H, 0);
     };
+    canvas._vizPaint = paint;
+    canvas._vizArgs = { levels: levels, key: key };
+    canvas.classList.add('rfx-static-viz');
     paint();
     if (window.ResizeObserver && !canvas._vizRO){
-        try { canvas._vizRO = new ResizeObserver(function(){ paint(); }); canvas._vizRO.observe(canvas); } catch(e){}
+        try { canvas._vizRO = new ResizeObserver(function(){ if (canvas._vizPaint) canvas._vizPaint(); }); canvas._vizRO.observe(canvas); } catch(e){}
     }
     return viz;
 }
+/* The thumbnails are drawn once, so a theme change (Monochrome <-> Color, saturation,
+   brightness) repaints them with the new colours. The drawer redraws every frame. */
+(function(){
+    var pending = 0;
+    window.addEventListener('rfx-theme-change', function(){
+        if (pending) cancelAnimationFrame(pending);
+        pending = requestAnimationFrame(function(){
+            pending = 0;
+            var bg = window.RFXTheme ? window.RFXTheme.cssVar('--rfx-input') : null;
+            document.querySelectorAll('#tab-assets canvas.rfx-static-viz').forEach(function(cv){
+                if (cv._vizArgs && cv.parentNode) paintStaticViz(cv, cv._vizArgs.levels, cv._vizArgs.key, bg);
+            });
+        });
+    });
+})();
 /* whole-file amplitude envelope over time (for the static thumbnail / paused drawer) */
 function fileEnvelope(chan, P){
     var levels = [], bucket = Math.max(1, Math.floor(chan.length/P)), peak = 0;

@@ -279,8 +279,8 @@ button:focus-visible, [role="button"]:focus-visible { filter: brightness(1.2); }
     font-size: var(--rfx-fs-md);
     transition: background var(--rfx-dur);
 }
-.modal-input:hover { background: var(--rfx-surface-1); }
-.modal-input:focus { background: var(--rfx-surface-1); border-color: transparent; outline: none; }
+.modal-input:hover { background: var(--rfx-input-hover); }
+.modal-input:focus { background: var(--rfx-input-hover); border-color: transparent; outline: none; }
 
 .slider-val-wrapper {
     position: relative;
@@ -293,8 +293,8 @@ button:focus-visible, [role="button"]:focus-visible { filter: brightness(1.2); }
     cursor: text;
     transition: background var(--rfx-dur);
 }
-.slider-val-wrapper:hover { background: var(--rfx-surface-1); }
-.slider-val-wrapper.active { background: var(--rfx-surface-1); border-color: transparent; }
+.slider-val-wrapper:hover { background: var(--rfx-input-hover); }
+.slider-val-wrapper.active { background: var(--rfx-input-hover); border-color: transparent; }
 .slider-val-input { width: 32px; background: transparent; color: var(--rfx-text-1); border: none; text-align: right; padding: 4px 0 4px 6px; font-size: var(--rfx-fs-sm); }
 .slider-val-unit { color: var(--rfx-text-2); font-size: var(--rfx-fs-xs); padding: 4px 6px 4px 2px; pointer-events: none; }
 
@@ -491,6 +491,8 @@ button:focus-visible, [role="button"]:focus-visible { filter: brightness(1.2); }
     box-shadow: none !important;
     opacity: 0.35 !important;
 }
+/* off unless Settings > Navigation > Tab switching arrows is on */
+:root:not([data-rfx-navarrows]) .global-nav-btn { display: none !important; }
 .global-nav-btn svg { width: 13px !important; height: 13px !important; stroke-width: 2 !important; }
 .global-nav-btn:hover {
     opacity: 1 !important;
@@ -511,7 +513,7 @@ select {
     background-repeat: no-repeat; background-position: calc(100% - 19px) 50%, calc(100% - 14px) 50%; background-size: 5px 5px, 5px 5px;
     cursor: pointer; transition: background-color var(--rfx-dur) ease; box-shadow: none !important; outline: none !important;
 }
-select:hover { background-color: var(--rfx-surface-1); }
+select:hover { background-color: var(--rfx-input-hover); }
 select:focus, select:active { border-color: transparent !important; box-shadow: none !important; outline: none !important; }
 select option { background: var(--rfx-menu); color: var(--rfx-text-1); }
 
@@ -543,8 +545,8 @@ select option { background: var(--rfx-menu); color: var(--rfx-text-1); }
     border: none !important;
 }
 
-.custom-select-display:hover { background: var(--rfx-surface-1); }
-.custom-select-wrapper.active .custom-select-display { background: var(--rfx-surface-1); border-color: transparent !important; }
+.custom-select-display:hover { background: var(--rfx-input-hover); }
+.custom-select-wrapper.active .custom-select-display { background: var(--rfx-input-hover); border-color: transparent !important; }
 
 /* Rotate chevron smoothly on open */
 .custom-select-wrapper.active .custom-select-display::after { transform: translateY(-50%) rotate(180deg); }

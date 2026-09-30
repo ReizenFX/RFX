@@ -534,6 +534,7 @@
     const ICON_PAUSE = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
 
     window.setTimerMode = function(mode) {
+        if (window.isDraggingModeTab) return;
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.time-view').forEach(v => v.classList.remove('active'));
         document.getElementById('btn-mode-' + mode).classList.add('active');
@@ -1176,16 +1177,29 @@
     window.isDraggingTrackerTab = false;
 
     function initTrackerDraggableTabs() {
-        const container = document.querySelector('#tab-tracker .tabs-header');
+        makeSubTabsDraggable(document.getElementById('tracker-tabs-header'), '.tracker-tab-btn', 'isDraggingTrackerTab', saveTrackerTabOrder);
+        makeSubTabsDraggable(document.getElementById('timer-mode-header'), '.mode-btn', 'isDraggingModeTab', () => {
+            const c = document.getElementById('timer-mode-header');
+            if (c) localStorage.setItem('rfxTimerModeOrder', JSON.stringify(Array.from(c.querySelectorAll('.mode-btn')).map(t => t.id)));
+        });
+        try {
+            const order = JSON.parse(localStorage.getItem('rfxTimerModeOrder') || 'null');
+            const c = document.getElementById('timer-mode-header');
+            if (order && c) order.forEach(id => { const b = document.getElementById(id); if (b && b.parentNode === c) c.appendChild(b); });
+        } catch (e) {}
+    }
+
+    /* Drag-to-reorder for a sub-tab row (the Tracker sub tabs and the Timer / Stopwatch row). */
+    function makeSubTabsDraggable(container, itemSel, flag, onSave) {
         if (!container) return;
 
         let draggedItem = null, startX = 0, currentX = 0, siblings = [], startIndex = 0, currentIndex = 0, shiftAmount = 0; 
         
         container.addEventListener('pointerdown', (e) => {
-            const tab = e.target.closest('.tracker-tab-btn'); 
-            if (!tab) return;
+            const tab = e.target.closest(itemSel); 
+            if (!tab || !container.contains(tab)) return;
             draggedItem = tab; startX = e.clientX; currentX = 0; draggedItem.setPointerCapture(e.pointerId);
-            const allTabs = Array.from(container.querySelectorAll('.tracker-tab-btn'));
+            const allTabs = Array.from(container.querySelectorAll(itemSel));
             startIndex = allTabs.indexOf(draggedItem); currentIndex = startIndex;
             shiftAmount = allTabs.length > 1 ? Math.abs(allTabs[1].getBoundingClientRect().left - allTabs[0].getBoundingClientRect().left) : draggedItem.offsetWidth + 2;
             siblings = allTabs.map((t, index) => ({ el: t, index: index, rect: t.getBoundingClientRect(), shift: 0 }));
@@ -1194,8 +1208,8 @@
         container.addEventListener('pointermove', (e) => {
             if (!draggedItem) return;
             const deltaX = e.clientX - startX;
-            if (Math.abs(deltaX) > 4 || window.isDraggingTrackerTab) {
-                window.isDraggingTrackerTab = true;
+            if (Math.abs(deltaX) > 4 || window[flag]) {
+                window[flag] = true;
                 if (!draggedItem.classList.contains('dragging')) draggedItem.classList.add('dragging');
                 currentX = deltaX; draggedItem.style.transform = `translate3d(${currentX}px, 0, 0)`; draggedItem.style.transition = 'none';
                 const draggedCenter = draggedItem.getBoundingClientRect().left + draggedItem.getBoundingClientRect().width / 2;
@@ -1215,7 +1229,7 @@
         container.addEventListener('pointerup', (e) => {
             if (!draggedItem) return;
             draggedItem.releasePointerCapture(e.pointerId);
-            if (window.isDraggingTrackerTab) {
+            if (window[flag]) {
                 draggedItem.classList.remove('dragging'); draggedItem.style.transition = 'none'; draggedItem.style.transform = '';
                 siblings.forEach(sib => { sib.el.style.transition = 'none'; sib.el.style.transform = ''; });
                 if (currentIndex !== startIndex) {
@@ -1224,15 +1238,15 @@
                     else container.insertBefore(draggedItem, targetSibling);
                 }
                 void container.offsetWidth; draggedItem.style.transition = ''; siblings.forEach(sib => { sib.el.style.transition = ''; });
-                saveTrackerTabOrder(); 
-                setTimeout(() => { window.isDraggingTrackerTab = false; }, 50);
+                onSave(); 
+                setTimeout(() => { window[flag] = false; }, 50);
             }
             draggedItem = null;
         });
     }
 
     function saveTrackerTabOrder() { 
-        const container = document.querySelector('#tab-tracker .tabs-header');
+        const container = document.getElementById('tracker-tabs-header');
         if (container) {
             localStorage.setItem('ultTrackerTabsOrder', JSON.stringify(Array.from(container.querySelectorAll('.tracker-tab-btn')).map(t => t.id))); 
         }
@@ -1243,7 +1257,7 @@
         if (!orderStr) return;
         try { 
             const order = JSON.parse(orderStr); 
-            const container = document.querySelector('#tab-tracker .tabs-header'); 
+            const container = document.getElementById('tracker-tabs-header'); 
             if (container) {
                 order.forEach(id => { const tab = document.getElementById(id); if (tab) container.appendChild(tab); }); 
             }

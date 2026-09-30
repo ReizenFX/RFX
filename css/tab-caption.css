@@ -251,7 +251,7 @@
    --------------------------------------------------------------------------- */
 #tab-caption .cap-toggle-label {
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    background: var(--rfx-surface-1);
+    background: var(--rfx-bg);
     border: 1px solid transparent;
     padding: 10px 14px; border-radius: var(--rfx-r-lg);
     cursor: pointer; transition: background var(--rfx-dur) ease;
@@ -434,7 +434,7 @@
 }
 #tab-caption .cap-val-wrapper:focus-within,
 #tab-caption .cap-val-wrapper:hover,
-#tab-caption .cap-val-wrapper.active { background: var(--rfx-surface-1); border-color: transparent; box-shadow: none; }
+#tab-caption .cap-val-wrapper.active { background: var(--rfx-input-hover); border-color: transparent; box-shadow: none; }
 #tab-caption .cap-val-input {
     width: 32px; background: transparent; color: var(--text-primary);
     border: none; text-align: center; padding: 4px 0;
@@ -519,7 +519,7 @@
     outline: none; box-sizing: border-box;
     font-family: inherit; font-size: 13px;
 }
-.cap-prompt-input:hover, .cap-prompt-input:focus { background: var(--rfx-surface-1); }
+.cap-prompt-input:hover, .cap-prompt-input:focus { background: var(--rfx-input-hover); }
 
 /* Shared popup shell (colour picker, punctuation, extra, multi-delete, WAV) */
 @keyframes capSmoothPop {

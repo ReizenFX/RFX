@@ -79,7 +79,7 @@
 .input-group { display: flex; gap: 8px; align-items: stretch; }
 
 .modal-input { width: 100%; background: var(--rfx-input); color: var(--rfx-text-1); border: 1px solid transparent; border-radius: var(--rfx-r-md); padding: 10px; font-size: var(--rfx-fs-md); }
-.modal-input:hover, .modal-input:focus { background: var(--rfx-surface-1); }
+.modal-input:hover, .modal-input:focus { background: var(--rfx-input-hover); }
 
 select.modal-input {
     appearance: none; -webkit-appearance: none;
