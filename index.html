@@ -674,9 +674,9 @@
         <div class="flex-column-container">
             
             <div class="tabs-header" id="tracker-tabs-header" style="border-bottom: 1px solid var(--border-color); padding: 6px 10px; flex-shrink: 0;">
-                <button class="tracker-tab-btn active" id="btn-tab-dashboard" onclick="switchTrackerTab('tab-dashboard')">Dashboard</button>
-                <button class="tracker-tab-btn" id="btn-tab-timer" onclick="switchTrackerTab('tab-timer')">Focus Timer</button>
-                <button class="tracker-tab-btn" id="btn-tab-projects" onclick="switchTrackerTab('tab-projects')">Projects</button>
+                <button class="tracker-tab-btn active" id="btn-tab-dashboard" onclick="switchTrackerTab('tab-dashboard')"><svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7.5" height="9" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="5" rx="1.5"/><rect x="13.5" y="11" width="7.5" height="10" rx="1.5"/><rect x="3" y="15" width="7.5" height="6" rx="1.5"/></svg><span class="tab-lbl">Dashboard</span></button>
+                <button class="tracker-tab-btn" id="btn-tab-timer" onclick="switchTrackerTab('tab-timer')"><svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg><span class="tab-lbl">Focus Timer</span></button>
+                <button class="tracker-tab-btn" id="btn-tab-projects" onclick="switchTrackerTab('tab-projects')"><svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h3.4l2 2.2h7.6A2.5 2.5 0 0 1 21 9.7v7.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/></svg><span class="tab-lbl">Projects</span></button>
             </div>
 
             <div class="tracker-tab-content active" id="tab-dashboard" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; padding: 8px;">
@@ -737,8 +737,8 @@
             <div class="tracker-tab-content" id="tab-timer" style="display: none; flex-direction: column; flex: 1; overflow: hidden; padding: 8px;">
                 <!-- second sub-tab row (Timer / Stopwatch): same look and drag-to-reorder as the Tracker sub tabs -->
                 <div class="tabs-header timer-mode-header" id="timer-mode-header">
-                    <button class="mode-btn active" id="btn-mode-timer" onclick="setTimerMode('timer')">Timer</button>
-                    <button class="mode-btn" id="btn-mode-stopwatch" onclick="setTimerMode('stopwatch')">Stopwatch</button>
+                    <button class="mode-btn active" id="btn-mode-timer" onclick="setTimerMode('timer')"><svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12M6 21h12"/><path d="M7.5 3v3.2a4 4 0 0 0 1.4 3L12 12l3.1-2.8a4 4 0 0 0 1.4-3V3M7.5 21v-3.2a4 4 0 0 1 1.4-3L12 12l3.1 2.8a4 4 0 0 1 1.4 3V21"/></svg><span class="tab-lbl">Timer</span></button>
+                    <button class="mode-btn" id="btn-mode-stopwatch" onclick="setTimerMode('stopwatch')"><svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="14" r="7.5"/><path d="M12 14l3-3M10 2.5h4M12 2.5v4M18.5 6.5 20 5"/></svg><span class="tab-lbl">Stopwatch</span></button>
                 </div>
                 <div class="flex-column-container" style="position: relative;">
                     
@@ -762,8 +762,8 @@
                         </svg>
                     </button>
 
-                    <div class="scrollable-content" style="padding: 2px;">
-                        <div style="display: flex; flex-direction: column; align-items: center; padding-top: 10px;">
+                    <div class="scrollable-content timer-scroll" style="padding: 2px;">
+                        <div class="timer-stage">
                             
                             <div id="view-timer" class="time-view active">
                                 <div class="sw-dial-container" id="timer-ring-container">
@@ -1161,11 +1161,11 @@
 
             <div class="cap-header-row">
                 <div class="tabs-header" id="caption-tabs-header">
-                    <button class="tab-btn active" id="btn-cap-format" onclick="switchCaptionTab('cap-format')">Format</button>
-                    <button class="tab-btn" id="btn-cap-style" onclick="switchCaptionTab('cap-style')">Style</button>
-                    <button class="tab-btn" id="btn-cap-box" onclick="switchCaptionTab('cap-box')">Box</button>
-                    <button class="tab-btn" id="btn-cap-editor" onclick="switchCaptionTab('cap-editor')">Editor</button>
-                    <button class="tab-btn" id="btn-cap-generate" onclick="switchCaptionTab('cap-generate')">Generate</button>
+                    <button class="tab-btn active" id="btn-cap-format" onclick="switchCaptionTab('cap-format')"><svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M3 12h14.5a3.25 3.25 0 0 1 0 6.5H13"/><path d="m15 16.5-2 2 2 2M3 18h6"/></svg><span class="tab-lbl">Format</span></button>
+                    <button class="tab-btn" id="btn-cap-style" onclick="switchCaptionTab('cap-style')"><svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V4.5h16V7M12 4.5v15M9 19.5h6"/></svg><span class="tab-lbl">Style</span></button>
+                    <button class="tab-btn" id="btn-cap-box" onclick="switchCaptionTab('cap-box')"><svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3"/><path d="M7.5 12h9"/></svg><span class="tab-lbl">Box</span></button>
+                    <button class="tab-btn" id="btn-cap-editor" onclick="switchCaptionTab('cap-editor')"><svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 20h8"/><path d="M16.4 3.6a2.1 2.1 0 0 1 3 3L7.5 18.5 3 20l1.5-4.5z"/></svg><span class="tab-lbl">Editor</span></button>
+                    <button class="tab-btn" id="btn-cap-generate" onclick="switchCaptionTab('cap-generate')"><svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10v4M7 6.5v11M11 3.5v17M15 8v8M19 5.5v13"/></svg><span class="tab-lbl">Generate</span></button>
                 </div>
                 <button class="cap-settings-btn" data-tooltip="Caption settings: presets folder and AI engine downloads" onclick="captionOpenSettings()"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
             </div>

@@ -569,10 +569,7 @@
     function navigationSection(inner) {
         const theme = T();
         if (!theme) { inner.appendChild(el('div', 'rfx-note', 'Navigation settings are not available (js/theme.js did not load).')); return; }
-        const sec = el('div', 'rfxset-section');
-        sec.appendChild(label('Main tabs'));
-        const group = el('div', 'rfx-group');
-        const segRow = (title, sub, list, key) => {
+        const segRow = (group, title, sub, list, key) => {
             const row = el('div', 'rfx-row is-stack');
             const txt = el('div', 'rfx-row-text');
             txt.appendChild(el('div', 'rfx-row-title', title));
@@ -593,55 +590,57 @@
             group.appendChild(row);
             return { row: row, opts: opts, sub: subEl };
         };
-        const pos = segRow('Position', 'Where the main tabs sit. Order and behaviour stay the same.', theme.NAV_POSITIONS, 'navPos');
+        const switchRow = (group, title, sub, key) => {
+            const row = el('div', 'rfx-row');
+            const txt = el('div', 'rfx-row-text');
+            txt.appendChild(el('div', 'rfx-row-title', title));
+            const subEl = el('div', 'rfx-row-sub', sub || '');
+            txt.appendChild(subEl);
+            row.appendChild(txt);
+            const sw = el('label', 'switch');
+            const input = el('input');
+            input.type = 'checkbox';
+            input.onchange = () => { const v = {}; v[key] = input.checked; theme.set(v); sync(); };
+            sw.appendChild(input);
+            sw.appendChild(el('span', 'slider'));
+            row.appendChild(sw);
+            group.appendChild(row);
+            return { row: row, input: input, sub: subEl };
+        };
+        const section = title => {
+            const sec = el('div', 'rfxset-section');
+            sec.appendChild(label(title));
+            const group = el('div', 'rfx-group');
+            sec.appendChild(group);
+            inner.appendChild(sec);
+            return group;
+        };
 
-        const iconRow = el('div', 'rfx-row');
-        const it = el('div', 'rfx-row-text');
-        it.appendChild(el('div', 'rfx-row-title', 'Icon-only tabs'));
-        const iconSub = el('div', 'rfx-row-sub', '');
-        it.appendChild(iconSub);
-        iconRow.appendChild(it);
-        const isw = el('label', 'switch');
-        const icons = el('input');
-        icons.type = 'checkbox';
-        icons.onchange = () => { theme.set({ navIcons: icons.checked }); sync(); };
-        isw.appendChild(icons);
-        isw.appendChild(el('span', 'slider'));
-        iconRow.appendChild(isw);
-        group.appendChild(iconRow);
+        const mainG = section('Main tabs');
+        const pos = segRow(mainG, 'Position', 'Where the main tabs sit. Order and behaviour stay the same.', theme.NAV_POSITIONS, 'navPos');
+        const icons = switchRow(mainG, 'Icon-only main tabs', '', 'navIcons');
+        const arrows = switchRow(mainG, 'Tab switching arrows', 'Small previous / next tab buttons in the bottom corners', 'navArrows');
 
-        const sub = segRow('Sub tabs', '', theme.SUB_POSITIONS, 'subTabPos');
+        const subG = section('Sub tabs');
+        const sub = segRow(subG, 'Position', '', theme.SUB_POSITIONS, 'subTabPos');
+        const subIcons = switchRow(subG, 'Icon-only sub tabs', 'Caption, Tracker and Timer / Stopwatch sub tabs as icons', 'subIcons');
 
-        const arrowRow = el('div', 'rfx-row');
-        const at = el('div', 'rfx-row-text');
-        at.appendChild(el('div', 'rfx-row-title', 'Tab switching arrows'));
-        at.appendChild(el('div', 'rfx-row-sub', 'Small previous / next tab buttons in the bottom corners'));
-        arrowRow.appendChild(at);
-        const asw = el('label', 'switch');
-        const arrows = el('input');
-        arrows.type = 'checkbox';
-        arrows.onchange = () => { theme.set({ navArrows: arrows.checked }); sync(); };
-        asw.appendChild(arrows);
-        asw.appendChild(el('span', 'slider'));
-        arrowRow.appendChild(asw);
-        group.appendChild(arrowRow);
-        sec.appendChild(group);
-        inner.appendChild(sec);
-        inner.appendChild(el('div', 'rfx-note', 'With icon-only tabs, hovering a tab shows its name, and for Caption and Tracker its sub tabs, in a small menu that floats over the content.'));
-        const reset = btn('Reset navigation', '', () => { theme.resetLayout(); sync(); }, 'Tabs on the left as icons, sub tabs at the bottom, arrows off');
+        inner.appendChild(el('div', 'rfx-note', 'Hovering an icon-only tab shows its name. For Caption and Tracker, the main tab also lists its sub tabs in a small menu that floats over the content.'));
+        const reset = btn('Reset navigation', '', () => { theme.resetLayout(); sync(); }, 'Main tabs on the left as icons, sub tabs at the bottom with names, arrows off');
         reset.style.marginTop = '14px';
         inner.appendChild(reset);
 
         function sync() {
             const s = theme.get(), side = s.navPos === 'left' || s.navPos === 'right';
             Object.keys(pos.opts).forEach(k => pos.opts[k].classList.toggle('on', k === s.navPos));
-            icons.checked = side || s.navIcons;
-            arrows.checked = !!s.navArrows;
-            iconRow.classList.toggle('is-disabled', side);
-            iconSub.textContent = side ? 'Always on when the tabs are on a side' : 'Show the main tabs as icons at the top or bottom';
+            icons.input.checked = side || s.navIcons;
+            icons.row.classList.toggle('is-disabled', side);
+            icons.sub.textContent = side ? 'Always on when the main tabs are on a side' : 'Show the main tabs as icons at the top or bottom';
+            arrows.input.checked = !!s.navArrows;
             Object.keys(sub.opts).forEach(k => sub.opts[k].classList.toggle('on', k === (s.navPos === 'bottom' ? 'bottom' : side ? s.subTabPos : 'top')));
             sub.row.classList.toggle('is-disabled', !side);
             sub.sub.textContent = side ? 'Where Caption and Tracker show their sub tabs' : 'Follows the main tabs (' + (s.navPos === 'bottom' ? 'directly above them' : 'below them') + ')';
+            subIcons.input.checked = !!s.subIcons;
         }
         sync();
     }

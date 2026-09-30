@@ -88,8 +88,10 @@
 /* Large Hero Controls */
 .playback-controls { display: flex; gap: 24px; align-items: center; margin-top: 26px; }
 /* Stopwatch: laps go below the controls so circle and buttons sit exactly where they are on Timer */
-#view-stopwatch .playback-controls { order: 1; }
-#view-stopwatch .sw-laps-wrapper { order: 2; margin-top: 16px; }
+/* Laps hang below the controls without taking part in the centring, so the dial and the
+   buttons sit exactly where they are on Timer. */
+#view-stopwatch { position: relative; }
+#view-stopwatch .sw-laps-wrapper { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 16px; }
 .round-btn { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; transition: transform 0.15s, background var(--rfx-dur); }
 .round-btn:active { transform: scale(0.92); }
 
@@ -268,7 +270,14 @@
 .tracker-tab-content {
     padding: 8px;
     background-color: var(--rfx-bg);
+    min-height: 0;
 }
+/* Focus Timer: the Timer / Stopwatch row stays put like the Tracker bar; only the area
+   between them shrinks and scrolls. */
+#tab-timer > .flex-column-container { flex: 1 1 auto; height: auto; min-height: 0; }
+#tab-timer .timer-scroll { display: flex; flex-direction: column; min-height: 0; }
+/* dial + controls in the vertical middle; auto margins keep the top reachable when it scrolls */
+#tab-timer .timer-stage { margin: auto 0; display: flex; flex-direction: column; align-items: center; padding: 16px 0; }
 .tracker-tab-content .scrollable-content {
     margin-right: -8px !important;
     padding-right: 10px !important;

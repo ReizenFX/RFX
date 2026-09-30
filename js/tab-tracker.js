@@ -541,6 +541,8 @@
         document.getElementById('view-' + mode).classList.add('active');
         const soundToggle = document.getElementById('btn-sound-toggle');
         if (soundToggle) soundToggle.style.display = (mode === 'timer') ? 'flex' : 'none';
+        const presetsToggle = document.getElementById('btn-presets-toggle');
+        if (presetsToggle) presetsToggle.style.display = (mode === 'timer') ? 'flex' : 'none';
     };
 
     window.toggleSound = function() {

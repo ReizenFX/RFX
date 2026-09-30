@@ -18,11 +18,16 @@
         'tab-tracker': '#tracker-tabs-header .tracker-tab-btn'
     };
     const DIR = { left: 'right', right: 'left', top: 'down', bottom: 'up' };
+    // sub-tab bars whose buttons turn icon-only with data-rfx-subicons
+    const SUB_BARS = ['caption-tabs-header', 'tracker-tabs-header', 'timer-mode-header'];
     const GAP = 8, EDGE = 6, SHOW_DELAY = 50, HIDE_DELAY = 140;
 
     const html = document.documentElement;
     const iconMode = () => html.hasAttribute('data-rfx-navicons');
     const navPos = () => html.getAttribute('data-rfx-nav') || 'top';
+    const subIconMode = () => html.hasAttribute('data-rfx-subicons');
+    const subsAtBottom = () => html.getAttribute('data-rfx-subpos') === 'bottom';
+    const isSubBtn = btn => !!btn && SUB_BARS.indexOf(btn.parentElement && btn.parentElement.id) !== -1;
 
     let header = null, fly = null, current = null, showT = null, hideT = null;
 
@@ -43,7 +48,7 @@
 
     function render(btn) {
         const tabId = btn.id.replace(/^btn-/, '');
-        const subs = subButtons(tabId);
+        const subs = isSubBtn(btn) ? [] : subButtons(tabId);
         fly.innerHTML = '';
         fly.classList.toggle('has-subs', subs.length > 0);
         // a tab without sub-tabs shows its name; with sub-tabs the list itself is enough
@@ -74,7 +79,11 @@
         const vw = window.innerWidth, vh = window.innerHeight;
         const p = navPos(), subs = fly.classList.contains('has-subs');
         let x, y;
-        if (p === 'left' || p === 'right') {
+        if (isSubBtn(btn)) {
+            // a sub tab's name: centred above a bottom sub bar, below a top one
+            x = r.left + r.width / 2 - w / 2;
+            y = subsAtBottom() ? r.top - GAP - h : r.bottom + GAP;
+        } else if (p === 'left' || p === 'right') {
             x = p === 'left' ? r.right + GAP : r.left - GAP - w;
             y = subs ? r.top - 5 : r.top + r.height / 2 - h / 2;
         } else {
@@ -91,7 +100,7 @@
         clearTimeout(hideT);
         const wasOpen = fly.classList.contains('open');
         current = btn;
-        fly.setAttribute('data-dir', DIR[navPos()] || 'down');
+        fly.setAttribute('data-dir', isSubBtn(btn) ? (subsAtBottom() ? 'up' : 'down') : (DIR[navPos()] || 'down'));
         render(btn);
         place(btn);
         if (!wasOpen) {
@@ -135,6 +144,23 @@
         header.addEventListener('pointermove', () => { if (window.isDraggingTab) hide(); });   // dragging a tab
         // the bar scrolls (wheel, or a clicked tab scrolled into view): the panel follows its tab
         header.addEventListener('scroll', () => { if (current && fly.classList.contains('open')) place(current); }, { passive: true });
+        // icon-only sub tabs: their name on hover (not while a button is held, e.g. dragging)
+        SUB_BARS.forEach(id => {
+            const bar = document.getElementById(id);
+            if (!bar) return;
+            bar.addEventListener('mouseover', e => {
+                if (!subIconMode() || e.buttons) return;
+                const btn = e.target.closest('button');
+                if (!btn || btn.parentElement !== bar) return;
+                clearTimeout(hideT);
+                if (btn === current && fly.classList.contains('open')) return;
+                clearTimeout(showT);
+                showT = setTimeout(() => show(btn), fly.classList.contains('open') ? 0 : SHOW_DELAY);
+            });
+            bar.addEventListener('mouseleave', scheduleHide);
+            bar.addEventListener('pointerdown', hide);
+            bar.addEventListener('scroll', () => { if (current && fly.classList.contains('open')) place(current); }, { passive: true });
+        });
         window.addEventListener('blur', hide);
         window.addEventListener('resize', hide);
         window.addEventListener('rfx-theme-change', hide);

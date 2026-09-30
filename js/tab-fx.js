@@ -15,7 +15,8 @@ const fxJsx = window.createJsxLoader('fx.jsx');
 
     const ICON = {
         paste: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>',
-        close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+        close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+        grip: '<svg viewBox="0 0 8 14" fill="currentColor"><circle cx="2" cy="2" r="1.25"/><circle cx="6" cy="2" r="1.25"/><circle cx="2" cy="7" r="1.25"/><circle cx="6" cy="7" r="1.25"/><circle cx="2" cy="12" r="1.25"/><circle cx="6" cy="12" r="1.25"/></svg>'
     };
 
     // ---------------------------------------------------------------- storage
@@ -453,6 +454,12 @@ const fxJsx = window.createJsxLoader('fx.jsx');
 
     function renderRow(entry, hits) {
         const row = el('div', 'fxt-item' + (entry.checked ? ' is-checked' : ''));
+        row.dataset.id = entry.id;
+        // hold and move up / down to reorder (see initReorder)
+        const grip = el('span', 'fxt-grip');
+        grip.innerHTML = ICON.grip;
+        grip.addEventListener('click', ev => ev.stopPropagation());
+        row.appendChild(grip);
         row.appendChild(el('span', 'fxt-check'));
 
         const main = el('div', 'fxt-item-main');
@@ -513,6 +520,7 @@ const fxJsx = window.createJsxLoader('fx.jsx');
         if (!list) return;
         invalidateSearch();
         list.innerHTML = '';
+        list.classList.toggle('is-searching', !!searchQuery.trim());
         renderHeader();
 
         if (!entries.length) {
@@ -532,9 +540,102 @@ const fxJsx = window.createJsxLoader('fx.jsx');
         });
     }
 
+    // ---------------------------------------------------------------- reorder
+    /* Hold a row's grip and move it up or down: the other rows glide out of the way, the
+       held row never leaves the visible list, and the list scrolls near its edges.
+       Same behaviour as reordering the main tabs (initDraggableTabs in js/globals.js).
+       Off while searching (the order shown is the search ranking then). */
+    function initReorder(list) {
+        const EDGE_ZONE = 40, EDGE_MAX = 7, EDGE_MIN = 0.6;
+        let d = null, raf = null, edgeDir = 0, edgeSpeed = 0;
+        const EASE = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+
+        function place() {
+            const raw = (d.lastY - d.startY) + (list.scrollTop - d.startScroll);
+            const lr = list.getBoundingClientRect();
+            const homeNow = d.homeTop - (list.scrollTop - d.startScroll);
+            const y = Math.max(lr.top - homeNow, Math.min(lr.bottom - d.row.offsetHeight - homeNow, raw));
+            d.row.style.transform = 'translate3d(0,' + y + 'px,0)';
+            const center = homeNow + raw + d.row.offsetHeight / 2;
+            let idx = d.startIndex;
+            d.sibs.forEach(s => {
+                if (s.index === d.startIndex) return;
+                const c = s.mid - (list.scrollTop - d.startScroll);
+                let shift = 0;
+                if (d.startIndex < s.index && center > c) { shift = -d.shift; idx = Math.max(idx, s.index); }
+                else if (d.startIndex > s.index && center < c) { shift = d.shift; idx = Math.min(idx, s.index); }
+                if (s.cur !== shift) { s.cur = shift; s.el.style.transition = EASE; s.el.style.transform = 'translate3d(0,' + shift + 'px,0)'; }
+            });
+            d.index = idx;
+        }
+        function edgeStep() {
+            if (!d || !edgeDir) { raf = null; return; }
+            const before = list.scrollTop;
+            list.scrollTop = before + edgeDir * edgeSpeed;
+            if (list.scrollTop === before) { raf = null; return; }
+            place();
+            raf = requestAnimationFrame(edgeStep);
+        }
+        function edge(y) {
+            const r = list.getBoundingClientRect();
+            let depth = 0;
+            if (y < r.top + EDGE_ZONE && list.scrollTop > 0) { edgeDir = -1; depth = (r.top + EDGE_ZONE - y) / EDGE_ZONE; }
+            else if (y > r.bottom - EDGE_ZONE && list.scrollTop < list.scrollHeight - list.clientHeight) { edgeDir = 1; depth = (y - (r.bottom - EDGE_ZONE)) / EDGE_ZONE; }
+            else edgeDir = 0;
+            if (edgeDir) { depth = Math.max(0, Math.min(1, depth)); edgeSpeed = EDGE_MIN + (EDGE_MAX - EDGE_MIN) * depth * depth; if (raf === null) raf = requestAnimationFrame(edgeStep); }
+        }
+
+        list.addEventListener('pointerdown', e => {
+            const grip = e.target.closest('.fxt-grip');
+            if (!grip || e.button !== 0 || list.classList.contains('is-searching')) return;
+            const row = grip.closest('.fxt-item');
+            const rows = Array.from(list.querySelectorAll('.fxt-item'));
+            if (!row || rows.length < 2) return;
+            e.preventDefault();
+            const a = rows[0].getBoundingClientRect(), b = rows[1].getBoundingClientRect();
+            d = { row: row, grip: grip, moved: false, startY: e.clientY, lastY: e.clientY, startScroll: list.scrollTop,
+                  homeTop: row.getBoundingClientRect().top, startIndex: rows.indexOf(row), index: rows.indexOf(row),
+                  shift: row.getBoundingClientRect().height + Math.max(0, b.top - a.bottom),
+                  sibs: rows.map((r, i) => { const rc = r.getBoundingClientRect(); return { el: r, index: i, mid: rc.top + rc.height / 2, cur: 0 }; }) };
+            try { grip.setPointerCapture(e.pointerId); } catch (err) {}
+        });
+        list.addEventListener('pointermove', e => {
+            if (!d) return;
+            if (!d.moved && Math.abs(e.clientY - d.startY) < 4) return;
+            if (!d.moved) { d.moved = true; d.row.classList.add('dragging'); list.classList.add('is-reordering'); d.row.style.transition = 'none'; }
+            d.lastY = e.clientY;
+            edge(d.lastY);
+            place();
+        });
+        function finish(e) {
+            if (!d) return;
+            const cur = d; d = null;
+            edgeDir = 0; if (raf !== null) { cancelAnimationFrame(raf); raf = null; }
+            try { cur.grip.releasePointerCapture(e.pointerId); } catch (err) {}
+            if (!cur.moved) return;
+            const all = cur.sibs.map(s => s.el);
+            all.forEach(el => { el.style.transition = 'none'; });
+            if (cur.index !== cur.startIndex) {
+                const target = cur.sibs[cur.index].el;
+                list.insertBefore(cur.row, cur.index > cur.startIndex ? target.nextSibling : target);
+                const from = entries.findIndex(x => String(x.id) === cur.row.dataset.id);
+                const to = entries.findIndex(x => String(x.id) === target.dataset.id);
+                if (from >= 0 && to >= 0) { const moved = entries.splice(from, 1)[0]; entries.splice(to, 0, moved); saveEntries(); invalidateSearch(); }
+            }
+            cur.row.classList.remove('dragging');
+            list.classList.remove('is-reordering');
+            all.forEach(el => { el.style.transform = ''; });
+            void list.offsetHeight;
+            requestAnimationFrame(() => all.forEach(el => { el.style.transition = ''; }));
+        }
+        list.addEventListener('pointerup', finish);
+        list.addEventListener('pointercancel', finish);
+    }
+
     // ---------------------------------------------------------------- init
     function init() {
         if (!document.getElementById('fxt-list')) return;
+        initReorder(document.getElementById('fxt-list'));
         document.getElementById('fxt-copy').addEventListener('click', copyFromSelection);
         document.getElementById('fxt-paste').addEventListener('click', () => pasteEntries(checkedEntries()));
         document.getElementById('fxt-all').addEventListener('click', toggleAll);

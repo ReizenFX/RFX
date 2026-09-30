@@ -280,6 +280,20 @@
     transition: background var(--rfx-dur);
 }
 #tab-fx .fxt-item:hover { background: var(--rfx-surface-2); }
+/* reorder grip: six dots in the row's quietest text colour; hold it to drag the row */
+#tab-fx .fxt-grip {
+    flex-shrink: 0; width: 14px; height: 26px; margin: 0 -4px 0 -4px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: var(--rfx-r-sm); color: var(--rfx-text-4); cursor: grab; touch-action: none;
+    transition: color var(--rfx-dur), background var(--rfx-dur);
+}
+#tab-fx .fxt-grip svg { width: 6px; height: 11px; pointer-events: none; }
+#tab-fx .fxt-item:hover .fxt-grip { color: var(--rfx-text-3); }
+#tab-fx .fxt-grip:hover, #tab-fx .fxt-item.dragging .fxt-grip { color: var(--rfx-text-1); background: var(--rfx-fill-active); }
+#tab-fx .fxt-list.is-searching .fxt-grip { visibility: hidden; }
+#tab-fx .fxt-list.is-reordering, #tab-fx .fxt-list.is-reordering * { cursor: grabbing !important; }
+#tab-fx .fxt-item.dragging { position: relative; z-index: 5; background: var(--rfx-surface-3); box-shadow: var(--rfx-shadow); }
+#tab-fx .fxt-item.dragging.is-checked { background: var(--rfx-surface-3); }
 #tab-fx .fxt-item.is-checked { background: var(--rfx-fill-selected); }
 
 #tab-fx .fxt-item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
