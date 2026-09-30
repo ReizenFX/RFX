@@ -197,73 +197,65 @@
 
     <div class="tab-content" id="tab-color">
         <div class="flex-column-container">
-            <div class="scrollable-content" style="padding-right: 4px; display: flex; flex-direction: column; gap: 12px; flex: 1;">
-                <div class="picker-section" id="picker-section">
-                    <div class="canvas-container" id="sv-box">
-                        <canvas id="sv-bg"></canvas>
-                        <div class="sv-thumb" id="sv-thumb"></div>
+            <div class="scrollable-content color-scroll">
+                <div class="section-block color-card">
+                    <div class="picker-section" id="picker-section">
+                        <div class="canvas-container" id="sv-box">
+                            <canvas id="sv-bg"></canvas>
+                            <div class="sv-thumb" id="sv-thumb"></div>
+                        </div>
+                        <div class="canvas-container" id="h-box">
+                            <canvas id="h-bg"></canvas>
+                            <div class="h-thumb" id="h-thumb"></div>
+                        </div>
                     </div>
-                    <div class="canvas-container" id="h-box">
-                        <canvas id="h-bg"></canvas>
-                        <div class="h-thumb" id="h-thumb"></div>
-                    </div>
-                </div>
-                <div class="data-panel">
                     <div class="data-top">
                         <div class="swatch-name-group">
                             <div class="preview-swatch" id="preview" data-rfx="rfx-content-color" style="background: #FF0000;"></div>
                             <div class="name-col">
-                                <span class="label">Color Name</span>
+                                <span class="label">Color name</span>
                                 <div class="name-text" id="color-name">Red</div>
                             </div>
                         </div>
-                        <div class="hex-col">
-                            <span class="label">Hex Code</span>
-                            <div class="hex-group">
-                                <button class="btn-copy-hex" onclick="copyHexCode()" title="Copy Hex Code">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                                </button>
-                                <input type="text" class="hex-input" id="hex-input" value="FF0000" maxlength="6">
-                            </div>
+                        <div class="hex-group">
+                            <span class="hex-hash">#</span>
+                            <input type="text" class="hex-input" id="hex-input" value="FF0000" maxlength="6" spellcheck="false">
+                            <button class="btn-copy-hex" onclick="copyHexCode()" data-tooltip="Copy hex code">
+                                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            </button>
                         </div>
                     </div>
-                    <div class="data-bottom">
-                        <div class="metrics-row" style="display: flex; gap: 12px; align-items: center; justify-content: space-between; width: 100%;">
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <span class="hsb-label">H</span>
-                                <div class="slider-val-wrapper hsb-wrap" id="h-wrap" onclick="openNumpad('val-h', 'dummy-slider', 'h-wrap')"><input type="text" id="val-h" class="slider-val-input" value="0" readonly><span class="slider-val-unit">°</span></div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <span class="hsb-label">S</span>
-                                <div class="slider-val-wrapper hsb-wrap" id="s-wrap" onclick="openNumpad('val-s', 'dummy-slider', 's-wrap')"><input type="text" id="val-s" class="slider-val-input" value="100" readonly><span class="slider-val-unit">%</span></div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <span class="hsb-label">B</span>
-                                <div class="slider-val-wrapper hsb-wrap" id="b-wrap" onclick="openNumpad('val-b', 'dummy-slider', 'b-wrap')"><input type="text" id="val-b" class="slider-val-input" value="100" readonly><span class="slider-val-unit">%</span></div>
-                            </div>
-                            <input type="range" id="dummy-slider" style="display:none" min="0" max="360" value="0">
-                        </div>
-                        <button class="btn-secondary" style="margin-top: 12px; width: 100%; padding: 8px 12px;" id="btn-save">Save Preset</button>
+                    <div class="metrics-row">
+                        <div class="hsb-field"><span class="hsb-label">H</span><div class="slider-val-wrapper hsb-wrap" id="h-wrap" onclick="openNumpad('val-h', 'dummy-slider', 'h-wrap')"><input type="text" id="val-h" class="slider-val-input" value="0" readonly><span class="slider-val-unit">°</span></div></div>
+                        <div class="hsb-field"><span class="hsb-label">S</span><div class="slider-val-wrapper hsb-wrap" id="s-wrap" onclick="openNumpad('val-s', 'dummy-slider', 's-wrap')"><input type="text" id="val-s" class="slider-val-input" value="100" readonly><span class="slider-val-unit">%</span></div></div>
+                        <div class="hsb-field"><span class="hsb-label">B</span><div class="slider-val-wrapper hsb-wrap" id="b-wrap" onclick="openNumpad('val-b', 'dummy-slider', 'b-wrap')"><input type="text" id="val-b" class="slider-val-input" value="100" readonly><span class="slider-val-unit">%</span></div></div>
+                        <input type="range" id="dummy-slider" style="display:none" min="0" max="360" value="0">
                     </div>
                 </div>
-                <div class="bottom-section" id="bottom-section" style="margin-top: 0; min-height: 150px;">
+
+                <div class="section-block bottom-section" id="bottom-section">
                     <div class="presets-header-row">
-                        <div class="presets-header">PRESETS</div>
-                        <div class="preset-actions">
-                            <button class="btn-icon" id="btn-import">Import</button>
-                            <button class="btn-icon" id="btn-export">Export</button>
+                        <label class="section-label">Presets</label>
+                        <div class="preset-actions color-preset-actions">
+                            <button class="btn-icon-square" id="btn-save" data-tooltip="Save the current colour as a preset"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+                            <span class="color-ctrl-sep"></span>
+                            <button class="btn-icon-square" id="btn-import" data-tooltip="Import presets (.json)"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
+                            <button class="btn-icon-square" id="btn-export" data-tooltip="Export presets (.json)"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></button>
                             <input type="file" id="file-import" style="display:none" accept=".json">
                         </div>
                     </div>
                     <div class="presets-list" id="presets-list"></div>
+                    <div class="presets-empty">No presets yet. Pick a colour and press + to keep it here.</div>
                 </div>
             </div>
-            <div class="fixed-bottom" style="display: flex; gap: 12px; justify-content: center; padding: 10px 34px 8px 34px; background: var(--bg-base);">
-                <button class="btn-icon-square" data-tooltip="Apply Fill Color" onclick="applyColorToFill()">
-                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 11l-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z"></path><path d="M5 2l5 5"></path><path d="M2 13h15"></path><path d="M22 20a2 2 0 1 1-4 0c0-1.6 2-4 2-4s2 2.4 2 4Z"></path></svg>
+            <div class="fixed-bottom color-actions">
+                <button class="btn-primary" onclick="applyColorToFill()" data-tooltip="Apply to the fill of the selected layers">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 11l-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z"></path><path d="M5 2l5 5"></path><path d="M2 13h15"></path><path d="M22 20a2 2 0 1 1-4 0c0-1.6 2-4 2-4s2 2.4 2 4Z"></path></svg>
+                    <span>Fill</span>
                 </button>
-                <button class="btn-icon-square" data-tooltip="Apply Stroke Color" onclick="applyColorToStroke()">
-                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle></svg>
+                <button class="btn-secondary" onclick="applyColorToStroke()" data-tooltip="Apply to the stroke of the selected layers">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle></svg>
+                    <span>Stroke</span>
                 </button>
             </div>
         </div>
