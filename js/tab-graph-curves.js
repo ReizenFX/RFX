@@ -8,8 +8,8 @@
    an AE influence handle. Hovering a handle names what it changes, with the values.
    Right-click the graph for every setting as a slider; each one can also be reached with
    the handles alone.
-     Elastic        peak = Amplitude + Duration, first dip = Decay Y (+ Duration),
-                    second swing = Decay X (+ Decay Y), arm = Hang
+     Elastic        (Alight Motion model) top handle on the left edge, up / down = Amplitude;
+                    bottom handle on the zero line, left / right = the first dip (Frequency)
      Bounce         first landing = Gravity, first rebound = Amplitude (+ Gravity),
                     second rebound = Decay Y + Decay X, last landing = Bounciness, arm = Hang
      Cyclic         first peak = Cycles + Start, last low = Cycles + End, arm = Hang
@@ -40,44 +40,38 @@
     const HIT = 16;                        // grab radius in px
 
     // ------------------------------------------------------------------ Elastic
-    function elBase(p) {
-        const A = Math.max(0.01, p.amp / 100), r = clamp(1 - p.dy / 100, 0.02, 0.99), q = clamp(1 - p.dx / 100, 0.1, 1);
-        let n = Math.ceil(Math.log(0.005 / A) / Math.log(r));
-        n = clamp(isFinite(n) ? n : 3, 3, 30);     // at least peak, dip and a second swing (each has a handle)
-        let S = 0;
-        for (let k = 0; k < n; k++) S += Math.pow(q, k);
-        return { A: A, r: r, q: q, n: n, S: S };
+    /* Same model as Alight Motion's elastic: it swings past the target every T (a half
+       swing), and each swing's distance from the target is Amplitude x (1 - time), so the
+       wobble dies out in a straight line exactly at the second key.
+         top handle     on the left edge, up / down: Amplitude (its height above the target)
+         bottom handle  on the zero line, left / right: the first dip, so T (Frequency = 1 / T)
+       Right-click extras (defaults give exactly the curve above): Duration = where the
+       wobble dies (100 = at the second key), Decay X = later swings get quicker, Decay Y =
+       the wobble fades faster than a straight line, Hang = how round the peaks are. */
+    function elCore(p) {
+        const K0 = p.amp / 100, T = 1 / p.freq, q = clamp(1 - p.dx / 100, 0.1, 1), Dn = clamp(p.dur / 100, 0.1, 1), pw = 1 + p.dy / 20;
+        return { K0: K0, T: T, q: q, E: t => K0 * Math.pow(Math.max(0, 1 - t / Dn), pw) };
     }
     function buildElastic(p) {
-        // Duration = when the wobble settles; past 100 it is still wobbling at the second key (cut there)
-        const b = elBase(p), D = clamp(p.dur / 100, 0.05, 3), h0 = D / (0.85 + b.S), tp = 0.85 * h0, I = infE(p.hang);
-        const k = [K(0, 0, 0, (1 + b.A) / tp, 0, QUAD), K(tp, 1 + b.A, 0, 0, I, I)];
-        let u = tp;
-        let settled = false;
-        for (let j = 1; j <= b.n; j++) {
-            const step = h0 * Math.pow(b.q, j - 1);
-            if (u + step > 1 - 0.3 * step) break;
-            u += step;
-            settled = j === b.n;
-            k.push(K(u, settled ? 1 : 1 + (j % 2 ? -1 : 1) * b.A * Math.pow(b.r, j), 0, 0, I, I));
+        const c = elCore(p), I = infE(p.hang);
+        const k = [K(0, 0, 0, (1 + c.E(c.T)) / c.T, 0, QUAD)];
+        let t = 0, h = c.T;
+        for (let n = 1; n < 400; n++) {
+            const tn = t + h;
+            if (tn > 1 - 0.3 * h) break;
+            const e = c.E(tn);
+            if (n > 1 && e < 0.002) break;                 // settled: flat to the second key
+            k.push(K(tn, 1 + (n % 2 ? 1 : -1) * e, 0, 0, n === 1 ? 0.42 : I, I));
+            t = tn; h *= c.q;
         }
-        k[k.length - 1].io = settled ? QUAD : I;
-        k.push(K(1, 1, 0, 0, settled ? QUAD : I, 0));
-        const tempo = h => { const b2 = elBase(p); p.dur = clamp(R(h * (0.85 + b2.S) * 100), 5, 300); };
-        const hs = [
-            { id: 'peak', x: tp, y: 1 + b.A, label: 'Amplitude ' + p.amp + '  ·  Duration ' + p.dur,
-              drag: (x, y) => { p.amp = clamp(R((y - 1) * 100), 1, 100); tempo(clamp(x, 0.01, 1) / 0.85); } },
-            { id: 'dip', x: tp + h0, y: 1 - b.A * b.r, label: 'Decay Y ' + p.dy + '  ·  Duration ' + p.dur,
-              drag: (x, y) => { const r = clamp((1 - y) / b.A, 0.02, 0.99); p.dy = clamp(R((1 - r) * 100), 1, 98); tempo(clamp(x, 0.02, 1) / 1.85); } }
-        ];
-        if (b.n >= 3) hs.push({ id: 'swing', x: tp + h0 + h0 * b.q, y: 1 + b.A * b.r * b.r, label: 'Decay X ' + p.dx + '  ·  Decay Y ' + p.dy,
-            drag: (x, y) => {
-                const q = clamp((x - tp - h0) / h0, 0.1, 1); p.dx = clamp(R((1 - q) * 100), 0, 90);
-                const r = clamp(Math.sqrt(Math.max(0.0001, y - 1) / b.A), 0.02, 0.99); p.dy = clamp(R((1 - r) * 100), 1, 98);
-                const b2 = elBase(p); p.dur = clamp(R(h0 * (0.85 + b2.S) * 100), 5, 300);   // keeps the first swing where it is
-            } });
-        hs.push({ id: 'hang', arm: true, x: tp, y: 1 + b.A, label: 'Hang ' + p.hang });
-        return { knots: k, handles: hs };
+        k.push(K(1, 1, 0, 0, I, 0));
+        const dipT = c.T * (1 + c.q), dipV = dipT <= 1 ? 1 - c.E(dipT) : 1;
+        return { knots: k, handles: [
+            { id: 'amp', x: 0, y: 1 + c.K0, lines: [[0, 1 + c.K0, 1, 1 + c.K0]], label: 'Amplitude ' + p.amp,
+              drag: (x, y) => { p.amp = clamp(R((y - 1) * 100), 0, 120); } },
+            { id: 'freq', x: dipT, y: 0, lines: [[dipT, 0, dipT, dipV]], label: 'Frequency ' + p.freq.toFixed(1),
+              drag: x => { p.freq = clamp(R((1 + c.q) / Math.max(0.01, x) * 10) / 10, 1 + c.q, 50); } }
+        ] };
     }
 
     // ------------------------------------------------------------------ Bounce
@@ -240,9 +234,10 @@
     }
 
     // ------------------------------------------------------------------ registry
-    const P = (k, label, min, max, def, hidden) => ({ k: k, label: label, min: min, max: max, def: def, hidden: !!hidden });
+    const P = (k, label, min, max, def, hidden, step) => ({ k: k, label: label, min: min, max: max, def: def, hidden: !!hidden, step: step || 1 });
     const MODELS = {
-        elastic: { name: 'Elastic', build: buildElastic, params: [P('amp', 'Amplitude', 1, 100, 26), P('dur', 'Duration', 5, 300, 60), P('dx', 'Decay X', 0, 90, 25), P('dy', 'Decay Y', 1, 98, 50), P('hang', 'Hang', 0, 100, 50)] },
+        elastic: { name: 'Elastic', build: buildElastic, view: [-0.15, 2.35],
+            params: [P('amp', 'Amplitude', 0, 120, 60), P('freq', 'Frequency', 2, 50, 5, false, 0.1), P('dur', 'Duration', 10, 100, 100), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 100, 0), P('hang', 'Hang', 0, 100, 50)] },
         bounce: { name: 'Bounce', build: buildBounce, params: [P('bnc', 'Bounciness', 1, 100, 50), P('amp', 'Amplitude', 1, 100, 50), P('grav', 'Gravity', 1, 100, 50), P('dy', 'Decay Y', 0, 95, 50), P('dx', 'Decay X', -60, 95, 1), P('hang', 'Hang', 0, 100, 75)] },
         cyclic: { name: 'Cyclic', build: buildCyclic, params: [P('cyc', 'Cycles', 1, 15, 3), P('start', 'Start', 0, 150, 100), P('end', 'End', -50, 100, 0), P('hang', 'Hang', 0, 100, 50)] },
         steps: { name: 'Steps', build: buildSteps, params: [P('steps', 'Steps', 2, 24, 4), P('smooth', 'Smoothness', 0, 100, 0)] },
@@ -252,11 +247,12 @@
     const defParams = m => { const o = {}; MODELS[m].params.forEach(q => { o[q.k] = q.def; }); return o; };
     function assignKnown(m, target, src) {
         if (!src) return;
-        MODELS[m].params.forEach(q => { if (typeof src[q.k] === 'number' && isFinite(src[q.k])) target[q.k] = clamp(R(src[q.k]), q.min, q.max); });
+        MODELS[m].params.forEach(q => { if (typeof src[q.k] === 'number' && isFinite(src[q.k])) target[q.k] = clamp(R(src[q.k] / q.step) * q.step, q.min, q.max); });
     }
 
     // ------------------------------------------------------------------ state
-    function defaults() { const s = { mode: 'bezier', rev: false }; Object.keys(MODELS).forEach(m => { s[m] = defParams(m); }); return s; }
+    const VERSION = 2;
+    function defaults() { const s = { v: VERSION, mode: 'bezier', rev: false }; Object.keys(MODELS).forEach(m => { s[m] = defParams(m); }); return s; }
     let st = load();
     function load() {
         const s = defaults();
@@ -265,7 +261,7 @@
             if (o && typeof o === 'object') {
                 if (o.mode === 'bezier' || MODELS[o.mode]) s.mode = o.mode;
                 s.rev = !!o.rev;
-                Object.keys(MODELS).forEach(m => assignKnown(m, s[m], o[m]));
+                Object.keys(MODELS).forEach(m => { if (m !== 'elastic' || o.v === VERSION) assignKnown(m, s[m], o[m]); });
             }
         } catch (e) {}
         return s;
@@ -283,11 +279,13 @@
         return {
             knots: b.knots.noMirror ? b.knots : mirrorKnots(b.knots),
             band: b.band && b.band.map(r => [1 - r[0], 1 - r[2], 1 - r[1]]),
-            handles: b.handles.map(h => Object.assign({}, h, f(h.x, h.y)))
+            handles: b.handles.map(h => Object.assign({}, h, f(h.x, h.y), { lines: h.lines && h.lines.map(l => [1 - l[0], 1 - l[1], 1 - l[2], 1 - l[3]]) }))
         };
     }
     const shape = () => shapeFor(st);
     function viewRange(sh, noPad) {
+        const M = model();
+        if (M && M.view) return st.rev ? [1 - M.view[1], 1 - M.view[0]] : M.view.slice();   // a fixed view: nothing rescales while dragging
         sh = sh || shape();
         let lo = 0, hi = 1;
         sh.knots.forEach(q => { lo = Math.min(lo, q.v); hi = Math.max(hi, q.v); });
@@ -396,7 +394,8 @@
             base.setAttribute('d', 'M ' + sh.band.map(r => { const q = toPx(r[0], (r[1] + r[2]) / 2); return q.x + ',' + q.y; }).join(' L '));
         } else { band.setAttribute('d', ''); base.setAttribute('d', ''); }
         // the keyframes Apply will add
-        g.querySelector('.gx-shape-knots').innerHTML = sh.knots.slice(1, -1).map(q => { const P0 = toPx(q.u, q.v); return '<circle class="gx-knot" cx="' + P0.x + '" cy="' + P0.y + '" r="2"/>'; }).join('');
+        // the handles' guide lines (slider track, stem to the curve)
+        g.querySelector('.gx-shape-knots').innerHTML = sh.handles.map(h => (h.lines || []).map(l => { const A = toPx(l[0], l[1]), B = toPx(l[2], l[3]); return '<line class="gx-ctl-line" x1="' + A.x + '" y1="' + A.y + '" x2="' + B.x + '" y2="' + B.y + '" stroke-width="2" stroke-linecap="round"/>'; }).join('')).join('');
         // handles (arms after the main handles so they stay on top of them)
         lastPx = [];
         let html = '';
@@ -498,11 +497,12 @@
             const cell = document.createElement('label'); cell.className = 'gx-cm-cell';
             const head = document.createElement('div'); head.className = 'gx-cm-head';
             const name = document.createElement('span'); name.textContent = q.label;
-            const val = document.createElement('span'); val.className = 'gx-cm-val'; val.textContent = p[q.k];
+            const fmt = v => (q.step < 1 ? (+v).toFixed(1) : String(v));
+            const val = document.createElement('span'); val.className = 'gx-cm-val'; val.textContent = fmt(p[q.k]);
             head.appendChild(name); head.appendChild(val);
             const input = document.createElement('input');
-            input.type = 'range'; input.className = 'main-slider'; input.min = q.min; input.max = q.max; input.step = 1; input.value = p[q.k];
-            input.addEventListener('input', () => { p[q.k] = +input.value; val.textContent = input.value; redraw(); });
+            input.type = 'range'; input.className = 'main-slider'; input.min = q.min; input.max = q.max; input.step = q.step; input.value = p[q.k];
+            input.addEventListener('input', () => { p[q.k] = +input.value; val.textContent = fmt(input.value); redraw(); });
             input.addEventListener('change', () => { save(); autoApply(); });
             cell.appendChild(head); cell.appendChild(input);
             grid.appendChild(cell);

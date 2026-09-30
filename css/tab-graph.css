@@ -49,6 +49,7 @@
 .gx-handle.is-on { stroke-width: 3; }
 .gx-handle-sm { fill: var(--rfx-knob); stroke: var(--rfx-accent); }
 .gx-arm-line { stroke: var(--rfx-accent); stroke-opacity: .8; }
+.gx-ctl-line { stroke: var(--rfx-accent); stroke-opacity: .7; pointer-events: none; }
 .gx-knot { fill: var(--rfx-text-4); }
 .gx-band { fill: var(--rfx-fill-hover); stroke: none; }
 .gx-baseline { stroke: var(--rfx-text-4); }
