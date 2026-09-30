@@ -519,9 +519,9 @@
                 let isToday = (i === points.length - 1);
                 
                 if (isToday) {
-                    chartHTML += `<g class="chart-dot-today-group" data-chart-tooltip="${timeTxt}"><circle cx="${p.x}" cy="${p.y}" class="chart-dot-today-outer" /><circle cx="${p.x}" cy="${p.y}" class="chart-dot-today-inner" /><circle cx="${p.x}" cy="${p.y}" r="14" fill="transparent" /></g>`;
+                    chartHTML += `<g class="chart-dot-today-group" data-chart-point="1"><circle cx="${p.x}" cy="${p.y}" class="chart-dot-today-outer" data-tooltip="${timeTxt}" /><circle cx="${p.x}" cy="${p.y}" class="chart-dot-today-inner" /><circle cx="${p.x}" cy="${p.y}" r="14" fill="transparent" /></g>`;
                 } else {
-                    chartHTML += `<circle cx="${p.x}" cy="${p.y}" class="chart-dot-past" data-chart-tooltip="${timeTxt}" />`;
+                    chartHTML += `<circle cx="${p.x}" cy="${p.y}" class="chart-dot-past" data-chart-point="1" data-tooltip="${timeTxt}" />`;
                 }
             });
 
@@ -817,7 +817,7 @@
                 
                 let tags = '';
                 if (isActive) tags += '<span style="font-size:9px; background:var(--rfx-fill-active); color:var(--rfx-text-1); font-weight:600; padding:3px 6px; border-radius:4px;">ACTIVE</span>';
-                else if (isLegacy) tags += '<span style="font-size:9px; background:var(--rfx-fill-hover); color:var(--text-secondary); font-weight:600; padding:3px 6px; border-radius:4px;" title="Tracked before dates were saved">LEGACY</span>';
+                else if (isLegacy) tags += '<span style="font-size:9px; background:var(--rfx-fill-hover); color:var(--text-secondary); font-weight:600; padding:3px 6px; border-radius:4px;" data-tooltip="Tracked before dates were saved">LEGACY</span>';
 
                 let isExpanded = window.expandedProjects[rowId] === true;
                 let compsHtml = '';
@@ -1043,7 +1043,7 @@
         currentVal += val;
         
         // Limits time inputs to 2 digits
-        if (['input-h', 'input-m', 'input-s'].includes(window.activeNumpadInput.id) && currentVal.length > 2) { 
+        if ((['input-h', 'input-m', 'input-s'].includes(window.activeNumpadInput.id) || /^(new|edit)-preset-[hms]$/.test(window.activeNumpadInput.id)) && currentVal.length > 2) { 
             currentVal = currentVal.slice(-2); 
         }
         // Limits the frames input to 3 digits so it doesn't overflow the UI
@@ -1058,11 +1058,13 @@
     };
 
     window.openPresetModal = function() {
+        editingPresetId = null;
         renderPresets();
         document.getElementById('preset-modal-backdrop').classList.add('active');
     };
 
     window.closePresetModal = function() {
+        if (editingPresetId) { savePresetEdit(); editingPresetId = null; }
         document.getElementById('preset-modal-backdrop').classList.remove('active');
         document.getElementById('new-preset-name').value = '';
         document.getElementById('new-preset-h').value = '';
@@ -1070,27 +1072,61 @@
         document.getElementById('new-preset-s').value = '';
     };
 
+    const PRESET_ICON_EDIT = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>';
+    const PRESET_ICON_DONE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    const PRESET_ICON_DELETE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
+    let editingPresetId = null;
+    const pad2 = n => n.toString().padStart(2, '0');
+
     function renderPresets() {
         const list = document.getElementById('preset-list');
         list.innerHTML = '';
         window.appStats.presets.forEach(p => {
             const h = Math.floor(p.time / 3600); const m = Math.floor((p.time % 3600) / 60); const s = p.time % 60;
-            let timeStr = h > 0 ? 
-                `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}` : 
-                `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            let timeStr = h > 0 ? `${pad2(h)}:${pad2(m)}:${pad2(s)}` : `${pad2(m)}:${pad2(s)}`;
+            const editing = editingPresetId === p.id;
+            const timeHtml = editing
+                ? `<span class="preset-time-edit" onclick="event.stopPropagation()">
+                        <input type="text" id="edit-preset-h" class="preset-time-input" value="${pad2(h)}" readonly onclick="openNumpad('edit-preset-h', 'dummy-slider', null)">:<input type="text" id="edit-preset-m" class="preset-time-input" value="${pad2(m)}" readonly onclick="openNumpad('edit-preset-m', 'dummy-slider', null)">:<input type="text" id="edit-preset-s" class="preset-time-input" value="${pad2(s)}" readonly onclick="openNumpad('edit-preset-s', 'dummy-slider', null)">
+                   </span>`
+                : `<span class="preset-time">${timeStr}</span>`;
             list.innerHTML += `
-                <div class="preset-item" onclick="applyPreset(${p.time})">
-                    <span class="preset-name">${p.name}</span>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span class="preset-time">${timeStr}</span>
-                        <div class="preset-delete" onclick="event.stopPropagation(); deletePreset('${p.id}')" title="Delete Preset">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </div>
+                <div class="preset-item${editing ? ' is-editing' : ''}" onclick="${editing ? '' : 'applyPreset(' + p.time + ')'}">
+                    <div class="preset-main">
+                        <span class="preset-name">${p.name}</span>
+                        ${timeHtml}
+                    </div>
+                    <div class="preset-actions">
+                        <div class="preset-edit" onclick="event.stopPropagation(); editPreset('${p.id}')" data-tooltip="${editing ? 'Done' : 'Edit time'}">${editing ? PRESET_ICON_DONE : PRESET_ICON_EDIT}</div>
+                        <div class="preset-delete" onclick="event.stopPropagation(); deletePreset('${p.id}')" data-tooltip="Delete preset">${PRESET_ICON_DELETE}</div>
                     </div>
                 </div>`;
         });
+        if (editingPresetId) {
+            ['h', 'm', 's'].forEach(k => {
+                const el = document.getElementById('edit-preset-' + k);
+                if (el) el.addEventListener('input', savePresetEdit);
+            });
+        }
+    }
+
+    /* Edit a preset's time in place: the time turns into HH:MM:SS fields that use the
+       same numpad as everywhere else; every change is saved. The check button ends editing. */
+    window.editPreset = function(id) {
+        if (editingPresetId === id) { savePresetEdit(); editingPresetId = null; if (window.closeNumpad) window.closeNumpad(); renderPresets(); return; }
+        editingPresetId = id;
+        renderPresets();
+        openNumpad('edit-preset-m', 'dummy-slider', null);
+        const mEl = document.getElementById('edit-preset-m');
+        if (mEl) mEl.focus();   // the field being typed into shows a fill
+    };
+
+    function savePresetEdit() {
+        const p = window.appStats.presets.find(x => x.id === editingPresetId);
+        if (!p) return;
+        const v = k => parseInt((document.getElementById('edit-preset-' + k) || {}).value, 10) || 0;
+        const total = v('h') * 3600 + Math.min(59, v('m')) * 60 + Math.min(59, v('s'));
+        if (total > 0) { p.time = total; saveStats(); }
     }
 
     window.applyPreset = function(seconds) {
@@ -1123,38 +1159,10 @@
         }
     };
 
-    let tooltipTimer; 
-    document.addEventListener('mouseover', (e) => {
-        const target = e.target.closest('[data-chart-tooltip]');
-        if (target) {
-            window.isChartHovered = true; 
-            tooltipTimer = setTimeout(() => {
-                const globalTooltip = document.getElementById('chart-tooltip');
-                if(!globalTooltip) return;
-                globalTooltip.innerText = target.getAttribute('data-chart-tooltip');
-                const targetRect = target.getBoundingClientRect();
-                const tooltipRect = globalTooltip.getBoundingClientRect();
-                let x = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
-                let y = targetRect.top - tooltipRect.height - 12; 
-                if (x + tooltipRect.width > window.innerWidth) x = window.innerWidth - tooltipRect.width - 8;
-                if (x < 0) x = 8;
-                if (y < 0) y = targetRect.bottom + 12;
-                globalTooltip.style.left = x + 'px';
-                globalTooltip.style.top = y + 'px';
-                globalTooltip.classList.add('visible');
-            }, 150); 
-        }
-    });
-
-    document.addEventListener('mouseout', (e) => {
-        const target = e.target.closest('[data-chart-tooltip]');
-        if (target) {
-            window.isChartHovered = false; 
-            clearTimeout(tooltipTimer); 
-            const globalTooltip = document.getElementById('chart-tooltip');
-            if(globalTooltip) globalTooltip.classList.remove('visible');
-        }
-    });
+    // Chart points show their value with the shared tooltip (data-tooltip, js/globals.js);
+    // this only records the hover so the chart is not redrawn under the pointer.
+    document.addEventListener('mouseover', (e) => { if (e.target.closest && e.target.closest('[data-chart-point]')) window.isChartHovered = true; });
+    document.addEventListener('mouseout', (e) => { if (e.target.closest && e.target.closest('[data-chart-point]')) window.isChartHovered = false; });
 
     // ==========================================
     // TRACKER SUB-TAB DRAG & DROP ENGINE (Copied from Globals)

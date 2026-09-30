@@ -36,7 +36,7 @@
     border-radius: var(--rfx-r-lg);
     padding: 8px 10px;
 }
-.preset-name {
+#tab-render .preset-name {
     font-size: 12px;
     font-weight: 500 !important;
     color: var(--text-primary);
@@ -49,8 +49,8 @@
     cursor: pointer;
     transition: background 0.15s ease;
 }
-.preset-name:hover { background: var(--rfx-fill-active); }
-.preset-actions { display: flex; flex-direction: row; gap: 4px; }
+#tab-render .preset-name:hover { background: var(--rfx-fill-active); }
+#tab-render .preset-actions { display: flex; flex-direction: row; gap: 4px; }
 
 /* Scoped icon button overrides for render preset rows */
 #tab-render .preset-actions .btn-icon,

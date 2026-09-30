@@ -69,8 +69,10 @@
 .m-val { font-size: 14px; font-weight: var(--rfx-fw-strong); color: var(--rfx-text-1); white-space: nowrap; }
 
 /* --- TIMER & STOPWATCH DUAL ENGINE UI --- */
-.timer-mode-switcher { display: flex; background: var(--rfx-surface-1); border: 1px solid transparent; border-radius: var(--rfx-r-pill); padding: 2px; margin-top: 8px; margin-bottom: 24px; }
-.mode-btn { background: transparent; border: none; color: var(--rfx-text-2); padding: 6px 18px; border-radius: var(--rfx-r-pill); cursor: pointer; transition: background var(--rfx-dur), color var(--rfx-dur); font-size: var(--rfx-fs-sm); }
+.timer-mode-switcher { display: flex; gap: 2px; background: var(--rfx-surface-1); border: 1px solid transparent; border-radius: var(--rfx-r-pill); padding: 5px; margin-top: 8px; margin-bottom: 24px; }
+/* sub tabs at the bottom: the Timer / Stopwatch switch sits below the play controls */
+:root[data-rfx-subpos="bottom"] .timer-mode-switcher { order: 99; margin-top: 22px; margin-bottom: 4px; }
+.mode-btn { background: transparent; border: none; color: var(--rfx-text-2); padding: 5px 16px; border-radius: var(--rfx-r-pill); cursor: pointer; transition: background var(--rfx-dur), color var(--rfx-dur); font-size: var(--rfx-fs-sm); }
 .mode-btn:hover { color: var(--rfx-text-1); }
 .mode-btn.active { background: var(--rfx-fill-selected); color: var(--rfx-text-1); box-shadow: none; }
 
@@ -179,12 +181,19 @@
     background: var(--rfx-surface-1); padding: 8px 10px; border-radius: var(--rfx-r-md); cursor: pointer; border: 1px solid transparent; transition: background var(--rfx-dur);
 }
 .preset-item:hover { border-color: transparent; background: var(--rfx-surface-2); }
-.preset-name { font-size: var(--rfx-fs-md); color: var(--rfx-text-1); }
-.preset-time { font-size: var(--rfx-fs-md); color: var(--rfx-text-2); font-variant-numeric: tabular-nums; }
+.preset-item.is-editing { background: var(--rfx-surface-2); cursor: default; }
+/* name and time sit together on the left; edit + delete on the right */
+.preset-main { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex: 1; }
+.preset-list .preset-name { font-size: var(--rfx-fs-md); color: var(--rfx-text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; padding: 0; background: none; }
+.preset-time { font-size: var(--rfx-fs-md); color: var(--rfx-text-2); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.preset-time-edit { display: inline-flex; align-items: center; gap: 2px; color: var(--rfx-text-3); flex-shrink: 0; }
+.preset-time-input { width: 30px; height: 24px; padding: 0; border: none; border-radius: var(--rfx-r-sm); background: var(--rfx-input); color: var(--rfx-text-1); text-align: center; font-size: var(--rfx-fs-md); font-variant-numeric: tabular-nums; cursor: pointer; }
+.preset-time-input:focus { background: var(--rfx-fill-selected); outline: none; }
+.preset-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; margin-left: 8px; }
 
-.preset-delete { color: var(--rfx-text-2); cursor: pointer; padding: 2px; border-radius: var(--rfx-r-sm); opacity: 0; pointer-events: none; margin-left: 8px; transition: color var(--rfx-dur), background var(--rfx-dur); }
-.preset-item:hover .preset-delete { opacity: 1; pointer-events: auto; }
-.preset-delete:hover { color: var(--rfx-text-1); background: var(--rfx-fill-active); }
+.preset-edit, .preset-delete { color: var(--rfx-text-2); cursor: pointer; padding: 4px; line-height: 0; border-radius: var(--rfx-r-sm); opacity: 0; pointer-events: none; transition: color var(--rfx-dur), background var(--rfx-dur), opacity var(--rfx-dur); }
+.preset-item:hover .preset-edit, .preset-item:hover .preset-delete, .preset-item.is-editing .preset-edit, .preset-item.is-editing .preset-delete { opacity: 1; pointer-events: auto; }
+.preset-edit:hover, .preset-delete:hover { color: var(--rfx-text-1); background: var(--rfx-fill-active); }
 
 .preset-add-row { display: flex; flex-direction: column; gap: 8px; }
 .preset-time-inputs { display: flex; gap: 6px; }
