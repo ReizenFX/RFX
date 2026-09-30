@@ -366,7 +366,7 @@ function graphCurveParse(spec) {
         if (c.length < 7) continue;
         out.push({ u: parseFloat(c[0]), v: parseFloat(c[1]), si: parseFloat(c[2]), so: parseFloat(c[3]),
                    ii: Math.max(0.1, Math.min(100, parseFloat(c[4]))), io: Math.max(0.1, Math.min(100, parseFloat(c[5]))),
-                   hold: c[6] === '1', lin: c[6] === '2', frame: c[7] === '1' });
+                   hold: c[6] === '1', lin: c[6] === '2', frame: parseInt(c[7], 10) || 0 });
     }
     return out;
 }
@@ -389,10 +389,20 @@ function graphCurveApplyPair(prop, ta, tb, knots, minGap) {
 
     // 2. knot times; keep the knots that are at least minGap apart
     var frameDur = minGap * 2;
-    for (i = 0; i < knots.length; i++) knots[i].t = (knots[i].frame && T > frameDur * 3) ? ta + frameDur : ta + knots[i].u * T;
+    for (i = 0; i < knots.length; i++) {
+        var fr = (T > frameDur * 3) ? knots[i].frame : 0;
+        knots[i].t = fr === 1 ? ta + frameDur : (fr === 2 ? tb - frameDur : ta + knots[i].u * T);
+    }
+    // a key pinned one frame after the first / before the second key wins over knots crowding it
+    var tFirst = -1e9, tLast = 1e9;
+    for (i = 0; i < knots.length; i++) {
+        if (knots[i].t !== undefined && knots[i].frame && T > frameDur * 3) { if (knots[i].frame === 1) tFirst = knots[i].t; else tLast = knots[i].t; }
+    }
     var use = [knots[0]];
     for (i = 1; i < knots.length - 1; i++) {
-        if (knots[i].t - use[use.length - 1].t < minGap && !knots[i].frame) continue;
+        var pinned = knots[i].frame && T > frameDur * 3;
+        if (!pinned && (knots[i].t < tFirst + minGap || knots[i].t > tLast - minGap)) continue;
+        if (knots[i].t - use[use.length - 1].t < minGap && !pinned) continue;
         if (tb - knots[i].t < minGap) continue;
         use.push(knots[i]);
     }

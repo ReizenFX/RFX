@@ -53,6 +53,7 @@
 .gx-knot { fill: var(--rfx-text-4); }
 .gx-band { fill: var(--rfx-fill-hover); stroke: none; }
 .gx-baseline { stroke: var(--rfx-text-4); }
+.gx-snap { stroke: var(--rfx-text-4); pointer-events: none; }
 .gx-tip { pointer-events: none; }
 .gx-tip rect { fill: var(--rfx-menu); stroke: var(--rfx-line); stroke-width: 1; }
 .gx-tip text { fill: var(--rfx-text-1); font-size: 11px; font-family: inherit; }

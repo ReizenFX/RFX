@@ -10,7 +10,8 @@
    the handles alone.
      Elastic        (Alight Motion model) top handle on the left edge, up / down = Amplitude;
                     bottom handle on the zero line, left / right = the first dip (Frequency)
-     Bounce         first landing = Gravity, first rebound = Amplitude (+ Gravity),
+     Bounce         (Alight Motion model) one handle anywhere = the bottom of the first rebound:
+                    up / down = Bounciness, left / right = Gravity (timing)
                     second rebound = Decay Y + Decay X, last landing = Bounciness, arm = Hang
      Cyclic         first peak = Cycles + Start, last low = Cycles + End, arm = Hang
      Steps          top of the last riser = Steps, foot of the first riser = Smoothness
@@ -75,58 +76,57 @@
     }
 
     // ------------------------------------------------------------------ Bounce
-    const bN = p => 1 + R(p.bnc / 100 * 11);
-    function bFit(p, n) {
-        const A = clamp(p.amp / 100 * 0.95, 0.01, 0.95), qy = 1 - p.dy / 100, qx = 1 - p.dx / 100, t1 = 0.08 + (1 - p.grav / 100) * 0.42;
-        const L = [];
-        let u = t1;
-        for (let k = 0; k < n; k++) {
-            const h = A * Math.pow(qy, k), d = t1 * Math.sqrt(h) * Math.pow(qx, k);
-            if (u + d > 1 + 1e-9) break;                       // only bounces that fit before the second key
-            L.push({ s: u, d: d, h: h }); u += d;
-        }
-        return { A: A, t1: t1, L: L };
+    /* Same model as Alight Motion's bounce, one handle that goes anywhere: it is the bottom of
+       the first rebound. Its height sets how deep that rebound drops (d = Bounciness), its
+       place in time sets the timing (the first landing is at x / (1 + d); Gravity).
+       Every rebound is a parabola, d times as deep and d times as long as the one before (the
+       first lasts 2 x landing time x d), up to 10 rebounds. When time runs out near or
+       after a rebound's top, the curve is cut there and snaps to the second key's value on that key
+       (it holds until one frame before it); otherwise it rests on the target.
+       Right-click extras (defaults give exactly that): Decay X / Decay Y = rebounds get
+       shorter / shallower faster, Hang = how round their tops are, Bounces = the limit. */
+    function bnCore(p) {
+        const d1 = clamp(p.bnc / 100, 0, 1), hx = clamp((101 - p.grav) / 100, 0.01, 1);
+        return { d1: d1, hx: hx, t1: hx / (1 + d1), ry: d1 * (1 - p.dy / 100), rx: d1 * (1 - p.dx / 100) };
     }
     function buildBounce(p) {
-        const f = bFit(p, bN(p)), B = infB(p.hang), t1 = f.t1;
+        const c = bnCore(p), B = infB(p.hang), t1 = c.t1;
         const k = [K(0, 0, 0, 0, 0, QUAD)];
         let imp = K(t1, 1, 2 / t1, 0, QUAD, QUAD);
         k.push(imp);
-        f.L.forEach(b => {
-            imp.so = -4 * b.h / b.d;
-            k.push(K(b.s + b.d / 2, 1 - b.h, 0, 0, B, B));
-            imp = K(b.s + b.d, 1, 4 * b.h / b.d, 0, QUAD, QUAD);
-            k.push(imp);
-        });
-        if (imp.u > 1 - 1e-6) { imp.u = 1; imp.io = 0; } else { imp.so = 0; k.push(K(1, 1, 0, 0, QUAD, 0)); }
-        const setT1 = t => { p.grav = clamp(R((1 - (clamp(t, 0.08, 0.5) - 0.08) / 0.42) * 100), 1, 100); };
-        const hs = [{ id: 'land', x: t1, y: 1, label: 'Gravity ' + p.grav, drag: x => setT1(x) }];
-        const b0 = f.L[0], b1 = f.L[1];
-        if (b0) {
-            hs.push({ id: 'apex', x: b0.s + b0.d / 2, y: 1 - b0.h, label: 'Amplitude ' + p.amp + '  ·  Gravity ' + p.grav,
-                drag: (x, y) => { p.amp = clamp(R((1 - y) / 0.95 * 100), 1, 100); const A = clamp(p.amp / 100 * 0.95, 0.01, 0.95); setT1(x / (1 + Math.sqrt(A) / 2)); } });
+        let s = t1, D = c.d1, d = 2 * t1 * c.d1, cut = false;
+        for (let n = 0; n < p.maxb && s < 1 - 1e-6; n++) {
+            if (D < 0.002 || d < 1e-4) break;                        // settled
+            if (s + d <= 1 + 1e-9) {                                 // a whole rebound
+                imp.so = -4 * D / d;
+                k.push(K(s + d / 2, 1 - D, 0, 0, B, B));
+                s += d;
+                imp = K(s, 1, 4 * D / d, 0, QUAD, QUAD);
+                k.push(imp);
+            } else {
+                if (s + d / 2 <= 1.03) {                              // near or past its top: cut at the end
+                    const e = 0.012, w = (1 - e - s) / d;   // ~ one frame; in AE the key sits exactly one frame before
+                    imp.so = -4 * D / d;
+                    if (s + d / 2 < 1 - e - 0.005) k.push(K(s + d / 2, 1 - D, 0, 0, B, QUAD));
+                    else imp.io = QUAD;
+                    const cutK = K(1 - e, 1 - 4 * D * w * (1 - w), -4 * D * (1 - 2 * w) / d, 0, QUAD, 0, 1);
+                    cutK.frame = 2;                                  // one frame before the second key
+                    k.push(cutK);
+                    cut = true;
+                }
+                break;
+            }
+            D *= c.ry; d *= c.rx;
         }
-        if (b1) {
-            hs.push({ id: 'apex2', x: b1.s + b1.d / 2, y: 1 - b1.h, label: 'Decay Y ' + p.dy + '  ·  Decay X ' + p.dx,
-                drag: (x, y) => {
-                    const qy = clamp((1 - y) / f.A, 0.05, 1); p.dy = clamp(R((1 - qy) * 100), 0, 95);
-                    const qx = clamp(2 * (x - t1 - b0.d) / (t1 * Math.sqrt(f.A * qy)), 0.05, 1.6); p.dx = clamp(R((1 - qx) * 100), -60, 95);
-                } });
-        }
-        if (b0) {
-            const last = f.L[f.L.length - 1];
-            hs.push({ id: 'rest', x: last.s + last.d, y: 1, label: 'Bounciness ' + p.bnc,
-                drag: x => {
-                    let best = 1, bd = Infinity;
-                    for (let n = 1; n <= 12; n++) {
-                        const g = bFit(p, n), e = g.L.length ? g.L[g.L.length - 1].s + g.L[g.L.length - 1].d : g.t1;
-                        if (Math.abs(e - x) < bd - 1e-9) { bd = Math.abs(e - x); best = n; }
-                    }
-                    p.bnc = clamp(R((best - 1) / 11 * 100), 1, 100);
-                } });
-            hs.push({ id: 'hang', arm: true, x: b0.s + b0.d / 2, y: 1 - b0.h, label: 'Hang ' + p.hang });
-        }
-        return { knots: k, handles: hs };
+        if (!cut) {
+            if (imp.u > 1 - 1e-6) { imp.u = 1; imp.io = 0; }
+            else { imp.so = 0; k.push(K(1, 1, 0, 0, QUAD, 0)); }
+        } else k.push(K(1, 1, 0, 0, 0, 0));
+        const hy = 1 - c.d1;
+        return { knots: k, handles: [
+            { id: 'bounce', x: t1 * (1 + c.d1), y: hy, label: 'Bounciness ' + p.bnc.toFixed(1) + '  ·  Gravity ' + p.grav.toFixed(1),
+              drag: (x, y) => { p.bnc = clamp(R((1 - clamp(y, 0, 1)) * 1000) / 10, 0, 100); p.grav = clamp(R((101 - clamp(x, 0.01, 1) * 100) * 10) / 10, 1, 100); } }
+        ] };
     }
 
     // ------------------------------------------------------------------ Cyclic
@@ -155,7 +155,7 @@
             } else {
                 // reversed: the first jump happens right away (one frame after the first key)
                 k.push(K(0, 0, 0, 0, 0, 0, 2));
-                const f = K(0.012, 1 / n, 0, 0, 0, 0, 1); f.frame = true; k.push(f);
+                const f = K(0.012, 1 / n, 0, 0, 0, 0, 1); f.frame = 1; k.push(f);
                 for (let j = 1; j < n; j++) k.push(K(j / n, (j + 1) / n, 0, 0, 0, j < n - 1 ? 0 : QUAD, j < n - 1 ? 1 : 0));
                 k.push(K(1, 1, 0, 0, QUAD, 0));
                 k.noMirror = true;
@@ -238,7 +238,8 @@
     const MODELS = {
         elastic: { name: 'Elastic', build: buildElastic, view: [-0.15, 2.35],
             params: [P('amp', 'Amplitude', 0, 120, 60), P('freq', 'Frequency', 2, 50, 5, false, 0.1), P('dur', 'Duration', 10, 100, 100), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 100, 0), P('hang', 'Hang', 0, 100, 50)] },
-        bounce: { name: 'Bounce', build: buildBounce, params: [P('bnc', 'Bounciness', 1, 100, 50), P('amp', 'Amplitude', 1, 100, 50), P('grav', 'Gravity', 1, 100, 50), P('dy', 'Decay Y', 0, 95, 50), P('dx', 'Decay X', -60, 95, 1), P('hang', 'Hang', 0, 100, 75)] },
+        bounce: { name: 'Bounce', build: buildBounce, view: [-0.1, 1.25],
+            params: [P('bnc', 'Bounciness', 0, 100, 80, false, 0.1), P('grav', 'Gravity', 1, 100, 74, false, 0.1), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 90, 0), P('hang', 'Hang', 0, 100, 75), P('maxb', 'Bounces', 1, 20, 10)] },
         cyclic: { name: 'Cyclic', build: buildCyclic, params: [P('cyc', 'Cycles', 1, 15, 3), P('start', 'Start', 0, 150, 100), P('end', 'End', -50, 100, 0), P('hang', 'Hang', 0, 100, 50)] },
         steps: { name: 'Steps', build: buildSteps, params: [P('steps', 'Steps', 2, 24, 4), P('smooth', 'Smoothness', 0, 100, 0)] },
         elasticsteps: { name: 'Elastic Steps', build: buildElasticSteps, params: [P('steps', 'Steps', 2, 12, 3), P('amp', 'Amplitude', 0, 100, 50), P('decay', 'Decay', 0, 95, 65), P('hang', 'Hang', 0, 100, 50)] },
@@ -251,8 +252,8 @@
     }
 
     // ------------------------------------------------------------------ state
-    const VERSION = 2;
-    function defaults() { const s = { v: VERSION, mode: 'bezier', rev: false }; Object.keys(MODELS).forEach(m => { s[m] = defParams(m); }); return s; }
+    const VERSION = 3, MODEL_VERSION = { elastic: 2, bounce: 3 };
+    function defaults() { const s = { v: VERSION, vm: Object.assign({}, MODEL_VERSION), mode: 'bezier', rev: false }; Object.keys(MODELS).forEach(m => { s[m] = defParams(m); }); return s; }
     let st = load();
     function load() {
         const s = defaults();
@@ -261,7 +262,9 @@
             if (o && typeof o === 'object') {
                 if (o.mode === 'bezier' || MODELS[o.mode]) s.mode = o.mode;
                 s.rev = !!o.rev;
-                Object.keys(MODELS).forEach(m => { if (m !== 'elastic' || o.v === VERSION) assignKnown(m, s[m], o[m]); });
+                const vm = Object.assign({}, o.vm || {});
+                if (o.v === 2 && !o.vm) vm.elastic = 2;
+                Object.keys(MODELS).forEach(m => { if (!MODEL_VERSION[m] || vm[m] === MODEL_VERSION[m]) assignKnown(m, s[m], o[m]); });
             }
         } catch (e) {}
         return s;
@@ -269,7 +272,14 @@
     function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
     const model = () => MODELS[st.mode] || null;
 
-    function mirrorKnots(k) { return k.slice().reverse().map(q => K(1 - q.u, 1 - q.v, q.so, q.si, q.io, q.ii, 0)); }
+    function mirrorKnots(k) {
+        const N = k.length;
+        return k.slice().reverse().map((q, j) => {
+            const src = k[N - 2 - j], m = K(1 - q.u, 1 - q.v, q.so, q.si, q.io, q.ii, src ? (src.seg === 1 ? 2 : src.seg) : 0);
+            if (q.frame) m.frame = q.frame === 2 ? 1 : 2;
+            return m;
+        });
+    }
     // the shape as drawn: knots, handles and band (mirrored when reversed)
     function shapeFor(s) {
         const M = MODELS[s.mode]; if (!M) return null;
@@ -324,11 +334,23 @@
     }
 
     // ------------------------------------------------------------------ drawing
+    // a jump onto a key (a cut bounce snapping to the second key's value) is not part of the curve
+    const snapEnd = k => k.length > 2 && k[k.length - 2].seg === 1 && k[k.length - 2].frame === 2;
+    const snapStart = k => k.length > 2 && k[0].seg === 2 && k[1].frame === 1;
+    function snapD(k, toPx) {
+        let d = '';
+        if (snapEnd(k)) { const a = toPx(1, k[k.length - 2].v), b = toPx(1, 1); d += 'M ' + a.x + ',' + a.y + ' L ' + b.x + ',' + b.y; }
+        if (snapStart(k)) { const a = toPx(0, 0), b = toPx(0, k[1].v); d += ' M ' + a.x + ',' + a.y + ' L ' + b.x + ',' + b.y; }
+        return d;
+    }
     function pathD(k, toPx) {
         let d = '';
+        const skipLast = snapEnd(k), skipFirst = snapStart(k);
         k.forEach((q, i) => {
-            const P0 = toPx(q.u, q.v);
-            if (!i) { d = 'M ' + P0.x + ',' + P0.y; return; }
+            if (skipFirst && i === 0) return;
+            if (skipLast && i === k.length - 1) return;
+            const P0 = toPx(skipFirst && i === 1 ? 0 : (skipLast && i === k.length - 2 ? 1 : q.u), q.v);
+            if (!d) { d = 'M ' + P0.x + ',' + P0.y; return; }
             const a = k[i - 1], du = q.u - a.u;
             if (a.seg === 1) { const H = toPx(q.u, a.v); d += ' L ' + H.x + ',' + H.y + ' L ' + P0.x + ',' + P0.y; return; }
             if (a.seg === 2) { d += ' L ' + P0.x + ',' + P0.y; return; }
@@ -347,7 +369,7 @@
         const NS = 'http://www.w3.org/2000/svg';
         g = document.createElementNS(NS, 'g'); g.id = 'gx-shape';
         g.innerHTML = '<path class="gx-band"/><path class="gx-baseline" fill="none" stroke-width="1.5" stroke-dasharray="4 4"/>' +
-            '<path class="gx-curve gx-shape-curve" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '<path class="gx-snap" fill="none" stroke-width="1.5" stroke-dasharray="3 4"/><path class="gx-curve gx-shape-curve" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
             '<g class="gx-shape-knots"></g><g class="gx-shape-handles"></g><g class="gx-tip"><rect rx="6" ry="6"/><text/></g>' +
             '<text class="gx-hint"></text>';
         svg.appendChild(g);
@@ -386,6 +408,7 @@
         lastM = m;
         const g = ensureLayer(m.svg), toPx = toPxFn(m), sh = shape(), p = st[st.mode];
         g.querySelector('.gx-shape-curve').setAttribute('d', pathD(sh.knots, toPx));
+        g.querySelector('.gx-snap').setAttribute('d', snapD(sh.knots, toPx));
         // Random: the band the noise stays in, and its middle line
         const band = g.querySelector('.gx-band'), base = g.querySelector('.gx-baseline');
         if (sh.band) {
@@ -524,7 +547,7 @@
     // ------------------------------------------------------------------ apply to After Effects
     function apply(quiet) {
         const sh = shape(); if (!sh) return;
-        const spec = sh.knots.map(q => [q.u, q.v, q.si, q.so, q.ii * 100, q.io * 100].map(n => +(+n).toFixed(6)).concat([q.seg, q.frame ? 1 : 0]).join(',')).join(';');
+        const spec = sh.knots.map(q => [q.u, q.v, q.si, q.so, q.ii * 100, q.io * 100].map(n => +(+n).toFixed(6)).concat([q.seg, q.frame || 0]).join(',')).join(';');
         graphJsx('graphApplyCurveKnots("' + spec + '", "' + model().name + '")', res => {
             if (!res || res.indexOf('ERROR') === 0) { if (!quiet || (res && res.indexOf('ERROR') === 0)) window.showToast && showToast(res ? res.replace('ERROR: ', '') : 'Could not apply the curve'); return; }
             const parts = String(res).split(' ');
