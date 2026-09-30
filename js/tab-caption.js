@@ -39,6 +39,7 @@ var capRawWordData = [];
 var capCompFps = 30;
 var capCurrentEditorData = [];
 var capSelectedEditorIndex = -1;
+var capEditorDirty = false;   // an editor row was edited and not sent to AE yet (Update)
 var capFfmpegProcess = null;
 var capWhisperProcess = null;
 var capIsCancelling = false;
@@ -1409,6 +1410,11 @@ window.captionRefreshEditorTimeline = function(callback) {
 function renderEditorList() {
     var list = $id('cap-timeline-list');
     list.innerHTML = '';
+    capEditorDirty = false;
+    if (!list.dataset.dirtyWatch) {
+        list.dataset.dirtyWatch = '1';
+        list.addEventListener('input', function() { capEditorDirty = true; });
+    }
 
     capCurrentEditorData.forEach(function(item) {
         var row = document.createElement('div');
@@ -1509,6 +1515,12 @@ function captionSyncEditorToPlayhead(isFromSplit, isAutoSync) {
         var hash = parts[2];
 
         if (isAutoSync) {
+            // Unsent edits in the list: keep following the playhead, but do not rebuild
+            // the list under them (the refresh happens after Update).
+            if (capEditorDirty && ((capCurrentCompId !== null && capCurrentCompId !== compId) || (capCurrentHash !== null && capCurrentHash !== hash))) {
+                captionSyncScrollTo(idx, false);
+                return;
+            }
             if (capCurrentCompId !== null && capCurrentCompId !== compId) {
                 capCurrentCompId = compId;
                 capCurrentHash = hash;
@@ -2491,8 +2503,11 @@ document.addEventListener("DOMContentLoaded", function() {
     capPollTimer = setInterval(function() {
         if (!isCaptionEditorVisible()) return;
         if (capIsSplitting) return;
+        // Pause only while typing in the panel. A field can keep focus after you go back to
+        // After Effects; the panel no longer has focus then, so the sync must carry on
+        // (before, it stopped until you clicked somewhere in the extension).
         var ae = document.activeElement;
-        if (ae && (ae.tagName === 'TEXTAREA' || ae.tagName === 'INPUT')) return;
+        if (ae && (ae.tagName === 'TEXTAREA' || ae.tagName === 'INPUT') && document.hasFocus()) return;
         captionSyncEditorToPlayhead(false, true);
     }, 200);
 
