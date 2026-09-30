@@ -16,7 +16,7 @@
      Cyclic         (Alight Motion model) bottom handle = Frequency, right edge = End (baseline),
                     top handle = Tilt, the knob above it = Smoothness
      Steps          top of the last riser = Steps, foot of the first riser = Smoothness
-     Elastic Steps  the Steps graph; foot of the last jump = Steps, first dip = Elastic + Wobble
+     Elastic Steps  the Steps graph; top of the last riser = Steps, first dip = Elastic + Wobble
      Random         top of the band = Amount, dot on the middle line = Density,
                     end of the middle line = Trajectory (right-click: New pattern)
 
@@ -337,20 +337,10 @@
     }
 
     // ------------------------------------------------------------------ Steps
-    /* Smooth end (Steps / Elastic Steps, on by default): the staircase reaches the target on its
-       last step, before the end (levels 0, 1/(n-1) ... 1), so nothing jumps onto the second key.
-       Off: levels 0, 1/n ... (n-1)/n and the last jump lands on the second key. */
-    const stepLevel = (p, n) => (p.send ? (j => j / (n - 1)) : (j => j / n));
     function buildSteps(p, rev) {
-        const n = p.steps, s = p.smooth / 100, k = [], lv = stepLevel(p, n), jumps = p.send ? n - 1 : n;
+        const n = p.steps, s = p.smooth / 100, k = [];
         if (s < 0.02) {
-            if (p.send) {
-                // held levels, the last one is the target: the same forwards and reversed
-                k.push(K(0, 0, 0, 0, 0, 0, 1));
-                for (let j = 1; j < n; j++) k.push(K(j / n, lv(j), 0, 0, 0, 0, 1));
-                k.push(K(1, 1, 0, 0, 0, 0));
-                k.noMirror = true;
-            } else if (!rev) {
+            if (!rev) {
                 // held levels 0, 1/n ... (n-1)/n; the jump to the last value lands on the second key
                 k.push(K(0, 0, 0, 0, 0, 0, 1));
                 for (let j = 1; j < n; j++) k.push(K(j / n, j / n, 0, 0, 0, 0, 1));
@@ -366,71 +356,73 @@
         } else {
             const RAMP = 0.45;
             k.push(K(0, 0, 0, 0, 0, QUAD));
-            for (let j = 1; j <= jumps; j++) {
-                const a2 = j / n - s / n, last = k[k.length - 1];
-                if (a2 - last.u > 1e-6) k.push(K(a2, lv(j - 1), 0, 0, QUAD, RAMP)); else last.io = RAMP;
-                k.push(K(j / n, lv(j), 0, 0, RAMP, j < n ? QUAD : 0));
+            for (let j = 1; j <= n; j++) {
+                const a = j / n - s / n, last = k[k.length - 1];
+                if (a - last.u > 1e-6) k.push(K(a, (j - 1) / n, 0, 0, QUAD, RAMP)); else last.io = RAMP;
+                k.push(K(j / n, j / n, 0, 0, RAMP, j < n ? QUAD : 0));
             }
-            if (k[k.length - 1].u < 1 - 1e-9) { k[k.length - 1].io = QUAD; k.push(K(1, 1, 0, 0, QUAD, 0)); }
         }
         return { knots: k, handles: [
-            { id: 'count', x: (n - 1) / n, y: lv(n - 1), label: 'Steps ' + n, drag: x => { p.steps = clamp(R(1 / Math.max(0.02, 1 - x)), 2, 24); } },
+            { id: 'count', x: (n - 1) / n, y: (n - 1) / n, label: 'Steps ' + n, drag: x => { p.steps = clamp(R(1 / Math.max(0.02, 1 - x)), 2, 24); } },
             { id: 'smooth', x: 1 / n - s / n, y: 0, label: 'Smoothness ' + p.smooth, drag: x => { p.smooth = clamp(R((1 / n - x) * n * 100), 0, 100); if (p.smooth < 4) p.smooth = 0; } }
         ] };
     }
 
     // ------------------------------------------------------------------ Elastic Steps
     /* The Steps graph (same staircase, same step-count handle) with the smoothness handle replaced
-       by an elastic handle: each jump is a small Elastic curve - it rises over one half swing into a
-       rounded overshoot and wobbles, fading in a straight line so it has settled by the next jump.
-         elastic handle  the first dip after the first jump: down / up = more / less elastic (how far
-                         each step overshoots), left / right = a quicker, sharper or a slower,
-                         smoother swing (Wobble: a half swing's length as a share of the step); far
-                         right it is as round as the Elastic graph. All the way up = hard steps.
+       by an elastic handle: every jump overshoots its new level and wobbles, and the wobble dies
+       out (fading in a straight line, like Elastic) before the next jump.
+         elastic handle  the first dip after the first jump: down / up = more / less elastic
+                         (how far each step overshoots), left / right = how quickly it wobbles
+                         (Wobble: the length of a half swing, as a share of the step). All the way
+                         up (no dip) = hard steps, exactly the Steps graph.
        Reverse mirrors it: the wobble comes before each jump (at the end of each step). */
     function buildElasticSteps(p, rev) {
-        const n = p.steps, A = p.amp / 100, S = 1 / n, lv = stepLevel(p, n), jumps = p.send ? n - 1 : n - 1;
+        const n = p.steps, A = p.amp / 100, hf = p.wob / 100;
         // a half swing is never shorter than 0.25% of the move (faster is far below a frame)
-        const T = Math.max(p.wob / 100 * S, 0.0025), I = infE(50);
+        const S = 1 / n, D = 1 / n, h = Math.max(hf * S, 0.0025), I = infE(50), eE = Math.min(CY_EPS, h / 3);
+        const L = j => j / n;                                   // the levels of the Steps graph
+        const E = tau => A * D * Math.max(0, 1 - tau / S);    // overshoot envelope inside a step
         let k;
         if (A < 0.005) {
-            k = buildSteps({ steps: n, smooth: 0, send: p.send }, rev).knots;
+            k = buildSteps({ steps: n, smooth: 0 }, rev).knots;
         } else {
             k = [K(0, 0, 0, 0, 0, QUAD)];
-            for (let j = 1; j <= jumps; j++) {
-                const t0 = j * S, D = lv(j) - lv(j - 1);
-                const E = tau => A * D * Math.max(0, 1 - tau / S);   // fades out by the next jump
-                const pk = lv(j) + E(T), lastStep = j === jumps;
-                // the rise: from the flat step up to the first, rounded overshoot (as in Elastic)
-                k.push(K(t0, lv(j - 1), 0, (pk - lv(j - 1)) / T, QUAD, QUAD));
-                k.push(K(t0 + T, pk, 0, 0, 0.42, I));
-                const limit = (lastStep && !p.send) ? S - Math.max(0.3 * T, 0.012) : S - 0.3 * T;
-                for (let m = 2; ; m++) {
-                    const tau = m * T;
+            for (let j = 1; j < n; j++) {
+                const t0 = j * S, lastStep = j === n - 1;
+                // the jump: a vertical edge from the flat step up to the overshoot, which rounds over
+                const foot = K(t0, L(j - 1), 0, 0, QUAD, 0, 2);
+                k.push(foot);
+                const top = K(t0 + eE, L(j) + E(0), 0, 0, 0, I);
+                top.frame = 5;                                  // the top of an edge: at least a frame in AE
+                k.push(top);
+                let m = 0;
+                const limit = lastStep ? S - Math.max(0.3 * h, 0.012) : S - 0.3 * h;
+                for (;;) {
+                    m++;
+                    const tau = m * h;
                     if (tau > limit) break;
                     const e = E(tau);
-                    if (e < 0.0015 * Math.abs(D)) break;
-                    k.push(K(t0 + tau, lv(j) + (m % 2 ? 1 : -1) * e, 0, 0, I, I));
+                    if (e < 0.0015 * D) break;
+                    k.push(K(t0 + tau, L(j) + (m % 2 ? -1 : 1) * e, 0, 0, I, I));
                 }
-                if (lastStep && !p.send) {
+                if (lastStep) {
                     // settles on the last level and jumps to the second key's value on that key
-                    const st = K(1 - 0.004, lv(j), 0, 0, I, 0, 1);
+                    const st = K(1 - 0.004, L(j), 0, 0, I, 0, 1);
                     st.frame = 6;                                   // a frame before the key, on the curve
                     k.push(st);
                 }
             }
-            if (p.send) k[k.length - 1].io = I;
-            k.push(K(1, 1, 0, 0, p.send ? I : 0, 0));
+            if (n < 2) k.push(K(1 - 0.004, 0, 0, 0, QUAD, 0, 1));
+            k.push(K(1, 1, 0, 0, 0, 0));
         }
-        const D1 = lv(1) - lv(0), dipY = lv(1) - A * D1 * Math.max(0, 1 - 2 * T / S);
         return { knots: k, handles: [
-            { id: 'count', x: (n - 1) / n, y: lv(n - 2), label: 'Steps ' + n, drag: x => { p.steps = clamp(R(1 / Math.max(0.02, 1 - x)), 2, 24); } },
-            { id: 'elastic', x: S + 2 * T, y: dipY, label: 'Elastic ' + p.amp.toFixed(1) + '  \u00b7  Wobble ' + p.wob.toFixed(1),
+            { id: 'count', x: (n - 1) / n, y: (n - 1) / n, label: 'Steps ' + n, drag: x => { p.steps = clamp(R(1 / Math.max(0.02, 1 - x)), 2, 24); } },
+            { id: 'elastic', x: S + h, y: L(1) - E(h), label: 'Elastic ' + p.amp.toFixed(1) + '  \u00b7  Wobble ' + p.wob.toFixed(1),
               drag: (x, y) => {
-                  const wob = clamp((x - S) / 2 / S * 100, 1.5, 47);
-                  p.wob = R(wob * 10) / 10;
-                  const env = Math.max(0.02, 1 - 2 * p.wob / 100);
-                  p.amp = clamp(R((lv(1) - y) / (D1 * env) * 1000) / 10, 0, 150);
+                  const nhf = clamp((x - S) / S, 0.02, 0.6);
+                  p.wob = clamp(R(nhf * 1000) / 10, 2, 60);
+                  p.amp = clamp(R((L(1) - y) / (D * (1 - p.wob / 100)) * 1000) / 10, 0, 150);
               } }
         ] };
     }
@@ -473,11 +465,9 @@
             params: [P('bnc', 'Bounciness', 0, 100, 80, false, 0.1), P('grav', 'Gravity', 1, 100, 74, false, 0.1), P('dx', 'Decay X', 0, 90, 0), P('dy', 'Decay Y', 0, 90, 0), P('hang', 'Hang', 0, 100, 75), P('smooth', 'Smooth end', 0, 1, 1, true)] },
         cyclic: { name: 'Cyclic', build: buildCyclicShape, view: [-0.12, 1.65],
             params: [P('freq', 'Frequency', 1, 50, 3.2, false, 0.01), P('tilt', 'Tilt', 0, 100, 50, false, 0.1), P('soft', 'Smoothness', 0, 100, 0, false, 0.1), P('end', 'End', 0, 100, 0, false, 0.1), P('smooth', 'Smooth end', 0, 1, 1, true)] },
-        steps: { name: 'Steps', build: buildSteps, endKey: 'send', params: [P('steps', 'Steps', 2, 24, 4), P('smooth', 'Smoothness', 0, 100, 0), P('send', 'Smooth end', 0, 1, 1, true)] },
-        // the view fits the tallest overshoot the step height allows (it only changes with the step count)
-        elasticsteps: { name: 'Elastic Steps', build: buildElasticSteps, endKey: 'send',
-            view: p => { const D = p.send ? 1 / (p.steps - 1) : 1 / p.steps; return [Math.min(-0.3, D - 1.5 * D - 0.12), 1 + 1.5 * D + 0.12]; },
-            params: [P('steps', 'Steps', 2, 24, 4), P('amp', 'Elastic', 0, 150, 60, false, 0.1), P('wob', 'Wobble', 1.5, 47, 12, false, 0.1), P('send', 'Smooth end', 0, 1, 1, true)] },
+        steps: { name: 'Steps', build: buildSteps, params: [P('steps', 'Steps', 2, 24, 4), P('smooth', 'Smoothness', 0, 100, 0)] },
+        elasticsteps: { name: 'Elastic Steps', build: buildElasticSteps, view: [-0.3, 1.3],
+            params: [P('steps', 'Steps', 2, 24, 4), P('amp', 'Elastic', 0, 150, 60, false, 0.1), P('wob', 'Wobble', 2, 60, 18, false, 0.1)] },
         random: { name: 'Random', build: buildRandom, params: [P('amount', 'Amount', 0, 100, 35), P('density', 'Density', 0, 100, 40), P('traj', 'Trajectory', -50, 150, 100), P('seed', 'Seed', 0, 999999, 0, true)] }
     };
     const defParams = m => { const o = {}; MODELS[m].params.forEach(q => { o[q.k] = q.def; }); return o; };
@@ -487,7 +477,7 @@
     }
 
     // ------------------------------------------------------------------ state
-    const VERSION = 3, MODEL_VERSION = { elastic: 2, bounce: 3, cyclic: 2, elasticsteps: 3 };
+    const VERSION = 3, MODEL_VERSION = { elastic: 2, bounce: 3, cyclic: 2, elasticsteps: 2 };
     function defaults() { const s = { v: VERSION, vm: Object.assign({}, MODEL_VERSION), mode: 'bezier', rev: false }; Object.keys(MODELS).forEach(m => { s[m] = defParams(m); }); return s; }
     let st = load();
     function load() {
@@ -532,10 +522,7 @@
     const shape = () => shapeFor(st);
     function viewRange(sh, noPad) {
         const M = model();
-        if (M && M.view) {                                        // a fixed view: nothing rescales while dragging
-            const v = typeof M.view === 'function' ? M.view(st[st.mode]) : M.view;
-            return st.rev ? [1 - v[1], 1 - v[0]] : v.slice();
-        }
+        if (M && M.view) return st.rev ? [1 - M.view[1], 1 - M.view[0]] : M.view.slice();   // a fixed view: nothing rescales while dragging
         sh = sh || shape();
         let lo = 0, hi = 1;
         sh.knots.forEach(q => { lo = Math.min(lo, q.v); hi = Math.max(hi, q.v); });
@@ -784,7 +771,7 @@
         menu.appendChild(grid);
         const sep = document.createElement('div'); sep.className = 'ctx-sep'; menu.appendChild(sep);
         const item = (label, fn) => { const it = document.createElement('div'); it.className = 'ctx-item'; it.textContent = label; it.addEventListener('click', () => { closeMenu(); fn(); }); menu.appendChild(it); };
-        if (hasSmoothEnd(st.mode)) item(p[endKey(st.mode)] ? 'Smooth end: on' : 'Smooth end: off', () => toggleSmooth());
+        if (hasSmoothEnd(st.mode)) item(p.smooth ? 'Smooth end: on' : 'Smooth end: off', () => toggleSmooth());
         item('Reverse value', () => api.reverse());
         if (st.mode === 'random') item('New pattern', () => { p.seed = (p.seed + 1) % 1000000; save(); redraw(); autoApply(); });
         item('Reset ' + M.name, () => api.reset());
@@ -826,13 +813,11 @@
         const b = document.getElementById('graph-reverse-btn');
         if (b) b.classList.toggle('active', !!model() && st.rev);
     }
-    const hasSmoothEnd = m => m === 'bounce' || m === 'cyclic' || m === 'steps' || m === 'elasticsteps';
-    const endKey = m => (MODELS[m] && MODELS[m].endKey) || 'smooth';
+    const hasSmoothEnd = m => m === 'bounce' || m === 'cyclic';
     function toggleSmooth() {
         if (!hasSmoothEnd(st.mode)) return;
         const p = st[st.mode];
-        const ek = endKey(st.mode);
-        p[ek] = p[ek] ? 0 : 1;
+        p.smooth = p.smooth ? 0 : 1;
         save(); syncChip(); redraw(); autoApply();
     }
     function syncChip() {
@@ -850,7 +835,7 @@
         }
         if (!chip) return;
         chip.style.display = hasSmoothEnd(st.mode) ? '' : 'none';
-        chip.classList.toggle('on', hasSmoothEnd(st.mode) && !!st[st.mode][endKey(st.mode)]);
+        chip.classList.toggle('on', hasSmoothEnd(st.mode) && !!st[st.mode].smooth);
     }
     function setMode(m) {
         if (m !== 'bezier' && !MODELS[m]) return;
