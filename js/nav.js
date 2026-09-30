@@ -19,7 +19,7 @@
     };
     const DIR = { left: 'right', right: 'left', top: 'down', bottom: 'up' };
     // sub-tab bars whose buttons turn icon-only with data-rfx-subicons
-    const SUB_BARS = ['caption-tabs-header', 'tracker-tabs-header', 'timer-mode-header'];
+    const SUB_BARS = ['caption-tabs-header', 'tracker-tabs-header', 'timer-mode-header', 'graph-type-header'];
     const GAP = 8, EDGE = 6, SHOW_DELAY = 50, HIDE_DELAY = 140;
 
     const html = document.documentElement;
@@ -28,6 +28,8 @@
     const subIconMode = () => html.hasAttribute('data-rfx-subicons');
     const subsAtBottom = () => html.getAttribute('data-rfx-subpos') === 'bottom';
     const isSubBtn = btn => !!btn && SUB_BARS.indexOf(btn.parentElement && btn.parentElement.id) !== -1;
+    // a sub bar that always sits at the top of its tab (data-fly="down") drops its names below
+    const nameUp = btn => subsAtBottom() && btn.parentElement.getAttribute('data-fly') !== 'down';
 
     let header = null, fly = null, current = null, showT = null, hideT = null;
 
@@ -82,7 +84,7 @@
         if (isSubBtn(btn)) {
             // a sub tab's name: centred above a bottom sub bar, below a top one
             x = r.left + r.width / 2 - w / 2;
-            y = subsAtBottom() ? r.top - GAP - h : r.bottom + GAP;
+            y = nameUp(btn) ? r.top - GAP - h : r.bottom + GAP;
         } else if (p === 'left' || p === 'right') {
             x = p === 'left' ? r.right + GAP : r.left - GAP - w;
             y = subs ? r.top - 5 : r.top + r.height / 2 - h / 2;
@@ -100,7 +102,7 @@
         clearTimeout(hideT);
         const wasOpen = fly.classList.contains('open');
         current = btn;
-        fly.setAttribute('data-dir', isSubBtn(btn) ? (subsAtBottom() ? 'up' : 'down') : (DIR[navPos()] || 'down'));
+        fly.setAttribute('data-dir', isSubBtn(btn) ? (nameUp(btn) ? 'up' : 'down') : (DIR[navPos()] || 'down'));
         render(btn);
         place(btn);
         if (!wasOpen) {

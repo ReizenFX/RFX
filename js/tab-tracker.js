@@ -1191,61 +1191,7 @@
         } catch (e) {}
     }
 
-    /* Drag-to-reorder for a sub-tab row (the Tracker sub tabs and the Timer / Stopwatch row). */
-    function makeSubTabsDraggable(container, itemSel, flag, onSave) {
-        if (!container) return;
-
-        let draggedItem = null, startX = 0, currentX = 0, siblings = [], startIndex = 0, currentIndex = 0, shiftAmount = 0; 
-        
-        container.addEventListener('pointerdown', (e) => {
-            const tab = e.target.closest(itemSel); 
-            if (!tab || !container.contains(tab)) return;
-            draggedItem = tab; startX = e.clientX; currentX = 0; draggedItem.setPointerCapture(e.pointerId);
-            const allTabs = Array.from(container.querySelectorAll(itemSel));
-            startIndex = allTabs.indexOf(draggedItem); currentIndex = startIndex;
-            shiftAmount = allTabs.length > 1 ? Math.abs(allTabs[1].getBoundingClientRect().left - allTabs[0].getBoundingClientRect().left) : draggedItem.offsetWidth + 2;
-            siblings = allTabs.map((t, index) => ({ el: t, index: index, rect: t.getBoundingClientRect(), shift: 0 }));
-        });
-        
-        container.addEventListener('pointermove', (e) => {
-            if (!draggedItem) return;
-            const deltaX = e.clientX - startX;
-            if (Math.abs(deltaX) > 4 || window[flag]) {
-                window[flag] = true;
-                if (!draggedItem.classList.contains('dragging')) draggedItem.classList.add('dragging');
-                currentX = deltaX; draggedItem.style.transform = `translate3d(${currentX}px, 0, 0)`; draggedItem.style.transition = 'none';
-                const draggedCenter = draggedItem.getBoundingClientRect().left + draggedItem.getBoundingClientRect().width / 2;
-                let newIndex = startIndex;
-                siblings.forEach(sib => {
-                    if (sib.index === startIndex) return; 
-                    const sibCenter = sib.rect.left + sib.rect.width / 2;
-                    let shift = 0;
-                    if (startIndex < sib.index && draggedCenter > sibCenter) { shift = -shiftAmount; newIndex = Math.max(newIndex, sib.index); } 
-                    else if (startIndex > sib.index && draggedCenter < sibCenter) { shift = shiftAmount; newIndex = Math.min(newIndex, sib.index); }
-                    if (sib.shift !== shift) { sib.shift = shift; sib.el.style.transform = `translate3d(${shift}px, 0, 0)`; sib.el.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)'; }
-                });
-                currentIndex = newIndex;
-            }
-        });
-        
-        container.addEventListener('pointerup', (e) => {
-            if (!draggedItem) return;
-            draggedItem.releasePointerCapture(e.pointerId);
-            if (window[flag]) {
-                draggedItem.classList.remove('dragging'); draggedItem.style.transition = 'none'; draggedItem.style.transform = '';
-                siblings.forEach(sib => { sib.el.style.transition = 'none'; sib.el.style.transform = ''; });
-                if (currentIndex !== startIndex) {
-                    const targetSibling = siblings[currentIndex].el;
-                    if (currentIndex > startIndex) container.insertBefore(draggedItem, targetSibling.nextSibling);
-                    else container.insertBefore(draggedItem, targetSibling);
-                }
-                void container.offsetWidth; draggedItem.style.transition = ''; siblings.forEach(sib => { sib.el.style.transition = ''; });
-                onSave(); 
-                setTimeout(() => { window[flag] = false; }, 50);
-            }
-            draggedItem = null;
-        });
-    }
+    // makeSubTabsDraggable (drag-to-reorder for a sub-tab row) lives in js/globals.js
 
     function saveTrackerTabOrder() { 
         const container = document.getElementById('tracker-tabs-header');

@@ -206,14 +206,19 @@ const graphJsx = window.createJsxLoader('graph.jsx');
         }).observe(document.getElementById('tab-graph'));
     }
 
+    window._graphRedraw = function() { if (document.getElementById('bezier-svg')) updateGraphUI(); };
     window._graphResetFn = function() { animateGraphUpdate({x: 0.0, y: 0.0}, {x: 1.0, y: 1.0}); };
     window._graphGetCp = function() { return { x1: cp1.x, y1: cp1.y, x2: cp2.x, y2: cp2.y }; };
 
     function getGraphMetrics() {
         var svg = document.getElementById('bezier-svg'), rawW = Math.max(0.1, svg.clientWidth), rawH = Math.max(0.1, svg.clientHeight), pad = 16;
         var minValY = Math.min(0, cp1.y, cp2.y), maxValY = Math.max(1, cp1.y, cp2.y);
+        var curves = window.RFXGraphCurves && window.RFXGraphCurves.active();
         
-        if (window._isGraphDragging) {
+        if (curves) {
+            // Elastic / Bounce / Steps (js/tab-graph-curves.js) set the vertical range
+            var cr = window.RFXGraphCurves.range(); minValY = cr[0]; maxValY = cr[1];
+        } else if (window._isGraphDragging) {
             if (minValY < window._graphDragMinY) window._graphDragMinY = minValY;
             if (maxValY > window._graphDragMaxY) window._graphDragMaxY = maxValY;
             minValY = window._graphDragMinY;
@@ -281,7 +286,7 @@ const graphJsx = window.createJsxLoader('graph.jsx');
         function getMousePos(e) { var rect = svg.getBoundingClientRect(); return { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
 
         function onDown(e, handleNum) {
-            if (e.button !== 0) return; 
+            if (e.button !== 0 || (window.RFXGraphCurves && window.RFXGraphCurves.active())) return; 
             
             window._isGraphDragging = true; 
             window._graphDragMinY = Math.min(0, cp1.y, cp2.y); 
@@ -309,7 +314,7 @@ const graphJsx = window.createJsxLoader('graph.jsx');
         h1.addEventListener('pointerdown', function(e) { onDown(e, 1); }); h2.addEventListener('pointerdown', function(e) { onDown(e, 2); });
 
         svg.addEventListener('pointerdown', function(e) {
-            if (e.button !== 0 || draggingHandle || e.target === h1 || e.target === h2) return;
+            if (e.button !== 0 || draggingHandle || e.target === h1 || e.target === h2 || (window.RFXGraphCurves && window.RFXGraphCurves.active())) return;
             var m = getGraphMetrics(), pos = getMousePos(e);
             var dist1 = Math.hypot(pos.x - valToPx(m, cp1.x, cp1.y).x, pos.y - valToPx(m, cp1.x, cp1.y).y), dist2 = Math.hypot(pos.x - valToPx(m, cp2.x, cp2.y).x, pos.y - valToPx(m, cp2.x, cp2.y).y);
             draggingHandle = (dist1 < dist2) ? 1 : 2;
@@ -423,6 +428,17 @@ const graphJsx = window.createJsxLoader('graph.jsx');
 
         svg.addEventListener('contextmenu', function(e) {
             e.preventDefault();
+            var C = window.RFXGraphCurves;
+            if (C && C.active()) {
+                var mb = document.getElementById('graph-mirror-btn');
+                showCtxMenu(e.clientX, e.clientY, [
+                    { label: 'Apply', action: () => C.apply() },
+                    { label: 'Play at the start', disabled: !mb || mb.classList.contains('is-hidden'), action: () => mb.click() },
+                    { sep: true },
+                    { label: 'Reset ' + C.mode().charAt(0).toUpperCase() + C.mode().slice(1), action: () => C.reset() }
+                ]);
+                return;
+            }
 
             showCtxMenu(e.clientX, e.clientY, [
                 { label: 'Apply', action: () => window.applyGraphToKeyframesWithCheck(window._activeEaseType) },
@@ -507,9 +523,9 @@ const graphJsx = window.createJsxLoader('graph.jsx');
                 
                 // --- PRESET SPECIFIC OPTIONS (Greyed out if empty space) ---
                 { label: 'Rename Preset', disabled: !isPresetClick, action: check(() => window.openGraphRenamePresetModal(idx, item.name)) }, 
-                { label: 'Edit Preset Value', disabled: !isPresetClick, action: check(() => window.openGraphEditPresetModal(idx, item.vals)) }, 
+                { label: 'Edit Preset Value', disabled: !isPresetClick || !(item && item.vals), action: check(() => window.openGraphEditPresetModal(idx, item.vals)) }, 
                 
-                { label: 'Copy Preset Value As', disabled: !isPresetClick, sub: [
+                { label: 'Copy Preset Value As', disabled: !isPresetClick || !(item && item.vals), sub: [
                     { label: 'Bezier', action: check(() => copyTextToClip(`[${formatCoord(item.vals[0])}, ${formatCoord(item.vals[1])}, ${formatCoord(item.vals[2])}, ${formatCoord(item.vals[3])}]`)) }, 
                     { label: 'CSS', action: check(() => copyTextToClip(`cubic-bezier(${formatCoord(item.vals[0])}, ${formatCoord(item.vals[1])}, ${formatCoord(item.vals[2])}, ${formatCoord(item.vals[3])})`)) }
                 ]}, 
@@ -552,7 +568,8 @@ const graphJsx = window.createJsxLoader('graph.jsx');
     function formatCoord(c) { return c.toFixed(2); }
 
     function updateGraphUI() {
-        if (!graphRoot || graphRoot.clientHeight < 15) return;
+        // the curve SVG is built by initGraph; resize observers can fire before that
+        if (!graphRoot || graphRoot.clientHeight < 15 || !document.getElementById('bezier-svg')) return;
         var m = getGraphMetrics(); if (!m.svg || m.drawW <= 0 || m.drawH <= 0) return;
         var maskFade = document.getElementById('grid-fade');
         if (maskFade) { maskFade.setAttribute('cx', m.rawW / 2); maskFade.setAttribute('cy', m.rawH / 2); maskFade.setAttribute('r', Math.max(m.rawW, m.rawH) * 0.55); }
@@ -570,6 +587,8 @@ const graphJsx = window.createJsxLoader('graph.jsx');
 
         var b0 = valToPx(m, 0, 0), b1 = valToPx(m, 1, 1), boundsRect = document.getElementById('bezier-bounds-rect');
         if (boundsRect) { boundsRect.setAttribute('x', b0.x); boundsRect.setAttribute('y', b1.y); boundsRect.setAttribute('width', b1.x - b0.x); boundsRect.setAttribute('height', b0.y - b1.y); }
+
+        if (window.RFXGraphCurves && window.RFXGraphCurves.active()) { window.RFXGraphCurves.draw(m, valueDisplay); return; }
 
         var p1 = valToPx(m, cp1.x, cp1.y), p2 = valToPx(m, cp2.x, cp2.y), rp1 = valToPx(m, prevCp1.x, prevCp1.y), rp2 = valToPx(m, prevCp2.x, prevCp2.y), op1 = valToPx(m, olderCp1.x, olderCp1.y), op2 = valToPx(m, olderCp2.x, olderCp2.y);
         document.getElementById('bezier-path').setAttribute('d', `M ${b0.x},${b0.y} C ${p1.x},${p1.y} ${p2.x},${p2.y} ${b1.x},${b1.y}`);
@@ -609,6 +628,7 @@ const graphJsx = window.createJsxLoader('graph.jsx');
     }
 
     window.applyGraphToKeyframesWithCheck = function(type = 'all') {
+        if (window.RFXGraphCurves && window.RFXGraphCurves.active()) return window.RFXGraphCurves.apply();
         var hasOvershoot = (cp1.y < 0 || cp1.y > 1 || cp2.y < 0 || cp2.y > 1);
         if (hasOvershoot) {
             graphJsx('checkPositionLinkState()', function(res) {
@@ -633,6 +653,7 @@ const graphJsx = window.createJsxLoader('graph.jsx');
                 if(typeof showToast === 'function') showToast(res.replace('ERROR: ', ''));
             } else if (res && res.indexOf(',') !== -1 && res.split(',').length === 4) { 
                 var parts = res.split(','); 
+                if (window.RFXGraphCurves) window.RFXGraphCurves.setMode('bezier');
                 animateGraphUpdate({ x: parseFloat(parts[0]), y: parseFloat(parts[1]) }, { x: parseFloat(parts[2]), y: parseFloat(parts[3]) }); 
                 if(typeof showToast === 'function') showToast("Values read from AE"); 
             } else {
@@ -641,12 +662,12 @@ const graphJsx = window.createJsxLoader('graph.jsx');
         });
     };
 
-    window.openGraphInputModal = function() { var input = document.getElementById('graph-val-input'), modal = document.getElementById('graph-input-modal'); if (input && modal) { input.value = formatCoord(cp1.x) + ", " + formatCoord(cp1.y) + ", " + formatCoord(cp2.x) + ", " + formatCoord(cp2.y); modal.style.display = 'flex'; setTimeout(() => input.select(), 50); } };
+    window.openGraphInputModal = function() { if (window.RFXGraphCurves && window.RFXGraphCurves.active()) return; var input = document.getElementById('graph-val-input'), modal = document.getElementById('graph-input-modal'); if (input && modal) { input.value = formatCoord(cp1.x) + ", " + formatCoord(cp1.y) + ", " + formatCoord(cp2.x) + ", " + formatCoord(cp2.y); modal.style.display = 'flex'; setTimeout(() => input.select(), 50); } };
     window.closeGraphInputModal = function() { var m = document.getElementById('graph-input-modal'); if(m) m.style.display = 'none'; };
     window.confirmGraphInput = function() { var input = document.getElementById('graph-val-input'); if(!input) return; var v = input.value.split(','); if (v.length === 4) { animateGraphUpdate({ x: Math.max(0, Math.min(1, parseFloat(v[0]))), y: parseFloat(v[1]) }, { x: Math.max(0, Math.min(1, parseFloat(v[2]))), y: parseFloat(v[3]) }); if (window.isAutoGraph) setTimeout(() => window.applyGraphToKeyframesWithCheck(window._activeEaseType), 250); } window.closeGraphInputModal(); };
-    window.openGraphSaveModal = function() { var preview = document.getElementById('graph-save-val-preview'), input = document.getElementById('graph-save-input'), modal = document.getElementById('graph-save-modal'); if (preview && input && modal) { preview.textContent = formatCoord(cp1.x) + ", " + formatCoord(cp1.y) + ", " + formatCoord(cp2.x) + ", " + formatCoord(cp2.y); input.value = ''; modal.style.display = 'flex'; setTimeout(() => input.focus(), 50); } };
+    window.openGraphSaveModal = function() { var preview = document.getElementById('graph-save-val-preview'), input = document.getElementById('graph-save-input'), modal = document.getElementById('graph-save-modal'); if (preview && input && modal) { preview.textContent = (window.RFXGraphCurves && window.RFXGraphCurves.active()) ? window.RFXGraphCurves.summary() : formatCoord(cp1.x) + ", " + formatCoord(cp1.y) + ", " + formatCoord(cp2.x) + ", " + formatCoord(cp2.y); input.value = ''; modal.style.display = 'flex'; setTimeout(() => input.focus(), 50); } };
     window.closeGraphSaveModal = function() { var m = document.getElementById('graph-save-modal'); if(m) m.style.display = 'none'; };
-    window.confirmGraphSave = function() { var input = document.getElementById('graph-save-input'); if(!input) return; var name = input.value.trim() || 'Custom'; if (!graphLibraries[activeLibName]) graphLibraries[activeLibName] = []; graphLibraries[activeLibName].push({ name: name, vals: [cp1.x, cp1.y, cp2.x, cp2.y] }); saveGraphLibraries(); renderGraphLibrary(); window.closeGraphSaveModal(); };
+    window.confirmGraphSave = function() { var input = document.getElementById('graph-save-input'); if(!input) return; var name = input.value.trim() || 'Custom'; if (!graphLibraries[activeLibName]) graphLibraries[activeLibName] = []; graphLibraries[activeLibName].push((window.RFXGraphCurves && window.RFXGraphCurves.active()) ? { name: name, shape: window.RFXGraphCurves.snapshot() } : { name: name, vals: [cp1.x, cp1.y, cp2.x, cp2.y] }); saveGraphLibraries(); renderGraphLibrary(); window.closeGraphSaveModal(); };
     window.openGraphNewLibModal = function() { var input = document.getElementById('graph-newlib-input'), modal = document.getElementById('graph-newlib-modal'); if(input && modal) { input.value = ''; modal.style.display = 'flex'; setTimeout(() => input.focus(), 50); } };
     window.closeGraphNewLibModal = function() { var m = document.getElementById('graph-newlib-modal'); if(m) { m.style.display = 'none'; window._isImportingToNew = false; } };
     window.confirmGraphNewLib = function() { var input = document.getElementById('graph-newlib-input'); if(!input) return; var name = input.value.trim(); if (name && !graphLibraries[name]) { graphLibraries[name] = []; activeLibName = name; saveGraphLibraries(); buildLibDropdown(); switchGraphLibrary(name); window.closeGraphNewLibModal(); if (window._isImportingToNew) { processGraphImportData(name); window._isImportingToNew = false; } } };
@@ -795,14 +816,14 @@ const graphJsx = window.createJsxLoader('graph.jsx');
         var hoverDelaySeconds = 0.2; 
 
         arr.forEach(function(item, idx) {
-            var card = document.createElement('div'); card.className = 'graph-preset-card'; card.innerHTML = `<div class="graph-preset-svg-wrap">${drawMiniSVG(item.vals)}</div><div class="graph-preset-label">${item.name}</div>`;
+            var card = document.createElement('div'); card.className = 'graph-preset-card'; card.innerHTML = `<div class="graph-preset-svg-wrap">${item.shape ? (window.RFXGraphCurves ? window.RFXGraphCurves.miniSVG(item.shape) : '') : drawMiniSVG(item.vals)}</div><div class="graph-preset-label">${item.name}</div>`;
             
             // Hover Events with Delay Tracker
             card.addEventListener('mouseenter', function() {
                 card._isHovered = true;
                 if (card._hoverTimeout) clearTimeout(card._hoverTimeout);
                 card._hoverTimeout = setTimeout(function() {
-                    if (card._isHovered && !card._animating) {
+                    if (card._isHovered && !card._animating && item.vals) {
                         startCardAnim(card, item.vals);
                     }
                 }, hoverDelaySeconds * 1000); 
@@ -816,7 +837,7 @@ const graphJsx = window.createJsxLoader('graph.jsx');
                 }
             });
 
-            card.addEventListener('click', function() { animateGraphUpdate({x: item.vals[0], y: item.vals[1]}, {x: item.vals[2], y: item.vals[3]}); if (window.isAutoGraph) setTimeout(() => window.applyGraphToKeyframesWithCheck(window._activeEaseType), 350); });
+            card.addEventListener('click', function() { if (item.shape) { if (window.RFXGraphCurves) window.RFXGraphCurves.load(item.shape); return; } if (window.RFXGraphCurves) window.RFXGraphCurves.setMode('bezier'); animateGraphUpdate({x: item.vals[0], y: item.vals[1]}, {x: item.vals[2], y: item.vals[3]}); if (window.isAutoGraph) setTimeout(() => window.applyGraphToKeyframesWithCheck(window._activeEaseType), 350); });
             
             // NOTE: The contextmenu listener has been completely removed from here!
             

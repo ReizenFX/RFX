@@ -27,7 +27,7 @@ The panel is dark, minimal and premium: ~95% black, white and greys, one look ac
 ## Navigation (one system, four positions)
 - The main tab bar in `index.html` (`.rfx-app-header .tabs-header`) is the only navigation. `js/theme.js` sets `data-rfx-nav` (top | bottom | left | right), `data-rfx-navicons` (icon-only tabs; always on a side) and `data-rfx-subpos` (where Caption/Tracker sub-tab bars sit) on `<html>` from `rfxNavPos`, `rfxNavIcons`, `rfxSubTabPos`, plus `data-rfx-navarrows` from `rfxNavArrows` (the previous / next tab arrows, off by default) and `data-rfx-subicons` from `rfxSubIcons` (icon-only sub tabs). `css/global.css` ("navigation layout") only reorients and moves the same bar; order, states, hover, transitions and the Settings gear stay the same.
 - Each main tab button is `<svg class="tab-ic">` + `<span class="tab-lbl">`. New main tabs need both. Drag-to-reorder (`initDraggableTabs` in `js/globals.js`) works on the bar's axis; `saveTabOrder`/`loadTabOrder`/`switchTabOffset` only touch main tabs.
-- Sub-tab bars (`.tabs-header` inside a tab) all look and drag the same. Every sub-tab button is `<svg class="tab-ic">` + `<span class="tab-lbl">` like the main tabs; a new sub bar must be added to `SUB_BARS` in `js/nav.js` for its hover names. The Tracker Focus Timer has a second row (`#timer-mode-header`, Timer / Stopwatch, order in `rfxTimerModeOrder`) that sits next to the Tracker bar: under it when sub tabs are on top, directly above it when they are at the bottom.
+- Sub-tab bars (`.tabs-header` inside a tab) all look and drag the same (`makeSubTabsDraggable` in `js/globals.js`). Every sub-tab button is `<svg class="tab-ic">` + `<span class="tab-lbl">` like the main tabs; a new sub bar must be added to `SUB_BARS` in `js/nav.js` for its hover names. The Tracker Focus Timer has a second row (`#timer-mode-header`, Timer / Stopwatch, order in `rfxTimerModeOrder`) that sits next to the Tracker bar: under it when sub tabs are on top, directly above it when they are at the bottom.
 - `js/nav.js` shows the floating name / sub-tab menu for icon-only tabs (position: fixed, never moves layout). A tab with sub-tabs must be listed in its `SUBS` map (sub-tab buttons must keep the `btn-<contentId>` id pattern).
 
 ## Live development
@@ -50,6 +50,9 @@ The panel is dark, minimal and premium: ~95% black, white and greys, one look ac
 - Repo-local `core.autocrlf=false`: files keep their existing line endings (a mix of LF and CRLF). Don't normalize them.
 - No git identity is configured globally: pass one per commit (`git -c user.name=... -c user.email=... commit`). Never change global git config.
 - No `git reset --hard`, `git clean -fd` or force push without explicit approval.
+
+## Graph curve types
+- The Graph tab's type row (Bezier / Elastic / Bounce / Steps) is `js/tab-graph-curves.js` (loaded after `js/tab-graph.js`, state in `rfxGraphCurve`, row order `rfxGraphTypeOrder`, row hidden `rfxGraphTypeBarCollapsed`). Non-Bezier types are built as knots (time, value, speeds, influences, hold) in 0..1 space; the graph draws exactly the AE interpolation of those knots and `graphApplyCurveKnots` in `jsx/graph.jsx` bakes them as ordinary keyframes between each key pair (replacing keys it added before). Keep preview and bake on the same knots.
 
 ## Known issues (leave unless asked)
 - `js/tab-graph.js` calls `applyBezierEaseToExpression`, which no jsx file defines ("Apply to expression" does nothing).

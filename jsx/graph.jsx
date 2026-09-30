@@ -317,3 +317,131 @@ function readBezierEaseV2() {
         return "ERROR: " + e.toString();
     }
 }
+
+// -----------------------------------------------------------
+//  CURVE TYPES (Elastic / Bounce / Steps) -> real keyframes
+//  spec: "u,v,si,so,ii,io,hold;..." from js/tab-graph-curves.js, in 0..1 space
+//  (u = time, v = value, si/so = slope in/out, ii/io = influence %, hold = hold after).
+//  Baked between each pair of keyframes: inner keys that were there are replaced, the
+//  pair's own keys keep their other side, every key stays editable in the graph editor.
+//  Pairs: consecutive selected keys; one selected key + the next; none = every pair.
+// -----------------------------------------------------------
+function graphCurveParse(spec) {
+    var out = [], rows = String(spec).split(';');
+    for (var i = 0; i < rows.length; i++) {
+        var c = rows[i].split(',');
+        if (c.length < 7) continue;
+        out.push({ u: parseFloat(c[0]), v: parseFloat(c[1]), si: parseFloat(c[2]), so: parseFloat(c[3]),
+                   ii: Math.max(0.1, Math.min(100, parseFloat(c[4]))), io: Math.max(0.1, Math.min(100, parseFloat(c[5]))), hold: c[6] === '1' });
+    }
+    return out;
+}
+
+function graphCurveApplyPair(prop, ta, tb, knots, minGap) {
+    var ka = prop.nearestKeyIndex(ta), kb = prop.nearestKeyIndex(tb);
+    if (kb <= ka) return 0;
+    var va = prop.keyValue(ka), vb = prop.keyValue(kb), T = tb - ta;
+    if (T <= 0) return 0;
+    var vt = prop.propertyValueType;
+    var spatial = (vt === PropertyValueType.TwoD_SPATIAL || vt === PropertyValueType.ThreeD_SPATIAL);
+    var isArr = (typeof va !== 'number');
+    var n = isArr ? va.length : 1;
+    var dims = spatial ? 1 : n;
+    var dist = 0, d, i;
+    if (spatial) { for (d = 0; d < n; d++) dist += (vb[d] - va[d]) * (vb[d] - va[d]); dist = Math.sqrt(dist); }
+
+    // 1. remove the keys between the pair (added by an earlier apply, or in the way)
+    for (i = kb - 1; i > ka; i--) prop.removeKey(i);
+
+    // 2. keep the knots that are at least minGap apart in time
+    var use = [knots[0]], last = 0;
+    for (i = 1; i < knots.length - 1; i++) {
+        if ((knots[i].u - use[use.length - 1].u) * T < minGap) continue;
+        if ((1 - knots[i].u) * T < minGap) continue;
+        use.push(knots[i]);
+    }
+    use.push(knots[knots.length - 1]);
+
+    // 3. add the inner keys
+    for (i = 1; i < use.length - 1; i++) {
+        var val;
+        if (isArr) { val = []; for (d = 0; d < n; d++) val.push(va[d] + (vb[d] - va[d]) * use[i].v); }
+        else val = va + (vb - va) * use[i].v;
+        var idx = prop.addKey(ta + use[i].u * T);
+        prop.setValueAtKey(idx, val);
+    }
+
+    // 4. interpolation, speeds and influences (endpoints: only the side facing the segment)
+    function eases(slope, infl) {
+        var arr = [];
+        for (var e = 0; e < dims; e++) {
+            var sp;
+            if (spatial) sp = Math.abs(dist * slope / T);
+            else sp = ((isArr ? (vb[e] - va[e]) : (vb - va)) * slope) / T;
+            arr.push(new KeyframeEase(sp, infl));
+        }
+        return arr;
+    }
+    var BEZ = KeyframeInterpolationType.BEZIER, HOLD = KeyframeInterpolationType.HOLD;
+    for (i = 0; i < use.length; i++) {
+        var k = ka + i, q = use[i], prevHold = (i > 0 && use[i - 1].hold);
+        var inType = (i === 0) ? prop.keyInInterpolationType(k) : (prevHold ? HOLD : BEZ);
+        var outType = (i === use.length - 1) ? prop.keyOutInterpolationType(k) : (q.hold ? HOLD : BEZ);
+        var inE, outE;
+        try { inE = (i === 0) ? prop.keyInTemporalEase(k) : eases(q.si, q.ii); } catch (e1) { inE = eases(0, 33.33); }
+        try { outE = (i === use.length - 1) ? prop.keyOutTemporalEase(k) : eases(q.so, q.io); } catch (e2) { outE = eases(0, 33.33); }
+        try {
+            if (i > 0 && i < use.length - 1) { prop.setTemporalContinuousAtKey(k, q.si === q.so); prop.setTemporalAutoBezierAtKey(k, false); }
+            else { prop.setTemporalAutoBezierAtKey(k, false); prop.setTemporalContinuousAtKey(k, false); }   // the pair's own keys: its other side keeps its speed
+        } catch (e3) {}
+        prop.setInterpolationTypeAtKey(k, inType, outType);
+        try { prop.setTemporalEaseAtKey(k, inE, outE); } catch (e4) {}
+        if (spatial) {
+            try {
+                var zero = []; for (d = 0; d < n; d++) zero.push(0);
+                var inT = (i === 0) ? prop.keyInSpatialTangent(k) : zero;
+                var outT = (i === use.length - 1) ? prop.keyOutSpatialTangent(k) : zero;
+                if (i > 0 && i < use.length - 1) { prop.setSpatialAutoBezierAtKey(k, false); prop.setSpatialContinuousAtKey(k, false); prop.setRovingAtKey(k, false); }
+                prop.setSpatialTangentsAtKey(k, inT, outT);
+            } catch (e5) {}
+        }
+        try { prop.setSelectedAtKey(k, i === 0 || i === use.length - 1); } catch (e6) {}
+    }
+    return use.length - 2;
+}
+
+function graphApplyCurveKnots(spec, label) {
+    try {
+        var comp = app.project.activeItem;
+        if (!comp || !(comp instanceof CompItem)) return 'ERROR: No active comp';
+        var knots = graphCurveParse(spec);
+        if (knots.length < 2) return 'ERROR: Invalid curve';
+        var layers = comp.selectedLayers;
+        var targetProps = [], p, L;
+        var selProps = comp.selectedProperties;
+        if (selProps.length === 0) { for (L = 0; L < layers.length; L++) getAllKeyframedProps(layers[L], targetProps); }
+        else { for (p = 0; p < selProps.length; p++) targetProps.push(selProps[p]); }
+        var okTypes = [PropertyValueType.OneD, PropertyValueType.TwoD, PropertyValueType.ThreeD, PropertyValueType.TwoD_SPATIAL, PropertyValueType.ThreeD_SPATIAL, PropertyValueType.COLOR];
+        var minGap = comp.frameDuration * 0.5;
+        var pairs = 0, added = 0;
+
+        app.beginUndoGroup('Apply ' + (label || 'Curve'));
+        for (p = 0; p < targetProps.length; p++) {
+            var prop = targetProps[p];
+            if (!prop || !prop.canVaryOverTime || prop.numKeys < 2) continue;
+            var ok = false;
+            for (var t = 0; t < okTypes.length; t++) if (prop.propertyValueType === okTypes[t]) ok = true;
+            if (!ok) continue;
+            // pairs as times (indices move while keys are added / removed)
+            var times = [], sel = prop.selectedKeys, s;
+            if (sel.length >= 2) { for (s = 0; s < sel.length - 1; s++) times.push([prop.keyTime(sel[s]), prop.keyTime(sel[s + 1])]); }
+            else if (sel.length === 1) { if (sel[0] < prop.numKeys) times.push([prop.keyTime(sel[0]), prop.keyTime(sel[0] + 1)]); }
+            else { for (s = 1; s < prop.numKeys; s++) times.push([prop.keyTime(s), prop.keyTime(s + 1)]); }
+            for (s = 0; s < times.length; s++) { added += graphCurveApplyPair(prop, times[s][0], times[s][1], knots, minGap); pairs++; }
+        }
+        app.endUndoGroup();
+        return 'OK ' + pairs + ' ' + added;
+    } catch (e) {
+        return 'ERROR: ' + e.toString();
+    }
+}
