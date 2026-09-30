@@ -365,7 +365,8 @@ function graphCurveParse(spec) {
         var c = rows[i].split(',');
         if (c.length < 7) continue;
         out.push({ u: parseFloat(c[0]), v: parseFloat(c[1]), si: parseFloat(c[2]), so: parseFloat(c[3]),
-                   ii: Math.max(0.1, Math.min(100, parseFloat(c[4]))), io: Math.max(0.1, Math.min(100, parseFloat(c[5]))), hold: c[6] === '1' });
+                   ii: Math.max(0.1, Math.min(100, parseFloat(c[4]))), io: Math.max(0.1, Math.min(100, parseFloat(c[5]))),
+                   hold: c[6] === '1', lin: c[6] === '2', frame: c[7] === '1' });
     }
     return out;
 }
@@ -386,11 +387,13 @@ function graphCurveApplyPair(prop, ta, tb, knots, minGap) {
     // 1. remove the keys between the pair (added by an earlier apply, or in the way)
     for (i = kb - 1; i > ka; i--) prop.removeKey(i);
 
-    // 2. keep the knots that are at least minGap apart in time
-    var use = [knots[0]], last = 0;
+    // 2. knot times; keep the knots that are at least minGap apart
+    var frameDur = minGap * 2;
+    for (i = 0; i < knots.length; i++) knots[i].t = (knots[i].frame && T > frameDur * 3) ? ta + frameDur : ta + knots[i].u * T;
+    var use = [knots[0]];
     for (i = 1; i < knots.length - 1; i++) {
-        if ((knots[i].u - use[use.length - 1].u) * T < minGap) continue;
-        if ((1 - knots[i].u) * T < minGap) continue;
+        if (knots[i].t - use[use.length - 1].t < minGap && !knots[i].frame) continue;
+        if (tb - knots[i].t < minGap) continue;
         use.push(knots[i]);
     }
     use.push(knots[knots.length - 1]);
@@ -401,7 +404,7 @@ function graphCurveApplyPair(prop, ta, tb, knots, minGap) {
         var val;
         if (isArr) { val = []; for (d = 0; d < n; d++) val.push(va[d] + (vb[d] - va[d]) * use[i].v); }
         else val = va + (vb - va) * use[i].v;
-        var idx = prop.addKey(ta + use[i].u * T);
+        var idx = prop.addKey(use[i].t);
         prop.setValueAtKey(idx, val);
         added.push(prop.keyTime(idx));
     }
@@ -417,11 +420,11 @@ function graphCurveApplyPair(prop, ta, tb, knots, minGap) {
         }
         return arr;
     }
-    var BEZ = KeyframeInterpolationType.BEZIER, HOLD = KeyframeInterpolationType.HOLD;
+    var BEZ = KeyframeInterpolationType.BEZIER, HOLD = KeyframeInterpolationType.HOLD, LIN = KeyframeInterpolationType.LINEAR;
     for (i = 0; i < use.length; i++) {
-        var k = ka + i, q = use[i], prevHold = (i > 0 && use[i - 1].hold);
-        var inType = (i === 0) ? prop.keyInInterpolationType(k) : (prevHold ? HOLD : BEZ);
-        var outType = (i === use.length - 1) ? prop.keyOutInterpolationType(k) : (q.hold ? HOLD : BEZ);
+        var k = ka + i, q = use[i], prev = (i > 0) ? use[i - 1] : null;
+        var inType = (i === 0) ? prop.keyInInterpolationType(k) : (prev.hold ? HOLD : (prev.lin ? LIN : BEZ));
+        var outType = (i === use.length - 1) ? prop.keyOutInterpolationType(k) : (q.hold ? HOLD : (q.lin ? LIN : BEZ));
         var inE, outE;
         try { inE = (i === 0) ? prop.keyInTemporalEase(k) : eases(q.si, q.ii); } catch (e1) { inE = eases(0, 33.33); }
         try { outE = (i === use.length - 1) ? prop.keyOutTemporalEase(k) : eases(q.so, q.io); } catch (e2) { outE = eases(0, 33.33); }

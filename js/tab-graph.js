@@ -438,15 +438,7 @@ const graphJsx = window.createJsxLoader('graph.jsx');
         svg.addEventListener('contextmenu', function(e) {
             e.preventDefault();
             var C = window.RFXGraphCurves;
-            if (C && C.active()) {
-                showCtxMenu(e.clientX, e.clientY, [
-                    { label: 'Apply', action: () => C.apply() },
-                    { label: 'Reverse value', action: () => C.reverse() },
-                    { sep: true },
-                    { label: 'Reset ' + C.name(), action: () => C.reset() }
-                ]);
-                return;
-            }
+            if (C && C.active()) { closeCtxMenu(); C.openMenu(e.clientX, e.clientY); return; }   // every setting as a slider
 
             showCtxMenu(e.clientX, e.clientY, [
                 { label: 'Apply', action: () => window.applyGraphToKeyframesWithCheck(window._activeEaseType) },
