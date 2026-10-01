@@ -15,6 +15,8 @@
                     second rebound = Decay Y + Decay X, last landing = Bounciness, arm = Hang
      Cyclic         (Alight Motion model) bottom handle = Frequency, right edge = End (baseline),
                     top handle = Tilt, the knob above it = Smoothness
+     Value box      every type shows its settings as name(values) [+ reversed]; pasting one in
+                    the value box switches to that type (see code / parse)
      Steps          (Alight Motion model) bottom handle, left / right = Frequency (step length);
                     top handle, left / right = Smoothness (right above the bottom one = hard steps)
      Elastic Steps  (Alight Motion model) bottom handle, left / right = Frequency (step length);
@@ -600,8 +602,8 @@
             const L = k[k.length - 1]; L.seg = 2; L.frame = 3;
             k.push(K(1, 1, 0, 0, 0, 0));
         }
-        const band = [];
-        if (c.A > 0) for (let i = 0; i <= 48; i++) { const u = i / 48, bv = c.base(u), w = c.A * c.env(u); band.push([u, bv + w, bv - w]); }
+        const line = [];
+        if (c.A > 0) for (let i = 0; i <= 48; i++) { const u = i / 48; line.push([u, c.base(u)]); }
         const hs = [
             { id: 'end', axis: 'y', x: 1, y: c.e, label: 'End ' + p.end.toFixed(1) + (c.e > 0.5 ? '  (rises)' : c.e < 0.5 ? '  (falls)' : ''),
               drag: (x, y) => { p.end = clamp(R(y * 1000) / 10, 0, 100); } },
@@ -617,7 +619,7 @@
             hs.push({ id: 'seed', axis: 'xy', x: p.sx / 100, y: p.sy / 100, label: 'Seed  (drag to change the pattern)',
                 drag: (x, y) => { p.sx = clamp(R(x * 1000) / 10, 0, 100); p.sy = clamp(R(y * 1000) / 10, 0, 100); } });
         }
-        return { knots: k, band: band.length ? band : null, handles: hs };
+        return { knots: k, line: line.length ? line : null, handles: hs };
     }
 
     // ------------------------------------------------------------------ registry
@@ -677,7 +679,7 @@
             return m;
         });
     }
-    // the shape as drawn: knots, handles and band (mirrored when reversed)
+    // the shape as drawn: knots, handles and guide line (mirrored when reversed)
     function shapeFor(s) {
         const M = MODELS[s.mode]; if (!M) return null;
         const b = M.build(s[s.mode], s.rev);
@@ -685,7 +687,7 @@
         const f = (x, y) => ({ x: 1 - x, y: 1 - y });
         return {
             knots: b.knots.noMirror ? b.knots : Object.assign(mirrorKnots(b.knots), { jumpStart: !!b.knots.jumpEnd }),
-            band: b.band && b.band.map(r => [1 - r[0], 1 - r[2], 1 - r[1]]),
+            line: b.line && b.line.map(r => [1 - r[0], 1 - r[1]]),
             handles: b.handles.map(h => Object.assign({}, h, f(h.x, h.y), { lines: h.lines && h.lines.map(l => [1 - l[0], 1 - l[1], 1 - l[2], 1 - l[3]]) }))
         };
     }
@@ -700,7 +702,6 @@
         let lo = 0, hi = 1;
         sh.knots.forEach(q => { lo = Math.min(lo, q.v); hi = Math.max(hi, q.v); });
         sh.handles.forEach(h => { lo = Math.min(lo, h.y); hi = Math.max(hi, h.y); });
-        (sh.band || []).forEach(r => { lo = Math.min(lo, r[2]); hi = Math.max(hi, r[1]); });
         if (noPad) return [lo, hi];
         const pad = 0.07 * (hi - lo) + 0.03;   // room for the handles and their labels
         return [lo - pad, hi + pad];
@@ -717,6 +718,8 @@
         draw: draw,
         apply: apply,
         summary: summary,
+        code: code,
+        parse: parse,
         openMenu: openMenu,
         snapshot: () => ({ mode: st.mode, rev: st.rev, p: Object.assign({}, st[st.mode] || {}) }),
         load: sh => { if (!sh || !MODELS[sh.mode]) return; st.rev = !!sh.rev; st[sh.mode] = defParams(sh.mode); assignKnown(sh.mode, st[sh.mode], sh.p); setMode(sh.mode); autoApply(); },
@@ -727,6 +730,32 @@
     };
     window.RFXGraphCurves = api;
 
+    /* The graph as a value that can be copied, shared and pasted back: the type's name and its
+       settings in the right-click menu's order (hidden ones too, e.g. Smooth end, the seed), then
+       " reversed" when it plays backwards. Bezier stays "x1, y1, x2, y2", so the form tells the type:
+         elastic(60, 5, 100, 0, 0, 50)    bounce(80, 74, 0, 0, 75, 1) reversed
+       Values out of range are clamped; missing ones take their defaults. */
+    const CODE_NAMES = { elasticsteps: 'elastic-steps' };
+    const fmtNum = (v, step) => { const d = step < 1 ? Math.min(4, Math.ceil(-Math.log10(step) - 1e-9)) : 0; return String(parseFloat(v.toFixed(d))); };
+    function code(sh) {
+        sh = sh || { mode: st.mode, rev: st.rev, p: st[st.mode] };
+        const M = MODELS[sh.mode]; if (!M) return '';
+        const p = Object.assign(defParams(sh.mode), sh.p || {});
+        return (CODE_NAMES[sh.mode] || sh.mode) + '(' + M.params.map(q => fmtNum(p[q.k], q.step)).join(', ') + ')' + (sh.rev ? ' reversed' : '');
+    }
+    function parse(text) {
+        const m = /^\s*([a-z][a-z _-]*?)\s*\(([^)]*)\)\s*(reversed|reverse|rev)?\s*;?\s*$/i.exec(String(text || ''));
+        if (!m) return null;
+        const mode = m[1].toLowerCase().replace(/[\s_-]/g, '');
+        if (!MODELS[mode]) return null;
+        const nums = m[2].trim() === '' ? [] : m[2].split(',').map(s => Number(s.trim()));
+        const M = MODELS[mode];
+        if (nums.length > M.params.length || nums.some(n => !isFinite(n))) return null;
+        const p = defParams(mode), src = {};
+        nums.forEach((n, i) => { src[M.params[i].k] = n; });
+        assignKnown(mode, p, src);
+        return { mode: mode, rev: !!m[3], p: p };
+    }
     function summary() {
         const sh = shape(); if (!sh) return '';
         const extra = Math.max(0, sh.knots.length - 2);
@@ -763,7 +792,7 @@
         if (g && g.ownerSVGElement === svg) return g;
         const NS = 'http://www.w3.org/2000/svg';
         g = document.createElementNS(NS, 'g'); g.id = 'gx-shape';
-        g.innerHTML = '<path class="gx-band"/><path class="gx-baseline" fill="none" stroke-width="1.5" stroke-dasharray="4 4"/>' +
+        g.innerHTML = '<path class="gx-baseline" fill="none" stroke-width="1.5" stroke-dasharray="4 4"/>' +
             '<path class="gx-curve gx-shape-curve" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
             '<g class="gx-shape-knots"></g><g class="gx-shape-handles"></g><g class="gx-tip"><rect rx="6" ry="6"/><text/></g>' +
             '<text class="gx-hint"></text>';
@@ -807,13 +836,9 @@
         lastM = m;
         const g = ensureLayer(m.svg), toPx = toPxFn(m), sh = shape(), p = st[st.mode];
         g.querySelector('.gx-shape-curve').setAttribute('d', pathD(sh.knots, toPx));
-        // Random: the band the noise stays in, and its middle line
-        const band = g.querySelector('.gx-band'), base = g.querySelector('.gx-baseline');
-        if (sh.band) {
-            const top = sh.band.map(r => toPx(r[0], r[1])), bot = sh.band.map(r => toPx(r[0], r[2])).reverse();
-            band.setAttribute('d', 'M ' + top.concat(bot).map(q => q.x + ',' + q.y).join(' L ') + ' Z');
-            base.setAttribute('d', 'M ' + sh.band.map(r => { const q = toPx(r[0], (r[1] + r[2]) / 2); return q.x + ',' + q.y; }).join(' L '));
-        } else { band.setAttribute('d', ''); base.setAttribute('d', ''); }
+        // Random: the base shape under the jitter, dashed
+        const base = g.querySelector('.gx-baseline');
+        base.setAttribute('d', sh.line ? 'M ' + sh.line.map(r => { const q = toPx(r[0], r[1]); return q.x + ',' + q.y; }).join(' L ') : '');
         // the keyframes Apply will add
         // the handles' guide lines (slider track, stem to the curve)
         g.querySelector('.gx-shape-knots').innerHTML = sh.handles.map(h => (h.lines || []).map(l => { const A = toPx(l[0], l[1]), B = toPx(l[2], l[3]); return '<line class="gx-ctl-line" x1="' + A.x + '" y1="' + A.y + '" x2="' + B.x + '" y2="' + B.y + '" stroke-width="2" stroke-linecap="round"/>'; }).join('')).join('');
@@ -839,7 +864,7 @@
         let seen = false; try { seen = localStorage.getItem(HINT_KEY) === '1'; } catch (e) {}
         hint.textContent = seen ? '' : 'Drag the handles  ·  right-click for all settings';
         hint.setAttribute('x', 10); hint.setAttribute('y', m.rawH - 10);
-        if (valueDisplay) valueDisplay.textContent = summary();
+        if (valueDisplay) { valueDisplay.textContent = code(); valueDisplay.title = code(); }   // one line in the box; the whole value on hover
         syncChip();   // the graph area is rebuilt on its first draw: keep the chip in it
     }
     // what the hovered / dragged handle changes, with the values
@@ -957,6 +982,7 @@
         const item = (label, fn) => { const it = document.createElement('div'); it.className = 'ctx-item'; it.textContent = label; it.addEventListener('click', () => { closeMenu(); fn(); }); menu.appendChild(it); };
         if (hasSmoothEnd(st.mode)) item(p.smooth ? 'Smooth end: on' : 'Smooth end: off', () => toggleSmooth());
         item('Reverse value', () => api.reverse());
+        item('Copy value', () => copyText(code()));
         if (st.mode === 'random') item('New pattern', () => { p.seed = (p.seed + 1) % 1000000; save(); redraw(); autoApply(); });
         item('Reset ' + M.name, () => api.reset());
         item('Apply', () => apply(false));
@@ -965,6 +991,13 @@
         if (window.repositionMenu) window.repositionMenu(menu, x, y);
         else { menu.style.left = x + 'px'; menu.style.top = y + 'px'; }
         setTimeout(() => { document.addEventListener('pointerdown', onOutside, true); document.addEventListener('keydown', onEsc, true); }, 0);
+    }
+
+    function copyText(text) {
+        const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        ta.remove();
+        if (window.showToast) showToast('Copied to clipboard!');
     }
 
     // ------------------------------------------------------------------ apply to After Effects

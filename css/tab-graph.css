@@ -61,7 +61,6 @@
 #tab-graph.graph-shape-mode .gx-chip { display: flex; }
 #tab-graph .gx-chip:hover { background: var(--rfx-surface-3); color: var(--rfx-text-1); }
 #tab-graph .gx-chip.on { background: var(--rfx-accent); color: var(--rfx-on-accent); }
-.gx-band { fill: var(--rfx-fill-hover); stroke: none; }
 .gx-baseline { stroke: var(--rfx-text-4); }
 .gx-tip { pointer-events: none; }
 .gx-tip rect { fill: var(--rfx-menu); stroke: var(--rfx-line); stroke-width: 1; }
@@ -328,14 +327,17 @@
 #html-auto-btn { border: 1px solid transparent !important; }
 #html-auto-btn.active { background: var(--rfx-fill-selected) !important; color: var(--rfx-text-1) !important; border: 1px solid transparent !important; outline: none !important; }
 
-#graph-value-display { 
-    height: auto !important; 
-    min-height: 24px !important; 
-    display: flex !important; 
-    align-items: center !important; 
-    justify-content: center !important; 
-    padding: 4px 0 !important; 
-    line-height: 1.4 !important; 
+/* one line, centred; a long value (other graph types) ends in an ellipsis, the whole value on hover */
+#graph-value-display {
+    height: auto !important;
+    min-height: 24px !important;
+    display: block !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    padding: 4px 8px !important;
+    line-height: 16px !important;
 }
 
 .btn-icon-square svg { width: 13px !important; height: 13px !important; }

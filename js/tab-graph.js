@@ -523,8 +523,10 @@ const graphJsx = window.createJsxLoader('graph.jsx');
                 
                 // --- PRESET SPECIFIC OPTIONS (Greyed out if empty space) ---
                 { label: 'Rename Preset', disabled: !isPresetClick, action: check(() => window.openGraphRenamePresetModal(idx, item.name)) }, 
-                { label: 'Edit Preset Value', disabled: !isPresetClick || !(item && item.vals), action: check(() => window.openGraphEditPresetModal(idx, item.vals)) }, 
-                
+                { label: 'Edit Preset Value', disabled: !isPresetClick || !item, action: check(() => window.openGraphEditPresetModal(idx, item)) },
+
+                // other graph types have one form: their value (paste it in the value box to get the graph back)
+                (item && item.shape) ? { label: 'Copy Preset Value', action: check(() => copyTextToClip(presetValue(item))) } :
                 { label: 'Copy Preset Value As', disabled: !isPresetClick || !(item && item.vals), sub: [
                     { label: 'Bezier', action: check(() => copyTextToClip(`[${formatCoord(item.vals[0])}, ${formatCoord(item.vals[1])}, ${formatCoord(item.vals[2])}, ${formatCoord(item.vals[3])}]`)) }, 
                     { label: 'CSS', action: check(() => copyTextToClip(`cubic-bezier(${formatCoord(item.vals[0])}, ${formatCoord(item.vals[1])}, ${formatCoord(item.vals[2])}, ${formatCoord(item.vals[3])})`)) }
@@ -599,6 +601,7 @@ const graphJsx = window.createJsxLoader('graph.jsx');
         l1.setAttribute('x1', b0.x); l1.setAttribute('y1', b0.y); l1.setAttribute('x2', p1.x); l1.setAttribute('y2', p1.y);
         l2.setAttribute('x1', b1.x); l2.setAttribute('y1', b1.y); l2.setAttribute('x2', p2.x); l2.setAttribute('y2', p2.y);
         h1.setAttribute('cx', p1.x); h1.setAttribute('cy', p1.y); h2.setAttribute('cx', p2.x); h2.setAttribute('cy', p2.y);
+        if (valueDisplay) valueDisplay.title = '';
         if (valueDisplay) valueDisplay.textContent = formatCoord(cp1.x) + ", " + formatCoord(cp1.y) + ", " + formatCoord(cp2.x) + ", " + formatCoord(cp2.y);
     }
 
@@ -662,10 +665,35 @@ const graphJsx = window.createJsxLoader('graph.jsx');
         });
     };
 
-    window.openGraphInputModal = function() { if (window.RFXGraphCurves && window.RFXGraphCurves.active()) return; var input = document.getElementById('graph-val-input'), modal = document.getElementById('graph-input-modal'); if (input && modal) { input.value = formatCoord(cp1.x) + ", " + formatCoord(cp1.y) + ", " + formatCoord(cp2.x) + ", " + formatCoord(cp2.y); modal.style.display = 'flex'; setTimeout(() => input.select(), 50); } };
+    /* A graph value, in any type's form: Bezier "x1, y1, x2, y2" (also "[...]" or "cubic-bezier(...)"),
+       or another type's "name(values)" [+ " reversed"] (js/tab-graph-curves.js code / parse).
+       Returns { vals } or { shape }, or null when it is not a graph value. */
+    function parseGraphValue(text) {
+        var C = window.RFXGraphCurves, sh = C && C.parse ? C.parse(text) : null;
+        if (sh) return { shape: sh };
+        var s = String(text || '').trim().replace(/^cubic-bezier\s*\(/i, '').replace(/^\[/, '').replace(/[)\]]\s*;?\s*$/, '');
+        var v = s.split(',').map(function (x) { return x.trim() === '' ? NaN : Number(x); });
+        if (v.length !== 4 || v.some(function (n) { return !isFinite(n); })) return null;
+        return { vals: [Math.max(0, Math.min(1, v[0])), v[1], Math.max(0, Math.min(1, v[2])), v[3]] };
+    }
+    function currentGraphValue() { var C = window.RFXGraphCurves; return (C && C.active()) ? C.code() : formatCoord(cp1.x) + ", " + formatCoord(cp1.y) + ", " + formatCoord(cp2.x) + ", " + formatCoord(cp2.y); }
+    function graphValueHint(text) { var h = document.getElementById('graph-val-hint'); if (h) h.textContent = text || 'Bezier "x1, y1, x2, y2", or a value copied from any graph type'; }
+    window.openGraphInputModal = function() { var input = document.getElementById('graph-val-input'), modal = document.getElementById('graph-input-modal'); if (input && modal) { input.value = currentGraphValue(); graphValueHint(); modal.style.display = 'flex'; setTimeout(() => input.select(), 50); } };
     window.closeGraphInputModal = function() { var m = document.getElementById('graph-input-modal'); if(m) m.style.display = 'none'; };
-    window.confirmGraphInput = function() { var input = document.getElementById('graph-val-input'); if(!input) return; var v = input.value.split(','); if (v.length === 4) { animateGraphUpdate({ x: Math.max(0, Math.min(1, parseFloat(v[0]))), y: parseFloat(v[1]) }, { x: Math.max(0, Math.min(1, parseFloat(v[2]))), y: parseFloat(v[3]) }); if (window.isAutoGraph) setTimeout(() => window.applyGraphToKeyframesWithCheck(window._activeEaseType), 250); } window.closeGraphInputModal(); };
-    window.openGraphSaveModal = function() { var preview = document.getElementById('graph-save-val-preview'), input = document.getElementById('graph-save-input'), modal = document.getElementById('graph-save-modal'); if (preview && input && modal) { preview.textContent = (window.RFXGraphCurves && window.RFXGraphCurves.active()) ? window.RFXGraphCurves.summary() : formatCoord(cp1.x) + ", " + formatCoord(cp1.y) + ", " + formatCoord(cp2.x) + ", " + formatCoord(cp2.y); input.value = ''; modal.style.display = 'flex'; setTimeout(() => input.focus(), 50); } };
+    // a pasted value switches to its graph type
+    window.confirmGraphInput = function() {
+        var input = document.getElementById('graph-val-input'); if (!input) return;
+        var r = parseGraphValue(input.value);
+        if (!r) { graphValueHint('Not a graph value: use "x1, y1, x2, y2" or a copied graph value'); input.select(); return; }
+        if (r.shape) { window.RFXGraphCurves.load(r.shape); }
+        else {
+            if (window.RFXGraphCurves) window.RFXGraphCurves.setMode('bezier');
+            animateGraphUpdate({ x: r.vals[0], y: r.vals[1] }, { x: r.vals[2], y: r.vals[3] });
+            if (window.isAutoGraph) setTimeout(() => window.applyGraphToKeyframesWithCheck(window._activeEaseType), 250);
+        }
+        window.closeGraphInputModal();
+    };
+    window.openGraphSaveModal = function() { var preview = document.getElementById('graph-save-val-preview'), input = document.getElementById('graph-save-input'), modal = document.getElementById('graph-save-modal'); if (preview && input && modal) { preview.textContent = currentGraphValue(); input.value = ''; modal.style.display = 'flex'; setTimeout(() => input.focus(), 50); } };
     window.closeGraphSaveModal = function() { var m = document.getElementById('graph-save-modal'); if(m) m.style.display = 'none'; };
     window.confirmGraphSave = function() { var input = document.getElementById('graph-save-input'); if(!input) return; var name = input.value.trim() || 'Custom'; if (!graphLibraries[activeLibName]) graphLibraries[activeLibName] = []; graphLibraries[activeLibName].push((window.RFXGraphCurves && window.RFXGraphCurves.active()) ? { name: name, shape: window.RFXGraphCurves.snapshot() } : { name: name, vals: [cp1.x, cp1.y, cp2.x, cp2.y] }); saveGraphLibraries(); renderGraphLibrary(); window.closeGraphSaveModal(); };
     window.openGraphNewLibModal = function() { var input = document.getElementById('graph-newlib-input'), modal = document.getElementById('graph-newlib-modal'); if(input && modal) { input.value = ''; modal.style.display = 'flex'; setTimeout(() => input.focus(), 50); } };
@@ -674,8 +702,18 @@ const graphJsx = window.createJsxLoader('graph.jsx');
 
     window.openGraphRenamePresetModal = function(idx, name) { window._activePresetIdx = idx; document.getElementById('graph-rename-preset-input').value = name; document.getElementById('graph-rename-preset-modal').style.display = 'flex'; setTimeout(() => document.getElementById('graph-rename-preset-input').select(), 50); };
     window.confirmGraphRenamePreset = function() { var n = document.getElementById('graph-rename-preset-input').value.trim(); if (n && window._activePresetIdx !== undefined) { graphLibraries[activeLibName][window._activePresetIdx].name = n; saveGraphLibraries(); renderGraphLibrary(); } document.getElementById('graph-rename-preset-modal').style.display = 'none'; };
-    window.openGraphEditPresetModal = function(idx, vals) { window._activePresetIdx = idx; document.getElementById('graph-edit-preset-input').value = vals.map(formatCoord).join(', '); document.getElementById('graph-edit-preset-modal').style.display = 'flex'; setTimeout(() => document.getElementById('graph-edit-preset-input').select(), 50); };
-    window.confirmGraphEditPreset = function() { var valStr = document.getElementById('graph-edit-preset-input').value.split(','); if (valStr.length === 4 && window._activePresetIdx !== undefined) { var newVals = [Math.max(0,Math.min(1,parseFloat(valStr[0]))), parseFloat(valStr[1]), Math.max(0,Math.min(1,parseFloat(valStr[2]))), parseFloat(valStr[3])]; if (!isNaN(newVals[0]) && !isNaN(newVals[1]) && !isNaN(newVals[2]) && !isNaN(newVals[3])) { graphLibraries[activeLibName][window._activePresetIdx].vals = newVals; saveGraphLibraries(); renderGraphLibrary(); } } document.getElementById('graph-edit-preset-modal').style.display = 'none'; };
+    // any type's preset: its value in the same form as the value box (and it can become another type)
+    function presetValue(item) { return item.shape ? (window.RFXGraphCurves ? window.RFXGraphCurves.code(item.shape) : '') : item.vals.map(formatCoord).join(', '); }
+    window.openGraphEditPresetModal = function(idx, item) { window._activePresetIdx = idx; document.getElementById('graph-edit-preset-input').value = Array.isArray(item) ? item.map(formatCoord).join(', ') : presetValue(item); document.getElementById('graph-edit-preset-modal').style.display = 'flex'; setTimeout(() => document.getElementById('graph-edit-preset-input').select(), 50); };
+    window.confirmGraphEditPreset = function() {
+        var input = document.getElementById('graph-edit-preset-input'), r = parseGraphValue(input.value), item = graphLibraries[activeLibName] && graphLibraries[activeLibName][window._activePresetIdx];
+        if (!r) { if (typeof showToast === 'function') showToast('Not a graph value'); input.select(); return; }
+        if (item) {
+            if (r.shape) { item.shape = r.shape; delete item.vals; } else { item.vals = r.vals; delete item.shape; }
+            saveGraphLibraries(); renderGraphLibrary();
+        }
+        document.getElementById('graph-edit-preset-modal').style.display = 'none';
+    };
     window.openGraphRenameLibModal = function() { document.getElementById('graph-renamelib-input').value = activeLibName; document.getElementById('graph-renamelib-modal').style.display = 'flex'; setTimeout(() => document.getElementById('graph-renamelib-input').select(), 50); };
     window.confirmGraphRenameLib = function() { var n = document.getElementById('graph-renamelib-input').value.trim(); if (n && n !== activeLibName && !graphLibraries[n]) { graphLibraries[n] = graphLibraries[activeLibName]; delete graphLibraries[activeLibName]; activeLibName = n; saveGraphLibraries(); buildLibDropdown(); switchGraphLibrary(activeLibName); } document.getElementById('graph-renamelib-modal').style.display = 'none'; };
 
