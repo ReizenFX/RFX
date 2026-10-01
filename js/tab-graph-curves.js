@@ -19,8 +19,9 @@
                     top handle, left / right = Smoothness (right above the bottom one = hard steps)
      Elastic Steps  (Alight Motion model) bottom handle, left / right = Frequency (step length);
                     right-edge handle, up / down = smooth steps (bottom) to sharp, ringing ones (top)
-     Random         top of the band = Amount, dot on the middle line = Density,
-                    end of the middle line = Trajectory (right-click: New pattern)
+     Random         (Alight Motion model) right edge = End (rises / falls), bottom line = Bend
+                    (early / late), left edge = Jitter, top line = Frequency, free handle = Seed
+                    (right-click: New pattern)
 
    Every type is a short list of keyframes ("knots": time, value, speeds, influences,
    segment type) in 0..1 space (0 = first key's value, 1 = second key's value). The graph
@@ -524,32 +525,99 @@
     }
 
     // ------------------------------------------------------------------ Random
-    function rng(seed) {   // small deterministic generator, so the preview and the baked keys match
-        let a = seed >>> 0;
-        return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    /* Same model as Alight Motion's random: a smooth base shape with jitter on top.
+         End     right edge, up / down only: where the base ends (it starts at the opposite level),
+                 so all the way up = it rises, all the way down = it falls
+         Bend    bottom line, left / right only: left = the change happens early (steep, then
+                 flat), right = it happens late (flat, then steep), middle = straight
+                 End x Bend gives the four basic shapes (rise / fall, early / late)
+         Amount  left edge, measured down from the top: how much jitter
+         Frequency  top line, left / right only: further left = denser jitter
+         Seed    anywhere: which pattern. The pattern is a smooth function of where the handle
+                 is, so dragging it morphs the jitter instead of reshuffling it (right-click:
+                 New pattern for a different set altogether)
+       The jitter fades in over its first swing and out over its last, so changing Frequency only
+       stretches it (from the middle). A base that does not start / end on the keys' values jumps there on the
+       first / last frame, as in Alight Motion (those jumps are not drawn).
+       Built as ordinary keys: the base curve split exactly at the jitter's points, each one moved
+       by the jitter; with no jitter the base is one segment (no extra keys). */
+    const hash2 = (ix, iy) => {
+        let h = (Math.imul(ix | 0, 374761393) + Math.imul(iy | 0, 668265263)) | 0;
+        h = Math.imul(h ^ (h >>> 13), 1274126177); h ^= h >>> 16;
+        return (h >>> 0) / 4294967296 * 2 - 1;
+    };
+    function vnoise(x, y) {   // smooth 2D value noise, -1..1
+        const ix = Math.floor(x), iy = Math.floor(y), q = s => s * s * s * (s * (s * 6 - 15) + 10), u = q(x - ix), v = q(y - iy);
+        const n00 = hash2(ix, iy), n10 = hash2(ix + 1, iy), n01 = hash2(ix, iy + 1), n11 = hash2(ix + 1, iy + 1);
+        return n00 + (n10 - n00) * u + (n01 - n00) * v + (n00 - n10 - n01 + n11) * u * v;
     }
-    const env = u => 0.35 + 0.65 * u;
+    const smooth01 = s => { s = clamp(s, 0, 1); return s * s * (3 - 2 * s); };
+    function rnCore(p) {
+        const e = p.end / 100, s = 1 - e, c = 0.05 + 0.9 * p.bend / 100, k = 0.9;
+        // the base: a bezier from (0, start) to (1, end) bending towards the corner (c, 1 - c) of the 0..1 square
+        const x1 = k * c, f1 = k * (1 - c), x2 = 1 - k * (1 - c), f2 = 1 - k * c;
+        const cub = (p1, p2, w) => 3 * (1 - w) * (1 - w) * w * p1 + 3 * (1 - w) * w * w * p2 + w * w * w;
+        const dcub = (p1, p2, w) => 3 * (1 - w) * (1 - w) * p1 + 6 * (1 - w) * w * (p2 - p1) + 3 * w * w * (1 - p2);
+        const tOf = u => { let lo = 0, hi = 1; for (let i = 0; i < 44; i++) { const m = (lo + hi) / 2; if (cub(x1, x2, m) < u) lo = m; else hi = m; } return (lo + hi) / 2; };
+        // swings across the move: 2 (handle on the right) to 80 (on the left), spread evenly enough that a
+        // pixel of drag never scrolls the jitter far
+        const fq = p.freq / 100, D = 1 / (2 + 78 * fq * fq);
+        return {
+            s: s, e: e, x1: x1, f1: f1, x2: x2, f2: f2, cub: cub, dcub: dcub, tOf: tOf, D: D,
+            A: 0.45 * p.amount / 100,                                           // the jitter's reach, at most 0.45 of the move
+            env: u => smooth01(u / D) * smooth01((1 - u) / D),                  // fades in / out over one swing
+            r: i => vnoise(p.sx / 100 * 5 + i * 17.31 + p.seed * 71.3, p.sy / 100 * 5 + i * 3.17),
+            base: u => s + (e - s) * cub(f1, f2, tOf(u))
+        };
+    }
     function buildRandom(p) {
-        const m = R(6 + p.density / 100 * 74), e = p.traj / 100, amp = p.amount / 100, rnd = rng(1234 + p.seed), pts = [{ u: 0, v: 0 }];
-        for (let i = 1; i <= m; i++) {
-            const j = rnd() - 0.5, u = i / (m + 1) + j * 0.6 / (m + 1);
-            pts.push({ u: u, v: e * u + (rnd() * 2 - 1) * amp * env(u) });
-        }
-        pts.push({ u: 1, v: 1 });
-        // straight segments: each key's speeds are the slopes towards its neighbours
-        const k = pts.map((q, i) => {
-            const si = i ? (q.v - pts[i - 1].v) / (q.u - pts[i - 1].u) : 0;
-            const so = i < pts.length - 1 ? (pts[i + 1].v - q.v) / (pts[i + 1].u - q.u) : 0;
-            return K(q.u, q.v, si, so, i ? QUAD : 0, i < pts.length - 1 ? QUAD : 0);
+        const c = rnCore(p), ds = c.e - c.s, U = [0];
+        // the jitter's points sit every D from the middle, so changing Frequency stretches it from there
+        const J = [];
+        if (c.A > 0) { const jm = Math.floor((0.5 - 1e-6) / c.D); for (let j = -jm; j <= jm; j++) { const u = 0.5 + j * c.D; if (c.env(u) >= 0.02) { U.push(u); J.push(j); } } }   // (points where it has all but faded out would crowd the keys)
+        U.push(1);
+        const N = U.length - 1, T = U.map((u, i) => (i === 0 ? 0 : i === N ? 1 : c.tOf(u)));
+        const n = U.map((u, i) => (i === 0 || i === N ? 0 : c.env(u) * c.r(J[i - 1])));
+        const d = U.map((u, i) => (i === 0 || i === N ? 0 : (n[i + 1] - n[i - 1]) / (U[i + 1] - U[i - 1])));
+        const k = U.map((u, i) => {
+            const sl = ds * c.dcub(c.f1, c.f2, T[i]) / c.dcub(c.x1, c.x2, T[i]) + c.A * d[i];
+            return K(u, c.s + ds * c.cub(c.f1, c.f2, T[i]) + c.A * n[i], sl, sl, 0, 0);
         });
+        // the base split exactly at each point (de Casteljau on the parameter range): influences per piece
+        for (let i = 0; i < N; i++) {
+            const dt = T[i + 1] - T[i], du = U[i + 1] - U[i];
+            k[i].io = clamp(dt / 3 * c.dcub(c.x1, c.x2, T[i]) / du, 0.001, 1);
+            k[i + 1].ii = clamp(dt / 3 * c.dcub(c.x1, c.x2, T[i + 1]) / du, 0.001, 1);
+        }
+        k[0].si = 0; k[0].ii = 0; k[N].so = 0; k[N].io = 0;
+        if (Math.abs(c.s) > 1e-6) {
+            // starts away from the first key's value: it jumps there on the first frame (not drawn)
+            k[0].frame = 4;
+            k.unshift(K(0, 0, 0, 0, 0, 0, 2));
+        }
+        if (Math.abs(c.e - 1) > 1e-6) {
+            // ends away from the second key's value: it jumps there on the last frame (not drawn)
+            const L = k[k.length - 1]; L.seg = 2; L.frame = 3;
+            k.push(K(1, 1, 0, 0, 0, 0));
+        }
         const band = [];
-        for (let i = 0; i <= 24; i++) { const u = i / 24; band.push([u, e * u + amp * env(u), e * u - amp * env(u)]); }
-        const ud = 5 / (m + 1);
-        return { knots: k, band: band, handles: [
-            { id: 'amount', x: 0.5, y: 0.5 * e + amp * env(0.5), label: 'Amount ' + p.amount, drag: (x, y) => { p.amount = clamp(R((y - 0.5 * e) / env(0.5) * 100), 0, 100); } },
-            { id: 'density', x: ud, y: e * ud, label: 'Density ' + p.density, drag: x => { const mm = clamp(R(5 / Math.max(0.01, x) - 1), 6, 80); p.density = clamp(R((mm - 6) / 74 * 100), 0, 100); } },
-            { id: 'traj', x: 1, y: e, label: 'Trajectory ' + p.traj, drag: (x, y) => { p.traj = clamp(R(y * 100), -50, 150); } }
-        ] };
+        if (c.A > 0) for (let i = 0; i <= 48; i++) { const u = i / 48, bv = c.base(u), w = c.A * c.env(u); band.push([u, bv + w, bv - w]); }
+        const hs = [
+            { id: 'end', axis: 'y', x: 1, y: c.e, label: 'End ' + p.end.toFixed(1) + (c.e > 0.5 ? '  (rises)' : c.e < 0.5 ? '  (falls)' : ''),
+              drag: (x, y) => { p.end = clamp(R(y * 1000) / 10, 0, 100); } },
+            { id: 'bend', axis: 'x', x: p.bend / 100, y: 0, label: 'Bend ' + p.bend.toFixed(1) + (p.bend < 50 ? '  (early)' : p.bend > 50 ? '  (late)' : ''),
+              drag: x => { p.bend = clamp(R(x * 1000) / 10, 0, 100); } },
+            { id: 'amount', axis: 'y', x: 0, y: 1 - p.amount / 100, label: 'Jitter ' + p.amount.toFixed(1),
+              drag: (x, y) => { p.amount = clamp(R((1 - y) * 1000) / 10, 0, 100); } }
+        ];
+        if (c.A > 0) {
+            // the jitter's own handles appear once there is jitter
+            hs.push({ id: 'freq', axis: 'x', x: 1 - p.freq / 100, y: 1, label: 'Frequency ' + p.freq.toFixed(1),
+                drag: x => { p.freq = clamp(R((1 - x) * 1000) / 10, 0, 100); } });
+            hs.push({ id: 'seed', axis: 'xy', x: p.sx / 100, y: p.sy / 100, label: 'Seed  (drag to change the pattern)',
+                drag: (x, y) => { p.sx = clamp(R(x * 1000) / 10, 0, 100); p.sy = clamp(R(y * 1000) / 10, 0, 100); } });
+        }
+        return { knots: k, band: band.length ? band : null, handles: hs };
     }
 
     // ------------------------------------------------------------------ registry
@@ -566,7 +634,11 @@
         elasticsteps: { name: 'Elastic Steps', build: buildElasticSteps,
             view: [-0.12, 1.12],   // the curve stays inside the box
             params: [P('freq', 'Frequency', 1.05, 24, 4, false, 0.01), P('el', 'Elastic', 0, 100, 100, false, 0.1), P('str', 'Strength', 0, 200, 100, false, 1), P('smooth', 'Smooth end', 0, 1, 1, true)] },
-        random: { name: 'Random', build: buildRandom, params: [P('amount', 'Amount', 0, 100, 35), P('density', 'Density', 0, 100, 40), P('traj', 'Trajectory', -50, 150, 100), P('seed', 'Seed', 0, 999999, 0, true)] }
+        random: { name: 'Random', build: buildRandom, holdView: true,
+            // fits the jitter; held while dragging (a view that grew under the Jitter handle would run away)
+            view: p => { const r = 0.45 * p.amount / 100; return [-0.12 - r, 1.12 + r]; },
+            params: [P('end', 'End', 0, 100, 100, false, 0.1), P('bend', 'Bend', 0, 100, 30, false, 0.1), P('amount', 'Jitter', 0, 100, 35, false, 0.1), P('freq', 'Frequency', 0, 100, 60, false, 0.1),
+                P('sx', 'Seed X', 0, 100, 70, true, 0.1), P('sy', 'Seed Y', 0, 100, 40, true, 0.1), P('seed', 'Seed', 0, 999999, 0, true)] }
     };
     const defParams = m => { const o = {}; MODELS[m].params.forEach(q => { o[q.k] = q.def; }); return o; };
     function assignKnown(m, target, src) {
@@ -575,7 +647,7 @@
     }
 
     // ------------------------------------------------------------------ state
-    const VERSION = 3, MODEL_VERSION = { elastic: 2, bounce: 3, cyclic: 2, elasticsteps: 5, steps: 2 };
+    const VERSION = 3, MODEL_VERSION = { elastic: 2, bounce: 3, cyclic: 2, elasticsteps: 5, steps: 2, random: 2 };
     function defaults() { const s = { v: VERSION, vm: Object.assign({}, MODEL_VERSION), mode: 'bezier', rev: false }; Object.keys(MODELS).forEach(m => { s[m] = defParams(m); }); return s; }
     let st = load();
     function load() {
@@ -698,12 +770,16 @@
         svg.appendChild(g);
         svg.addEventListener('pointerdown', e => {
             if (!api.active() || e.button !== 0 || !lastM) return;
-            const i = hitTest(local(e));
+            const pos0 = local(e), i = hitTest(pos0);
             if (i === null) return;
             e.preventDefault(); e.stopPropagation();
             closeMenu();
             frozen = viewRange();
-            drag = { id: lastPx[i].id, pid: e.pointerId };
+            drag = { id: lastPx[i].id, pid: e.pointerId, x0: pos0.x, y0: pos0.y, cands: null };
+            // handles on top of each other (Random's End and Bend in a corner): the first move picks the one
+            // that moves that way
+            const c0 = lastPx[i], cands = lastPx.filter(q => !q.arm && q.h.axis && Math.hypot(q.px - c0.px, q.py - c0.py) < 6);
+            if (cands.length > 1) drag.cands = cands.map(q => ({ id: q.id, axis: q.h.axis }));
             hover = drag.id;
             try { svg.setPointerCapture(e.pointerId); } catch (err) {}
             svg.style.cursor = 'grabbing';
@@ -794,6 +870,13 @@
         applyDrag(pos);
     }
     function applyDrag(pos) {
+        if (drag.cands) {
+            const dx = pos.x - drag.x0, dy = pos.y - drag.y0;
+            if (Math.hypot(dx, dy) < 4) return;
+            const want = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+            const pick = drag.cands.find(q => q.axis === want) || drag.cands.find(q => q.axis === 'xy') || drag.cands[0];
+            drag.id = pick.id; hover = pick.id; drag.cands = null;
+        }
         const m = lastM, h = lastPx.find(q => q.id === drag.id);
         if (!h) return;
         const p = st[st.mode];
@@ -806,8 +889,7 @@
         }
         // grow the view only past its edge (no margin here: a margin would rescale the view under
         // the pointer on every move and send the handle running away)
-        const r = viewRange(null, true);
-        frozen = [Math.min(frozen[0], r[0]), Math.max(frozen[1], r[1])];
+        if (!(model() && model().holdView)) { const r = viewRange(null, true); frozen = [Math.min(frozen[0], r[0]), Math.max(frozen[1], r[1])]; }
         redraw();
     }
     function endDrag() {
@@ -824,7 +906,7 @@
     function easeRangeTo(target) {
         if (camAnim) { cancelAnimationFrame(camAnim); camAnim = null; }
         const M = model();
-        if (!M || M.view) { frozen = null; redraw(); return; }   // a fixed view has nothing to ease
+        if (!M || (M.view && typeof M.view !== 'function')) { frozen = null; redraw(); return; }   // a fixed view has nothing to ease
         const from = (frozen || target).slice(), t0 = performance.now();
         const step = now => {
             const p = Math.min(1, (now - t0) / 300), e = 1 - Math.pow(1 - p, 3);
