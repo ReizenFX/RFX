@@ -439,13 +439,15 @@
        Smooth end (on by default): the first jump stays at the handle and the rest are spread evenly
        so the last one reaches the target a whole step before the second key and settles onto it.
        Off: a jump whose wobble would run past the second key is squeezed to settle before it.
-       Right-click: Strength scales how far the steps overshoot. Reverse mirrors it. */
+       The curve stays inside the box: a swing that would pass the target is lowered so its peak
+       just touches it. Right-click: Strength scales how far the steps overshoot. Reverse mirrors it. */
     function esCore(p) {
-        const P = 1 / p.freq, h = clamp(p.el / 100, 0, 1), kL = Math.min(1, 1.1 * Math.sqrt(h));
+        // eased so the shape changes at an even pace from the very bottom of the handle (no sudden start)
+        const P = 1 / p.freq, h = clamp(p.el / 100, 0, 1), ez = q => 1 - Math.pow(1 - h, q), kL = ez(3);
         return {
             P: P, h: h, kL: kL,
-            A: 0.45 * Math.pow(h, 0.8) * p.str / 100,   // first overshoot, as a share of the step height
-            trR: 0.5 - 0.465 * Math.pow(h, 0.6),        // the jump's length (to its first peak), as a share of the step
+            A: 0.45 * ez(1.4) * p.str / 100,            // first overshoot, as a share of the step height
+            trR: 0.5 - 0.465 * ez(1.8),                 // the jump's length (to its first peak), as a share of the step
             spR: 0.4 + 0.3 * h                          // the wobble has faded by here (from the jump), as a share of the step
         };
     }
@@ -470,24 +472,29 @@
         J.forEach((jp, j) => {
             const t0 = jp[0], lo = jp[1], hi = jp[2], Sl = jp[3], D = hi - lo, r = 1 - t0, lastJ = j === J.length - 1;
             // the shape scales with the step's length; a half swing is never shorter than 0.25% of the move
-            const Tr = Math.max(c.trR * Sl, 0.0025), Sp = Math.max(c.spR * Sl, 3.2 * Tr);
-            const E = tau => c.A * D * Math.pow(Math.max(0, (Sp - tau) / (Sp - Tr)), 1.6);
+            // the wobble has faded out by the time the step runs out, so a swing always appears (and goes)
+            // at zero size while the handle moves: no swing pops in or out
+            // the last step with Smooth end settles by 94% of it, so no key crowds the second key
+            const lim = (p.smooth && lastJ ? 0.94 : 0.98) * Sl, Tr = Math.max(c.trR * Sl, 0.0025), Sp = Math.min(Math.max(c.spR * Sl, 3.2 * Tr), lim - Tr);
+            const E = tau => (Sp > Tr ? c.A * D * Math.pow(Math.max(0, (Sp - tau) / (Sp - Tr)), 1.6) : 0);
+            // inside the box: a swing that would pass the target keeps its size, but its centre comes
+            // down so the peak just touches the target (near the top it settles up into it)
+            const room = 1 - hi, at = (e, sgn) => Math.max(0, hi + sgn * e - Math.max(0, e - room));
             // the jump's events at its natural timing: [time from the jump, value]
-            const ev = [[Tr, hi + c.A * D]], lim = 0.98 * Sl;
+            const ev = [[Tr, at(c.A * D, 1)]];
             if (c.A >= 0.002) {
                 for (let m = 2; ; m++) {
                     const tau = Tr * m;
-                    if (tau >= Sp || tau + Tr > lim) break;
+                    if (tau >= Sp) break;
                     const e = E(tau);
                     if (e < 0.0015 * D) break;
-                    ev.push([tau, hi + (m % 2 ? 1 : -1) * e]);
+                    ev.push([tau, at(e, m % 2 ? 1 : -1)]);
                 }
                 ev.push([Math.min(ev[ev.length - 1][0] + Tr, lim), hi]);   // settled
             }
-            // Smooth end off: squeezed to settle before the second key (85% of what is left)
-            const end = ev[ev.length - 1][0], sc = p.smooth ? 1 : Math.min(1, 0.85 * r / end);
-            // Smooth end: a settle right against the second key is the second key
-            if (p.smooth && lastJ && ev.length > 1 && r - end < Math.max(0.06 * Sl, 1.5 * Tr)) ev.pop();
+            // Smooth end off: a step without room for itself is a smaller copy of a whole step, fitted into
+            // 85% of what is left (scaled by the step, not by its wobble, so it changes smoothly with the handle)
+            const end = ev[ev.length - 1][0], sc = p.smooth ? 1 : Math.min(1, 0.85 * r / lim);
             k.push(K(t0, lo, 0, c.kL * (ev[0][1] - lo) / (Tr * sc), QUAD, ioJ));
             ev.forEach((q, i) => { k.push(K(t0 + q[0] * sc, q[1], 0, 0, i ? I : iiP, i === ev.length - 1 ? 0 : I)); });
         });
@@ -557,8 +564,7 @@
         steps: { name: 'Steps', build: buildSteps, view: [-0.1, 1.12],
             params: [P('freq', 'Frequency', 1.05, 24, 4, false, 0.01), P('soft', 'Smoothness', 0, 100, 0, false, 0.1), P('smooth', 'Smooth end', 0, 1, 1, true)] },
         elasticsteps: { name: 'Elastic Steps', build: buildElasticSteps,
-            // fits the highest overshoot the step height allows (it only changes with Frequency and Strength)
-            view: p => { const J = esJumps(p, esCore(p)), q = J[J.length - 1]; return [-0.12, Math.max(1.12, q[2] + 0.45 * (q[2] - q[1]) * p.str / 100 + 0.1)]; },
+            view: [-0.12, 1.12],   // the curve stays inside the box
             params: [P('freq', 'Frequency', 1.05, 24, 4, false, 0.01), P('el', 'Elastic', 0, 100, 100, false, 0.1), P('str', 'Strength', 0, 200, 100, false, 1), P('smooth', 'Smooth end', 0, 1, 1, true)] },
         random: { name: 'Random', build: buildRandom, params: [P('amount', 'Amount', 0, 100, 35), P('density', 'Density', 0, 100, 40), P('traj', 'Trajectory', -50, 150, 100), P('seed', 'Seed', 0, 999999, 0, true)] }
     };
